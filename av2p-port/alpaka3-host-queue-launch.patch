@@ -1,0 +1,26 @@
+--- a/include/alpaka/api/unifiedCudaHip/Queue.hpp
++++ b/include/alpaka/api/unifiedCudaHip/Queue.hpp
+@@ -358,6 +358,7 @@
+                 // thread spec which is only holding data if the dimension is larger than 3u
+                 auto optimizedThreadSpec = ThreadSpecType(threadSpec.getNumBlocks(), threadSpec.getNumThreads());
+ 
++#if defined(__CUDACC__) || defined(__CUDA__) || defined(__HIP__)
+                 auto kernelName = gpuKernel<
+                     ALPAKA_TYPEOF(getApi(queue)),
+                     ALPAKA_TYPEOF(getDeviceKind(queue)),
+@@ -375,6 +376,15 @@
+                     queue.getNativeHandle()>>>(kernelBundle, optimizedThreadSpec);
+ 
+                 queue.conditionalWait();
++#else
++                // `<<<...>>>` is not C++.  A host-only translation unit can create, query and use a
++                // CUDA/HIP queue, but it cannot build a kernel.  Keep that a compile-time error
++                // instead of emitting a host call that has no device code behind it.
++                static_assert(
++                    !sizeof(T_KernelBundle),
++                    "alpaka3: enqueuing a CUDA/HIP kernel requires a CUDA/HIP compiler. Move this code "
++                    "into a .dev.cc / .cu translation unit.");
++#endif
+             }
+         };
+     } // namespace unifiedCudaHip

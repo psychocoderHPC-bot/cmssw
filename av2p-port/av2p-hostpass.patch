@@ -1,0 +1,356 @@
+diff --git a/include/aV2P/adapter/Buf.hpp b/include/aV2P/adapter/Buf.hpp
+index c1e3f9f..99f433b 100644
+--- a/include/aV2P/adapter/Buf.hpp
++++ b/include/aV2P/adapter/Buf.hpp
+@@ -10,10 +10,12 @@
+ #include "aV2P/core/Common.hpp"
+ #include "aV2P/dev/Traits.hpp"
+ #include "aV2P/mem/buf/Traits.hpp"
++#include "aV2P/mem/view/Traits.hpp"
+ #include "aV2P/mem/view/ViewAccessOps.hpp"
+ 
+ #include <alpaka/alpaka.hpp>
+ 
++#include <concepts>
+ #include <type_traits>
+ #include <utility>
+ 
+@@ -56,6 +58,78 @@ namespace aV2P::detail
+     {
+         using type = typename NativeBufferWithMatchingAlignment<TBuffer, TIsOneDimensional>::type;
+     };
++
++    //! The memory-alignment type alpaka 3 chose for an allocation of this buffer type.
++    template<typename TBuffer>
++    struct BufferMemAlignment;
++
++    template<
++        alpaka::concepts::Api TApi,
++        typename TType,
++        alpaka::concepts::Vector TExtents,
++        alpaka::concepts::Alignment TAlignment>
++    struct BufferMemAlignment<alpaka::onHost::SharedBuffer<TApi, TType, TExtents, TAlignment>>
++    {
++        using type = TAlignment;
++    };
++
++    /*! Adapt an alpaka 2.2 buffer deleter (`void(TElem*)`) to the alpaka 3 deleter (`void()`).
++     *
++     * alpaka 2.2 passed the buffer pointer to the deleter; alpaka 3 `SharedBuffer` stores a
++     * zero-argument `std::function<void()>`.  A callable that already takes no argument is passed
++     * through unchanged.
++     */
++    template<typename TDeleter, typename TElem>
++    AV2P_FN_HOST auto adaptDeleter(TDeleter&& deleter, TElem* const pMem)
++    {
++        if constexpr(std::invocable<TDeleter&, TElem*> || std::invocable<TDeleter const&, TElem*>)
++            return [deleter = std::forward<TDeleter>(deleter), pMem]() mutable { deleter(pMem); };
++        else
++            return std::forward<TDeleter>(deleter);
++    }
++
++    /*! Convert an aV2P or alpaka 2.2 extent/pitch argument to the alpaka 3 vector type.
++     *
++     * The aV2P extent type (`aV2P::Vec`) is index-compatible with `alpaka::Vec` but does not model
++     * `alpaka::concepts::Vector`, which the native `SharedBuffer` constructor requires.  An arithmetic
++     * argument is broadcast, which keeps the 2.2 single-value spelling working.
++     */
++    template<typename TIdx, typename TDim, typename TVec>
++    AV2P_FN_HOST auto normaliseVec(TVec const& value)
++        -> alpaka::Vec<TIdx, static_cast<std::uint32_t>(TDim::value)>
++    {
++        constexpr auto dim = static_cast<std::uint32_t>(TDim::value);
++        using Vec = alpaka::Vec<TIdx, dim>;
++        if constexpr(dim == 0u)
++            return Vec{};
++        else if constexpr(std::is_arithmetic_v<TVec>)
++            return Vec::fill(static_cast<TIdx>(value));
++        else
++            return Vec([&](std::uint32_t const i) constexpr { return static_cast<TIdx>(value[i]); });
++    }
++
++    /*! Normalise a 2.2 pitch argument to the alpaka 3 (byte) pitch vector.
++     *
++     * alpaka 2.2 accepted the padding pitch of an externally allocated buffer as a single byte
++     * count for the innermost padding dimension; `calculatePitchesFromExtentsAndPitch` implements
++     * exactly that rule (innermost pitch is the element size, outer pitches follow from the
++     * extents, the row pitch is rounded up to the given value).  A pitch vector is converted
++     * element-wise.
++     */
++    template<typename TElem, typename TIdx, typename TDim, typename TExtent, typename TPitch>
++    AV2P_FN_HOST auto normalisePitches(TExtent const& extents, TPitch const& pitches)
++        -> alpaka::Vec<TIdx, static_cast<std::uint32_t>(TDim::value)>
++    {
++        if constexpr(std::is_arithmetic_v<TPitch>)
++        {
++            Vec<TDim, TIdx> const extentVec(
++                [&](auto const i) constexpr { return static_cast<TIdx>(extents[i.value]); });
++            return calculatePitchesFromExtentsAndPitch<TElem>(extentVec, static_cast<std::size_t>(pitches))
++                .getAlpaka3();
++        }
++        else
++            return normaliseVec<TIdx, TDim>(pitches);
++    }
+ } // namespace aV2P::detail
+ 
+ namespace aV2P
+@@ -100,11 +174,28 @@ namespace aV2P
+             Deleter deleter,
+             TExtent const& extents,
+             TPitch const& pitches)
+-            : m_memImpl{AlpakaBufferType(alpaka::getApi(dev.getAlpaka3()), pMem, extents, pitches, std::move(deleter))}
++            : m_memImpl{AlpakaBufferType(
++                  alpaka::getApi(dev.getAlpaka3()),
++                  pMem,
++                  detail::normaliseVec<TIdx, TDim>(extents),
++                  detail::normalisePitches<TElem, TIdx, TDim>(extents, pitches),
++                  detail::adaptDeleter(std::move(deleter), pMem),
++                  typename detail::BufferMemAlignment<AlpakaBufferType>::type{})}
+             , m_dev{dev}
+         {
+         }
+ 
++        //! 2.2 four-argument form: the pitches follow from the (contiguous) extents.
++        template<typename TExtent, typename Deleter>
++        AV2P_FN_HOST BufAlpaka3(
++            DevAlpaka3<TDevSpec> const& dev,
++            TElem* const pMem,
++            Deleter deleter,
++            TExtent const& extents)
++            : BufAlpaka3(dev, pMem, std::move(deleter), extents, std::size_t{0})
++        {
++        }
++
+         AV2P_FN_HOST BufAlpaka3(AlpakaBufferType const& sharedBuffer, DevAlpaka3<TDevSpec> const& dev)
+             : m_memImpl{sharedBuffer}
+             , m_dev{dev}
+@@ -178,11 +269,28 @@ namespace aV2P
+             Deleter deleter,
+             TExtent const& extents,
+             TPitch const& pitches)
+-            : m_memImpl{AlpakaBufferType(alpaka::getApi(dev.getAlpaka3()), pMem, extents, pitches, std::move(deleter))}
++            : m_memImpl{AlpakaBufferType(
++                  alpaka::getApi(dev.getAlpaka3()),
++                  pMem,
++                  detail::normaliseVec<TIdx, TDim>(extents),
++                  detail::normalisePitches<TElem, TIdx, TDim>(extents, pitches),
++                  detail::adaptDeleter(std::move(deleter), pMem),
++                  typename detail::BufferMemAlignment<AlpakaBufferType>::type{})}
+             , m_dev{dev}
+         {
+         }
+ 
++        //! 2.2 four-argument form: the pitches follow from the (contiguous) extents.
++        template<typename TExtent, typename Deleter>
++        AV2P_FN_HOST ConstBufAlpaka3(
++            DevAlpaka3<TDevSpec> const& dev,
++            TElem* const pMem,
++            Deleter deleter,
++            TExtent const& extents)
++            : ConstBufAlpaka3(dev, pMem, std::move(deleter), extents, std::size_t{0})
++        {
++        }
++
+         AV2P_FN_HOST ConstBufAlpaka3(AlpakaBufferType const& sharedBuffer, DevAlpaka3<TDevSpec> const& dev)
+             : m_memImpl{sharedBuffer}
+             , m_dev{dev}
+diff --git a/include/aV2P/adapter/Event.hpp b/include/aV2P/adapter/Event.hpp
+index d312391..05bbe9e 100644
+--- a/include/aV2P/adapter/Event.hpp
++++ b/include/aV2P/adapter/Event.hpp
+@@ -8,6 +8,7 @@
+ #include "aV2P/core/Common.hpp"
+ #include "aV2P/dev/Traits.hpp"
+ #include "aV2P/event/Traits.hpp"
++#include "aV2P/traits/Traits.hpp"
+ #include "aV2P/wait/Traits.hpp"
+ 
+ #include <alpaka/alpaka.hpp>
+@@ -59,6 +60,13 @@ namespace aV2P
+             return m_dev;
+         }
+ 
++        //! Native event handle of the wrapped alpaka 3 event (the CUDA/HIP event, the host event id,
++        //! ...).  Provided for the 2.2 diagnostics that identify an event by its implementation handle.
++        [[nodiscard]] auto getNativeHandle() const noexcept
++        {
++            return m_eventImpl.getNativeHandle();
++        }
++
+     private:
+         TDev m_dev;
+         EventType m_eventImpl;
+@@ -111,6 +119,15 @@ namespace aV2P
+             }
+         };
+ 
++        template<typename TDev>
++        struct NativeHandle<EventAlpaka3<TDev>>
++        {
++            [[nodiscard]] static auto getNativeHandle(EventAlpaka3<TDev> const& event)
++            {
++                return event.getNativeHandle();
++            }
++        };
++
+         template<typename TDev>
+         struct IsComplete<EventAlpaka3<TDev>>
+         {
+diff --git a/include/aV2P/alpaka.hpp b/include/aV2P/alpaka.hpp
+index b6b8792..fc97561 100644
+--- a/include/aV2P/alpaka.hpp
++++ b/include/aV2P/alpaka.hpp
+@@ -7,6 +7,11 @@
+ 
+ // Include the whole library.
+ 
++// Make the CUDA/HIP runtime backends available to host-only (`AV2P_HOST_ONLY`) translation units.
++// This must happen before the first alpaka 3 header is parsed, because alpaka 3 enables its
++// CUDA/HIP backend through `ALPAKA_LANG_CUDA` / `ALPAKA_LANG_HIP`.
++#include "aV2P/core/HostRuntimeApi.hpp"
++
+ // alpaka 3 implementation
+ #include <alpaka/alpaka.hpp>
+ 
+diff --git a/include/aV2P/core/Config.hpp b/include/aV2P/core/Config.hpp
+index 644e199..eb83823 100644
+--- a/include/aV2P/core/Config.hpp
++++ b/include/aV2P/core/Config.hpp
+@@ -6,6 +6,8 @@
+ #pragma once
+ 
+ #include "aV2P/core/PP.hpp"
++// Enables the CUDA/HIP runtime backends for host-only (`AV2P_HOST_ONLY`) translation units.
++#include "aV2P/core/HostRuntimeApi.hpp"
+ 
+ #ifdef __INTEL_COMPILER
+ #    warning                                                                                                          \
+diff --git a/include/aV2P/core/HostRuntimeApi.hpp b/include/aV2P/core/HostRuntimeApi.hpp
+new file mode 100644
+index 0000000..e491e3d
+--- /dev/null
++++ b/include/aV2P/core/HostRuntimeApi.hpp
+@@ -0,0 +1,123 @@
++/* Copyright 2026 René Widera
++ * SPDX-License-Identifier: MPL-2.0
++ */
++
++#pragma once
++
++//! CUDA/HIP runtime access from a host-only (`AV2P_HOST_ONLY`, non-`nvcc`) translation unit.
++//!
++//! alpaka 3 enables its CUDA/HIP backend only when the language is detected from the compiler
++//! (`__CUDACC__` / `__HIP__`), because the backend headers also contain device-side code and the
++//! `<<<...>>>` launch syntax.  The CUDA/HIP *runtime* API itself is plain host C++, so a host-only
++//! translation unit can name, construct and query the runtime platform, device, queue and event and
++//! can allocate, copy and free device memory - it just cannot build a kernel.
++//!
++//! This header restores that 2.2 capability for `AV2P_HOST_ONLY`:
++//!  - include the vendor runtime header and enable the alpaka 3 backend macros;
++//!  - declare the device-side builtins that the (never instantiated) device code in those headers
++//!    refers to, so that a host compiler can parse the headers.
++//!
++//! A kernel launch from a host-only translation unit stays a compile-time error: alpaka 3's launch
++//! operator is guarded and reports it with a `static_assert`
++//! (`alpaka/api/unifiedCudaHip/Queue.hpp`).
++//!
++//! Opt out with `AV2P_DISABLE_HOST_RUNTIME_API`.
++
++#if defined(AV2P_HOST_ONLY) && !defined(__CUDACC__) && !defined(AV2P_DISABLE_HOST_RUNTIME_API)
++
++//! `VVRRP` version encoding shared with `aV2P/core/PP.hpp` (major*10000 + minor*100 + patch).
++#if !defined(AV2P_HOST_RT_VERSION)
++#    define AV2P_HOST_RT_VERSION(V)                                                                                \
++        ((((V) / 1000llu) % 10000llu) * 10000llu + (((V) / 10llu) % 100llu) * 100llu + ((V) % 10llu))
++#endif
++
++// ---------------------------------------------------------------------------------------------
++// CUDA
++// ---------------------------------------------------------------------------------------------
++#    if defined(AV2P_ACC_GPU_CUDA_ENABLED) && !defined(AV2P_LANG_CUDA)
++#        if !defined(__has_include) || __has_include(<cuda_runtime.h>)
++#            include <cuda_runtime.h>
++#            define AV2P_LANG_CUDA AV2P_HOST_RT_VERSION(CUDART_VERSION)
++#            if !defined(ALPAKA_LANG_CUDA)
++#                define ALPAKA_LANG_CUDA AV2P_HOST_RT_VERSION(CUDART_VERSION)
++#            endif
++#            define AV2P_HOST_CUDA_RT_API 1
++
++// The device-side builtins below are referenced only by device function templates that a host-only
++// translation unit never instantiates; declarations are enough to parse the headers.  CUDA provides
++// `__host__`/`__device__`/`__global__` as empty macros for a non-nvcc compilation, so the enclosing
++// function templates remain ordinary (unused) host templates.
++extern "C"
++{
++    extern uint3 blockIdx;
++    extern uint3 threadIdx;
++    extern dim3 blockDim;
++    extern dim3 gridDim;
++    unsigned __activemask();
++    void __syncthreads();
++    void __syncwarp(unsigned = 0xffffffffu);
++    void __threadfence();
++    void __threadfence_block();
++    void __threadfence_system();
++    unsigned __ballot_sync(unsigned, int);
++    int __any_sync(unsigned, int);
++    int __all_sync(unsigned, int);
++    float rsqrtf(float);
++    double rsqrt(double);
++    int min(int, int);
++    int max(int, int);
++}
++template<typename T>
++T __shfl_sync(unsigned, T, int, int = 32);
++template<typename T>
++T __shfl_down_sync(unsigned, T, unsigned, int = 32);
++template<typename T>
++T __shfl_up_sync(unsigned, T, unsigned, int = 32);
++template<typename T>
++T __shfl_xor_sync(unsigned, T, int, int = 32);
++template<typename T>
++int __popc(T);
++template<typename T>
++int __clz(T);
++template<typename T>
++int __ffs(T);
++template<typename T, typename U>
++T atomicAdd(T*, U);
++template<typename T, typename U>
++T atomicSub(T*, U);
++template<typename T, typename U>
++T atomicExch(T*, U);
++template<typename T, typename U>
++T atomicMin(T*, U);
++template<typename T, typename U>
++T atomicMax(T*, U);
++template<typename T, typename U>
++T atomicAnd(T*, U);
++template<typename T, typename U>
++T atomicOr(T*, U);
++template<typename T, typename U>
++T atomicXor(T*, U);
++template<typename T, typename U>
++T atomicInc(T*, U);
++template<typename T, typename U>
++T atomicDec(T*, U);
++template<typename T, typename U, typename V>
++T atomicCAS(T*, U, V);
++#        endif
++#    endif
++
++// ---------------------------------------------------------------------------------------------
++// HIP (the HIP headers are host-compilable by design and already provide the builtins)
++// ---------------------------------------------------------------------------------------------
++#    if defined(AV2P_ACC_GPU_HIP_ENABLED) && !defined(AV2P_LANG_HIP)
++#        if !defined(__has_include) || __has_include(<hip/hip_runtime.h>)
++#            include <hip/hip_runtime.h>
++#            define AV2P_LANG_HIP AV2P_HOST_RT_VERSION(HIP_VERSION_MAJOR * 1000 + HIP_VERSION_MINOR)
++#            if !defined(ALPAKA_LANG_HIP)
++#                define ALPAKA_LANG_HIP AV2P_LANG_HIP
++#            endif
++#            define AV2P_HOST_HIP_RT_API 1
++#        endif
++#    endif
++
++#endif

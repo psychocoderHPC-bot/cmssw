@@ -1,0 +1,7 @@
+<tool revision="1">
+  <use name="alpaka"/>
+  <use name="tbb"/>
+  <flags CXXFLAGS="-DAV2P_ACC_CPU_B_TBB_T_SEQ_ENABLED"/>
+  <flags GENREFLEX_CPPFLAGS="-DAV2P_ACC_CPU_B_TBB_T_SEQ_ENABLED"/>
+  <flags LDFLAGS="-ltbb"/>
+</tool>

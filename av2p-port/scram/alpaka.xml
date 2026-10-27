@@ -1,0 +1,12 @@
+<tool revision="1">
+  <!-- SCRAM tool identifier stays "alpaka" (drop-in, zero BuildFile churn);
+       contents target aV2P, the native alpaka 3 compatibility layer. -->
+  <client>
+    <environment name="INCLUDE" default="$TOOL_BASE/include"/>
+  </client>
+  <runtime name="ROOT_INCLUDE_PATH" value="$INCLUDE" type="path"/>
+  <flags CXXFLAGS="-DAV2P_DEFAULT_HOST_MEMORY_ALIGNMENT=128 -DAV2P_DISABLE_VENDOR_RNG -DAV2P_HAS_STD_ATOMIC_REF"/>
+  <flags CUDA_FLAGS="-DAV2P_DEFAULT_HOST_MEMORY_ALIGNMENT=128 -DAV2P_DISABLE_VENDOR_RNG -DAV2P_HAS_STD_ATOMIC_REF"/>
+  <flags GENREFLEX_CPPFLAGS="-DAV2P_DEFAULT_HOST_MEMORY_ALIGNMENT=128 -DAV2P_DISABLE_VENDOR_RNG -DAV2P_HAS_STD_ATOMIC_REF"/>
+  <flags LDFLAGS="-lhwloc"/>
+</tool>

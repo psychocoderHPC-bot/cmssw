@@ -1,0 +1,9 @@
+<tool revision="1">
+  <use name="alpaka"/>
+  <use name="cuda"/>
+  <!-- host compilation: device host-only preprocessor gate -->
+  <flags CXXFLAGS="-DAV2P_ACC_GPU_CUDA_ENABLED -DAV2P_ACC_GPU_CUDA_ONLY_MODE -DAV2P_HOST_ONLY"/>
+  <flags GENREFLEX_CPPFLAGS="-DAV2P_ACC_GPU_CUDA_ENABLED -DAV2P_ACC_GPU_CUDA_ONLY_MODE -DAV2P_HOST_ONLY"/>
+  <!-- device compilation (.dev.cc via nvcc): host-only macro removed -->
+  <flags CUDA_FLAGS="-DAV2P_ACC_GPU_CUDA_ENABLED -DAV2P_ACC_GPU_CUDA_ONLY_MODE -UAV2P_HOST_ONLY --expt-relaxed-constexpr"/>
+</tool>

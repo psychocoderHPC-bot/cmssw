@@ -1,0 +1,7 @@
+<tool revision="1">
+  <use name="alpaka"/>
+  <use name="rocm"/>
+  <flags CXXFLAGS="-DAV2P_ACC_GPU_HIP_ENABLED -DAV2P_ACC_GPU_HIP_ONLY_MODE -DAV2P_HOST_ONLY"/>
+  <flags GENREFLEX_CPPFLAGS="-DAV2P_ACC_GPU_HIP_ENABLED -DAV2P_ACC_GPU_HIP_ONLY_MODE -DAV2P_HOST_ONLY"/>
+  <flags ROCM_FLAGS="-DAV2P_ACC_GPU_HIP_ENABLED -DAV2P_ACC_GPU_HIP_ONLY_MODE -UAV2P_HOST_ONLY --expt-relaxed-constexpr"/>
+</tool>
