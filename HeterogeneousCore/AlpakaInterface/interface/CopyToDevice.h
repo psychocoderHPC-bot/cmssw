@@ -40,11 +40,12 @@ namespace cms::alpakatools {
   // - CopyToDevice<aV2P::Buf<alpaka_common::DevHost, TObject, alpaka_common::Dim0D, alpaka_common::Idx>e
   // because both host_buffer and aV2P::Buf use trait-style
   // indirection that prevents template argument type deduction
+  // Scalar (zero-dimensional) host buffer: the 2.2 aV2P::BufCpu<TObject, Dim0D, Idx>
+  // is now the 1-D extent-1-backed cms::alpakatools::zerodim::ScalarBuf.
   template <typename TObject>
-  struct CopyToDevice<aV2P::BufCpu<TObject, alpaka_common::Dim0D, alpaka_common::Idx>> {
+  struct CopyToDevice<zerodim::ScalarBuf<alpaka_common::DevHost, TObject>> {
     template <typename TQueue>
     static auto copyAsync(TQueue& queue, host_buffer<TObject> const& src) {
-      using TDevice = aV2P::Dev<TQueue>;
       auto dst = make_device_buffer<TObject>(queue);
       aV2P::memcpy(queue, dst, src);
       return dst;

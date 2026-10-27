@@ -13,6 +13,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/devices.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/host.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/traits.h"
+#include "HeterogeneousCore/AlpakaInterface/interface/ZeroDimCompat.h"
 
 namespace cms::alpakatools {
 
@@ -24,7 +25,7 @@ namespace cms::alpakatools {
 
     template <typename TDev, typename T, typename = std::enable_if_t<aV2P::concepts::Device<TDev>>>
     struct buffer_type {
-      using type = aV2P::Buf<TDev, T, Dim0D, Idx>;
+      using type = zerodim::ScalarBuf<TDev, T>;
     };
 
     template <typename TDev, typename T>
@@ -39,7 +40,7 @@ namespace cms::alpakatools {
 
     template <typename TDev, typename T, typename = std::enable_if_t<aV2P::concepts::Device<TDev>>>
     struct view_type {
-      using type = aV2P::ViewPlainPtr<TDev, T, Dim0D, Idx>;
+      using type = zerodim::ScalarView<TDev, T>;
     };
 
     template <typename TDev, typename T>
@@ -66,7 +67,7 @@ namespace cms::alpakatools {
 
   template <typename T>
   std::enable_if_t<not std::is_array_v<T>, host_buffer<T>> make_host_buffer() {
-    return aV2P::allocBuf<T, Idx>(host(), Scalar{});
+    return zerodim::make_host_buffer<T>();
   }
 
   template <typename T>
@@ -87,7 +88,7 @@ namespace cms::alpakatools {
   template <typename T, typename TPlatform>
   std::enable_if_t<not std::is_array_v<T>, host_buffer<T>> make_host_buffer() {
     using Platform = TPlatform;
-    return aV2P::allocMappedBuf<T, Idx>(host(), platform<Platform>(), Scalar{});
+    return zerodim::make_host_buffer<T, Platform>();
   }
 
   template <typename T, typename TPlatform>
@@ -110,12 +111,7 @@ namespace cms::alpakatools {
   template <typename T, typename TQueue>
   std::enable_if_t<aV2P::concepts::Queue<TQueue> and not std::is_array_v<T>, host_buffer<T>> make_host_buffer(
       TQueue const& queue) {
-    if constexpr (host_allocator_policy<aV2P::Dev<TQueue>> == AllocatorPolicy::Caching) {
-      return allocCachedBuf<T, Idx>(host(), queue, Scalar{});
-    } else {
-      using Platform = aV2P::Platform<aV2P::Dev<TQueue>>;
-      return aV2P::allocMappedBuf<T, Idx>(host(), platform<Platform>(), Scalar{});
-    }
+    return zerodim::make_host_buffer<T>(queue);
   }
 
   template <typename T, typename TQueue>
@@ -152,7 +148,7 @@ namespace cms::alpakatools {
 
   template <typename T>
   std::enable_if_t<not std::is_array_v<T>, host_view<T>> make_host_view(T& data) {
-    return aV2P::ViewPlainPtr<DevHost, T, Dim0D, Idx>(&data, host(), Scalar{});
+    return zerodim::make_host_view(data);
   }
 
   template <typename T>
@@ -198,7 +194,7 @@ namespace cms::alpakatools {
   template <typename T, typename TDev>
   std::enable_if_t<aV2P::concepts::Device<TDev> and not std::is_array_v<T>, device_buffer<TDev, T>>
   make_device_buffer(TDev const& device) {
-    return aV2P::allocBuf<T, Idx>(device, Scalar{});
+    return zerodim::make_device_buffer<T>(device);
   }
 
   template <typename T, typename TDev>
@@ -222,15 +218,7 @@ namespace cms::alpakatools {
   template <typename T, typename TQueue>
   std::enable_if_t<aV2P::concepts::Queue<TQueue> and not std::is_array_v<T>, device_buffer<aV2P::Dev<TQueue>, T>>
   make_device_buffer(TQueue const& queue) {
-    if constexpr (device_allocator_policy<aV2P::Dev<TQueue>> == AllocatorPolicy::Caching) {
-      return allocCachedBuf<T, Idx>(aV2P::getDev(queue), queue, Scalar{});
-    }
-    if constexpr (device_allocator_policy<aV2P::Dev<TQueue>> == AllocatorPolicy::Asynchronous) {
-      return aV2P::allocAsyncBuf<T, Idx>(queue, Scalar{});
-    }
-    if constexpr (device_allocator_policy<aV2P::Dev<TQueue>> == AllocatorPolicy::Synchronous) {
-      return aV2P::allocBuf<T, Idx>(aV2P::getDev(queue), Scalar{});
-    }
+    return zerodim::make_device_buffer<T>(queue);
   }
 
   template <typename T, typename TQueue>
@@ -273,7 +261,7 @@ namespace cms::alpakatools {
   template <typename T, typename TDev>
   std::enable_if_t<aV2P::concepts::Device<TDev> and not std::is_array_v<T>, device_view<TDev, T>> make_device_view(
       TDev const& device, T& data) {
-    return aV2P::ViewPlainPtr<TDev, T, Dim0D, Idx>(&data, device, Scalar{});
+    return zerodim::make_device_view(device, data);
   }
 
   template <typename T, typename TDev>
@@ -318,7 +306,7 @@ namespace cms::alpakatools {
   template <typename T, typename TQueue>
   std::enable_if_t<aV2P::concepts::Queue<TQueue> and not std::is_array_v<T>, device_view<aV2P::Dev<TQueue>, T>>
   make_device_view(TQueue const& queue, T& data) {
-    return aV2P::ViewPlainPtr<aV2P::Dev<TQueue>, T, Dim0D, Idx>(&data, aV2P::getDev(queue), Scalar{});
+    return zerodim::make_device_view(queue, data);
   }
 
   template <typename T, typename TQueue>
