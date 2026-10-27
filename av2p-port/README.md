@@ -10,19 +10,15 @@ native alpaka 3 compatibility layer. It is based on upstream CMSSW commit
 aV2P ships alpaka 3 with a 2.2-shaped adapter surface. CMSSW code keeps its
 2.2 idioms (`Buf`, `Queue`, `Event`, `exec`, the `Acc` aliases) and links
 against the aV2P headers instead of the old alpaka 2.2 tree. The external
-dependency is pinned to aV2P commit `47148de` on top of `5c1ad3d`.
+dependency is pinned to aV2P commit `70bbdb18a` on top of `5c1ad3d`.
 
-Two host-side defects in the 2.2 adapter had to be fixed for CMSSW's host
-translation units and its caching allocator. Both fixes live in
-`av2p-hostpass.patch` in this directory and are part of aV2P commit `47148de`:
+The adapter fixes this port needed (the 2.2 `Buf` deleter constructor, the
+host-only CUDA/HIP runtime pass, the `AV2P_ACC_*_ONLY_MODE` function-attribute
+fix and the native alpaka 3 host queue-launch guard) are part of aV2P from
+`5c1ad3d` through `70bbdb18a`. The aV2P checkout applies its own bundled
+native patch, so this branch carries no patch files and no hand patches.
 
-- `Buf` overload resolution for the 2.2 `(device, ptr, deleter, extents,
-  pitches)` constructor.
-- A host-only CUDA/HIP pass: include the vendor runtime header early so that
-  `PlatformCudaRt`, `DevCudaRt`, `QueueCudaRt*` and `EventCudaRt` construct and
-  query on the host, while a kernel enqueue remains a compile-time error.
-
-The CMSSW side keeps two matching changes: the host-only
+The CMSSW side keeps two matching source changes: the host-only
 `TaskKernelGpuUniformCudaHipRt` stubs are removed from `config.h`, and
 `CachingAllocator.h` prints the native queue/event handles through
 `aV2P::getNativeHandle`.
@@ -55,16 +51,15 @@ HeterogeneousCore/AlpakaInterface/scripts/check-av2p-migration.sh .
 
 `audit-output.txt` in this directory is the output for this branch.
 
-## Required patches
+## Zero-dimensional support
 
-1. `av2p-hostpass.patch`: applies to aV2P at `include/aV2P/` and fixes the
-   `Buf` adapter and the host-only CUDA/HIP runtime path. It is already part of
-   aV2P commit `47148de`.
-2. `alpaka3-host-queue-launch.patch`: applies to native alpaka 3 at
-   `include/alpaka/api/unifiedCudaHip/Queue.hpp`. It wraps the kernel launch in
-   `__CUDACC__ || __CUDA__ || __HIP__` and turns a host-compiler enqueue into a
-   single `static_assert`. The patched header must be installed in the aV2P
-   prefix.
+aV2P `70bbdb18a` provides `aV2P/zerodim/ZeroDim.hpp` with `ScalarBuf`,
+`ScalarView`, the 0-D `CreateTaskMemcpy`/`CreateTaskMemset` specialisations and
+the aV2P view traits. `HeterogeneousCore/AlpakaInterface/interface/ZeroDimCompat.h`
+is now a thin CMSSW layer: it includes that header, aliases the aV2P types into
+`cms::alpakatools::zerodim`, and keeps the scalar factory functions that select
+CMSSW's caching allocator policy. The downstream call sites in `memory.h` and
+`CopyToDevice.h` are unchanged.
 
 ## SCRAM tool files
 
@@ -78,44 +73,43 @@ strip `AV2P_HOST_ONLY`. Rules for an operator:
 
 1. This external is the only provider of the backend gate macros. Do not
    install a second external that injects `-DALPAKA_ACC_*`.
-2. `<aV2P-prefix>/include` must provide `aV2P/`, and a native alpaka 3 prefix
-   must provide `<native-alpaka3-prefix>/include/alpaka/`. The two trees may
-   live in one merged prefix or in two separate prefixes. Put the aV2P root
-   first so that `<aV2P/alpaka.hpp>` resolves to aV2P.
+2. `<aV2P-prefix>/include` provides both `aV2P/` and native `alpaka/`. A split
+   layout with the native tree in a second prefix still works if the tool file
+   lists both include roots. Put the aV2P root first so that
+   `<aV2P/alpaka.hpp>` resolves to aV2P.
 3. `ALPAKA_BACKENDS` stays. It is a SCRAM/CMake build flag, not a C++ macro.
 
-## Build layer: include roots, link flags and gates
+## Build layer: self-contained install
 
-Two layouts are supported. Both were validated on hardware.
-
-- **Merged prefix.** One include root contains both `aV2P/` and native
-  `alpaka/`. This is the rosi install: `/home/ubuntu/av2p/install3/include`
-  has aV2P next to alpaka 3.0.0 at `eb677e8d`.
-- **Split prefixes.** aV2P is installed in `<aV2P-prefix>/include` and native
-  alpaka 3 in `<native-alpaka3-prefix>/include`. The tool include list is
-  `<aV2P-prefix>/include:<native-alpaka3-prefix>/include`, with the aV2P root
-  first. This is the HIP install on `hal`:
-  `/home/agent/av2p-hip/install/include` holds only `aV2P/`, and
-  `/home/agent/av2p-hip/install-alpaka/include` holds only `alpaka/`.
-
-aV2P's install step does not reliably bundle native alpaka 3. Packaging must
-either merge the two trees into one include root or declare both roots in the
-tool file and the include path. A prefix with only `aV2P/` has no native alpaka,
-and a prefix with only `alpaka/` has no adapter.
-
-Check a layout with:
+From `70bbdb18a` a standalone aV2P install is self-contained. One prefix holds
 
 ```
-av2p-port/check-tool-prefix.sh "$AV2P_PREFIX" cuda                   # merged
+<prefix>/include/aV2P
+<prefix>/include/alpaka
+<prefix>/lib/cmake/aV2P
+<prefix>/lib/cmake/alpaka
+```
+
+and `aV2PConfig.cmake` sets `alpaka_DIR` to `<prefix>/lib/cmake/alpaka` before
+`find_dependency(alpaka)` when the consumer did not set it. A CMake consumer
+that calls `find_package(aV2P CONFIG REQUIRED)` therefore needs only the aV2P
+prefix on `CMAKE_PREFIX_PATH`. The installed target requires the usual native
+finalize step: call `aV2P_finalize(<target>)` after `target_link_libraries`, or
+create the target with `aV2P_add_executable()`.
+
+Check a prefix with:
+
+```
+av2p-port/check-tool-prefix.sh "$AV2P_PREFIX" cuda                   # self-contained
 av2p-port/check-tool-prefix.sh "$AV2P_PREFIX" cuda "$ALPAKA_PREFIX"  # split
 # or: hip
 ```
 
 Without the optional third argument the script requires both include roots in
-`$AV2P_PREFIX` (merged layout). With it, the script requires `aV2P/` in the
-first prefix and `alpaka/` in the second, and preprocesses with both `-I` paths
-in the order aV2P, alpaka. It uses `nvcc` for `cuda` and `hipcc` for `hip` by
-default; override the compiler with `CXX`.
+`$AV2P_PREFIX`. With it, the script requires `aV2P/` in the first prefix and
+`alpaka/` in the second, and preprocesses with both `-I` paths in the order
+aV2P, alpaka. It uses `nvcc` for `cuda` and `hipcc` for `hip` by default;
+override the compiler with `CXX`.
 
 `-lhwloc` is required by the validated install because its vendored alpaka 3
 was built with hwloc. If a package's external builds alpaka with hwloc off,
@@ -123,28 +117,19 @@ that package must drop `-lhwloc`. This follows the alpaka build of each
 package, so decide it from that external's alpaka configuration instead of
 copying the command below.
 
-`AV2P_ACC_*_ONLY_MODE` must stay off. With `AV2P_ACC_GPU_HIP_ONLY_MODE`
-defined, aV2P sets `AV2P_FN_ACC` to `__device__` only; alpaka 3's
-`KernelBundle::operator()` guards the launch on `std::is_invocable_v` in the
-HIP host pass, so the kernel launch fails to compile. This is an
-aV2P/alpaka 3 incompatibility, reproduced on gfx1100. The SCRAM tool files in
-`scram/` therefore do not pass `AV2P_ACC_*_ONLY_MODE`.
+`AV2P_ACC_*_ONLY_MODE` is fixed in `70bbdb18a`: `AV2P_FN_ACC` stays
+`__device__ __host__` in only mode, so the native alpaka 3 kernel functor is
+still host-invocable. The validated builds use `AV2P_ACC_GPU_HIP_ONLY_MODE=OFF`
+and never set the CUDA only mode.
 
 `--expt-relaxed-constexpr` is an nvcc option. AMD clang 22 (ROCm 7.2) rejects
 it as an unknown argument, so the ROCm tool file does not pass it. The CUDA
 tool file keeps it on `CUDA_FLAGS` for the device pass only.
 
-`aV2PConfig.cmake` does not export `alpaka_DIR`. A CMake consumer that calls
-`find_package(aV2P CONFIG)` must also provide the native alpaka prefix, for
-example on `CMAKE_PREFIX_PATH` or through `alpaka_DIR`. SCRAM consumers use the
-tool file and are not affected.
-
 ## Build and run
 
-`$AV2P_PREFIX` is the aV2P prefix and `$ALPAKA_PREFIX` is the native alpaka 3
-prefix. For a merged prefix set `ALPAKA_PREFIX=$AV2P_PREFIX`. Both `-I` flags
-are required, in the order aV2P, alpaka. The commands assume the per-package
-`-lhwloc` decision from the previous section.
+`$AV2P_PREFIX` is the aV2P prefix from the self-contained install. For a split
+layout also set `$ALPAKA_PREFIX` and add its `include` root after the aV2P one.
 
 The CUDA validation used CUDA 12.6.85, g++ 13.3.0 and a Tesla V100-SXM2-32GB
 (`sm_70`). Real device test with the default caching allocator:
@@ -152,7 +137,7 @@ The CUDA validation used CUDA 12.6.85, g++ 13.3.0 and a Tesla V100-SXM2-32GB
 ```
 nvcc -x cu -std=c++20 -arch=sm_70 --expt-relaxed-constexpr --extended-lambda \
   -DAV2P_ACC_GPU_CUDA_ENABLED \
-  -I$AV2P_PREFIX/include -I$ALPAKA_PREFIX/include -I<cmssw-tree> \
+  -I$AV2P_PREFIX/include -I<cmssw-tree> \
   HeterogeneousTest/AlpakaKernel/test/alpaka/testDeviceAdditionKernel.dev.cc \
   -o test_addkernel -L/usr/lib -lCatch2Main -lCatch2 -lhwloc -ltbb -lcudart -lpthread
 CUDA_VISIBLE_DEVICES=0 ./test_addkernel
@@ -163,19 +148,17 @@ RX 7900 XTX (`gfx1100`). Real device test with the default caching allocator:
 
 ```
 hipcc -x hip -std=c++20 --offload-arch=gfx1100 -O2 -DAV2P_ACC_GPU_HIP_ENABLED \
-  -I$AV2P_PREFIX/include -I$ALPAKA_PREFIX/include -I<cmssw-tree> \
+  -I$AV2P_PREFIX/include -I<cmssw-tree> \
   HeterogeneousTest/AlpakaKernel/test/alpaka/testDeviceAdditionKernel.dev.cc \
   -o test_addkernel -lCatch2Main -lCatch2 -lhwloc -lamdhip64 -lpthread
 HIP_VISIBLE_DEVICES=0 ./test_addkernel
 ```
 
-Host-only translation unit with g++ (the HIP build adds `-I/opt/rocm/include`
-and uses `-DAV2P_ACC_GPU_HIP_ENABLED`):
+Host-only translation unit with g++:
 
 ```
 g++ -std=c++20 -c -DAV2P_ACC_GPU_CUDA_ENABLED -DAV2P_HOST_ONLY \
-  -I$AV2P_PREFIX/include -I$ALPAKA_PREFIX/include -I<cmssw-tree> \
-  -I/usr/local/cuda-12.6/include \
+  -I$AV2P_PREFIX/include -I<cmssw-tree> -I/usr/local/cuda-12.6/include \
   HeterogeneousCore/AlpakaInterface/src/prefixScan.cc -o prefixScan.o
 ```
 
@@ -183,24 +166,23 @@ A full SCRAM release build needs the SCRAM externals and is out of scope here.
 
 ## Test results
 
-All hardware checks pass on the final commit. See `test-evidence.md` for
+All hardware checks pass on the final commit with the self-contained
+`install-70b` prefixes from aV2P `70bbdb18a`. See `test-evidence.md` for
 commands and exact output lines.
 
-CUDA on `rosi_v100`, merged prefix:
+CUDA on `rosi_v100`:
 
 | check | result |
 |---|---|
 | catch2 device kernel, default allocator, GPU 0 | `All tests passed (1048577 assertions in 1 test case)` |
-| plugin translation unit plus harness, GPU 0 | `PLUGIN_WRAPPER_OK 1024 elements on Tesla V100-SXM2-32GB` |
-| g++ host-only compile of `prefixScan.cc` and `Backend.cc` | exit 0, 0 errors each |
+| g++ host compile of `prefixScan.cc` and `Backend.cc` | exit 0, 0 errors each |
 | zero-dimensional bridge, GPU 0 | `ZERODIM_BRIDGE_OK on Tesla V100-SXM2-32GB` |
+| package consumer, `find_package(aV2P CONFIG)` | `PKG_CONSUMER_OK` |
 
-HIP on `hal`, split prefixes:
+HIP on `hal`:
 
 | check | result |
 |---|---|
 | catch2 device kernel, default allocator, GPU 0 | `All tests passed (1048577 assertions in 1 test case)` |
-| plugin translation unit plus harness, GPU 0 | `PLUGIN_WRAPPER_OK 1024 elements on AMD Radeon RX 7900 XTX` |
-| g++ host-only compile of `prefixScan.cc` and `Backend.cc` | exit 0, 0 errors each |
 | zero-dimensional bridge, GPU 0 | `ZERODIM_BRIDGE_OK on AMD Radeon RX 7900 XTX` |
-| host-only launch of `aV2P::exec` (negative) | exit 1, one `static_assert` |
+| package consumer, `find_package(aV2P CONFIG)` | `PKG_CONSUMER_OK` |

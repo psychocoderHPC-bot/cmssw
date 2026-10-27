@@ -1,16 +1,33 @@
 # Hardware test evidence
 
-CUDA target: `rosi_v100`, exclusive allocation, 4x Tesla V100-SXM2-32GB, `sm_70`.
-Toolchain: CUDA 12.6.85, g++ 13.3.0, aV2P install prefix with the two patches
-from this directory applied. All commands ran on the target. CMSSW tree is
-`<cmssw-tree>`; aV2P prefix is `$AV2P_PREFIX`.
+aV2P pin: `psychocoderHPC-bot/alpaka` branch `av2p-final` at
+`70bbdb18ad5480e9564d9f7122e4922800d974d2`. The checkout applies its bundled
+native alpaka 3 queue-launch patch itself; this branch carries no patch files.
 
-## TEST 1: catch2 device kernel, default caching allocator, GPU 0
+The installs used below are self-contained prefixes: `include/aV2P`,
+`include/alpaka`, `lib/cmake/aV2P` and `lib/cmake/alpaka` in one root.
+`aV2PConfig.cmake` exports `alpaka_DIR` for the bundled alpaka.
+
+## CUDA: `rosi_v100`
+
+Exclusive allocation, 4x Tesla V100-SXM2-32GB, `sm_70`. Toolchain: CUDA
+12.6.85, g++ 13.3.0. aV2P prefix `/home/ubuntu/av2p/install-70b`, configured
+with `-DaV2P_ACC_GPU_CUDA_ENABLE=ON -DCMAKE_CUDA_ARCHITECTURES=70
+-DBUILD_TESTING=OFF`. CMSSW tree `<cmssw-tree>`, HEAD of `av2p-final` with the
+`aV2P/zerodim` migration applied.
+
+Audit (`check-av2p-migration.sh .`): exit 0,
+`clean (0 findings, 11 allowlisted lines)`.
+
+`check-tool-prefix.sh /home/ubuntu/av2p/install-70b cuda`: exit 0,
+`OK ... aV2P/ and alpaka/ present, preprocess succeeded with
+-DAV2P_ACC_GPU_CUDA_ENABLED`.
+
+### T1: catch2 device kernel, default caching allocator, GPU 0
 
 ```
 nvcc -x cu -std=c++20 -arch=sm_70 --expt-relaxed-constexpr --extended-lambda \
-  -DAV2P_ACC_GPU_CUDA_ENABLED \
-  -I$AV2P_PREFIX/include -I<cmssw-tree> \
+  -DAV2P_ACC_GPU_CUDA_ENABLED -I$AV2P_PREFIX/include -I<cmssw-tree> \
   <cmssw-tree>/HeterogeneousTest/AlpakaKernel/test/alpaka/testDeviceAdditionKernel.dev.cc \
   -o test_addkernel -L/usr/lib -lCatch2Main -lCatch2 -lhwloc -ltbb -lcudart -lpthread
 CUDA_VISIBLE_DEVICES=0 ./test_addkernel
@@ -25,24 +42,7 @@ All tests passed (1048577 assertions in 1 test case)
 No `-DAV2P_DISABLE_CACHING_ALLOCATOR` was set, so the caching allocator path
 runs.
 
-## TEST 2: plugin translation unit and harness, GPU 0
-
-```
-nvcc -x cu -std=c++20 -arch=sm_70 --expt-relaxed-constexpr --extended-lambda \
-  -DAV2P_ACC_GPU_CUDA_ENABLED \
-  -I$AV2P_PREFIX/include -I<cmssw-tree> \
-  main_plugin.cc <cmssw-tree>/plugins/alpaka/AlpakaTestKernelAdditionAlgo.dev.cc \
-  -o test_plugin -L/usr/lib -lhwloc -ltbb -lcudart -lpthread
-CUDA_VISIBLE_DEVICES=0 ./test_plugin
-```
-
-`COMPILE_EXIT=0`, `RUN_EXIT=0`:
-
-```
-PLUGIN_WRAPPER_OK 1024 elements on Tesla V100-SXM2-32GB
-```
-
-## TEST 3: g++ host-only translation units
+### T3: g++ host translation units
 
 ```
 g++ -std=c++20 -c -DAV2P_ACC_GPU_CUDA_ENABLED -DAV2P_HOST_ONLY \
@@ -53,34 +53,14 @@ g++ -std=c++20 -c -DAV2P_ACC_GPU_CUDA_ENABLED -DAV2P_HOST_ONLY \
   <cmssw-tree>/HeterogeneousCore/AlpakaInterface/src/Backend.cc -o Backend.o
 ```
 
-`EXIT=0`, 0 errors each. Objects produced: `prefixScan.o` (183360 B) and
-`Backend.o` (21856 B).
+`EXIT=0`, 0 errors each. Objects: `prefixScan.o` (183360 B) and `Backend.o`
+(21856 B), the same sizes as the previous validated run.
 
-Host capability probe, g++ and GPU 0:
-
-```
-devcount=1
-name=Tesla V100-SXM2-32GB native=0 mem=34072559616
-queue native=0x... empty=1
-event native=0x...
-HOST_API_OK
-```
-
-Negative probe, kernel enqueue in a g++ translation unit, exactly one
-diagnostic:
-
-```
-alpaka/api/unifiedCudaHip/Queue.hpp:384:22: error: static assertion failed:
-alpaka3: enqueuing a CUDA/HIP kernel requires a CUDA/HIP compiler. Move this code into a
-.dev.cc / .cu translation unit.
-```
-
-## TEST 4: zero-dimensional bridge, GPU 0
+### T4: zero-dimensional bridge, GPU 0
 
 ```
 nvcc -x cu -std=c++20 -arch=sm_70 --expt-relaxed-constexpr --extended-lambda \
-  -DAV2P_ACC_GPU_CUDA_ENABLED \
-  -I$AV2P_PREFIX/include -I<cmssw-tree> \
+  -DAV2P_ACC_GPU_CUDA_ENABLED -I$AV2P_PREFIX/include -I<cmssw-tree> \
   test0d.cc -o test0d -L/usr/lib -lhwloc -ltbb -lcudart -lpthread
 CUDA_VISIBLE_DEVICES=0 ./test0d
 ```
@@ -92,42 +72,27 @@ value=42 extentProduct=1
 ZERODIM_BRIDGE_OK on Tesla V100-SXM2-32GB
 ```
 
-## HIP validation (hal)
+The program exercises `make_device_buffer<int>(queue)`, `make_host_view(int&)`,
+`getExtentProduct == 1`, 0-D `memcpy` host->device->host and a one-thread
+kernel that increments the scalar.
 
-Target `hal`, one AMD Radeon RX 7900 XTX (`gfx1100`), 64-core AMD EPYC. The
-layout is split: aV2P in `/home/agent/av2p-hip/install`, native alpaka 3 in
-`/home/agent/av2p-hip/install-alpaka`. Both include roots are required and are
-passed in the order aV2P, alpaka. `$HIP_INC` below expands to both:
+## HIP: `hal`
 
-```
--I/home/agent/av2p-hip/install/include -I/home/agent/av2p-hip/install-alpaka/include
-```
+One AMD Radeon RX 7900 XTX (`gfx1100`), 64-core AMD EPYC. ROCm 7.2.0
+(HIP 7.2.26015, AMD clang 22), g++ 13.3.0. aV2P prefix
+`/home/agent/av2p-hip/install-70b`, configured with
+`-DaV2P_ACC_GPU_HIP_ENABLE=ON -DaV2P_ACC_GPU_HIP_ONLY_MODE=OFF
+-DCMAKE_HIP_ARCHITECTURES=gfx1100 -DBUILD_TESTING=OFF`. CMSSW tree
+`<cmssw-tree>` at the same HEAD as the CUDA run.
 
-| item | value |
-|---|---|
-| ROCm | 7.2.0 |
-| HIP | 7.2.26015 |
-| device compiler | AMD clang 22 (roc-7.2.0) |
-| GPU | AMD Radeon RX 7900 XTX, `gfx1100` |
-| host compiler | g++ 13.3.0 |
-| CMSSW tree | `/home/agent/cmssw-hip` |
+Audit: exit 0, `clean (0 findings, 11 allowlisted lines)`.
 
-Results:
-
-| check | result |
-|---|---|
-| T1 catch2 device kernel, default allocator, GPU 0 | `All tests passed (1048577 assertions in 1 test case)` |
-| T2 plugin translation unit plus harness, GPU 0 | `PLUGIN_WRAPPER_OK 1024 elements on AMD Radeon RX 7900 XTX` |
-| T3 g++ host-only objects `prefixScan.cc`, `Backend.cc` | both exit 0, 0 errors |
-| T4 zero-dimensional bridge, GPU 0 | `ZERODIM_BRIDGE_OK on AMD Radeon RX 7900 XTX` |
-| negative host-only launch | exit 1, exactly one `static_assert` |
-
-### T1: catch2 device kernel
+### T1: catch2 device kernel, default caching allocator, GPU 0
 
 ```
 hipcc -x hip -std=c++20 --offload-arch=gfx1100 -O2 -DAV2P_ACC_GPU_HIP_ENABLED \
-  $HIP_INC -I/home/agent/cmssw-hip \
-  /home/agent/cmssw-hip/HeterogeneousTest/AlpakaKernel/test/alpaka/testDeviceAdditionKernel.dev.cc \
+  -I$AV2P_PREFIX/include -I<cmssw-tree> \
+  <cmssw-tree>/HeterogeneousTest/AlpakaKernel/test/alpaka/testDeviceAdditionKernel.dev.cc \
   -o test_addkernel -lCatch2Main -lCatch2 -lhwloc -lamdhip64 -lpthread
 HIP_VISIBLE_DEVICES=0 ./test_addkernel
 ```
@@ -135,93 +100,45 @@ HIP_VISIBLE_DEVICES=0 ./test_addkernel
 `COMPILE_EXIT=0` (0 errors), `RUN_EXIT=0`:
 
 ```
-Randomness seeded to: 1726010235
-===============================================================================
 All tests passed (1048577 assertions in 1 test case)
 ```
 
-The first attempt added `--expt-relaxed-constexpr` and failed before parsing
-code:
+`--expt-relaxed-constexpr` is not passed: AMD clang 22 rejects it.
 
-```
-clang++: error: unknown argument: '--expt-relaxed-constexpr'
-```
-
-AMD clang 22 removed that nvcc-only option. Without it the test compiles and
-passes; the ROCm SCRAM tool file does not pass it.
-
-### T2: plugin translation unit and harness
+### T4: zero-dimensional bridge, GPU 0
 
 ```
 hipcc -x hip -std=c++20 --offload-arch=gfx1100 -O2 -DAV2P_ACC_GPU_HIP_ENABLED \
-  $HIP_INC -I/home/agent/cmssw-hip \
-  -I/home/agent/cmssw-hip/HeterogeneousTest/AlpakaKernel/plugins/alpaka \
-  t2_harness.cpp AlpakaTestKernelAdditionAlgo.dev.cc \
-  -o test_plugin -lhwloc -lamdhip64 -lpthread
-HIP_VISIBLE_DEVICES=0 ./test_plugin
+  -I$AV2P_PREFIX/include -I<cmssw-tree> test0d.cc -o test0d \
+  -lhwloc -lamdhip64 -lpthread
+HIP_VISIBLE_DEVICES=0 ./test0d
 ```
 
 `COMPILE_EXIT=0`, `RUN_EXIT=0`:
 
 ```
-PLUGIN_WRAPPER_OK 1024 elements on AMD Radeon RX 7900 XTX
-```
-
-### T3: g++ host-only translation units
-
-```
-g++ -std=c++20 -O2 -c -DAV2P_ACC_GPU_HIP_ENABLED -DAV2P_HOST_ONLY \
-  $HIP_INC -I/home/agent/cmssw-hip -I/opt/rocm/include \
-  HeterogeneousCore/AlpakaInterface/src/prefixScan.cc -o prefixScan.o
-g++ -std=c++20 -O2 -c -DAV2P_ACC_GPU_HIP_ENABLED -DAV2P_HOST_ONLY \
-  $HIP_INC -I/home/agent/cmssw-hip -I/opt/rocm/include \
-  HeterogeneousCore/AlpakaInterface/src/Backend.cc -o Backend.o
-```
-
-Both `EXIT=0`, 0 errors. The shipped `HostRuntimeApi.hpp` has a HIP branch
-(`AV2P_HOST_HIP_RT_API`) that defines `__HIP_PLATFORM_AMD__`, includes
-`<hip/hip_runtime.h>`, sets `ALPAKA_LANG_HIP` and declares the HIP grid
-builtins and intrinsics the host compiler needs for the alpaka 3 headers.
-
-### T4: zero-dimensional bridge
-
-```
+value=42 extentProduct=1
 ZERODIM_BRIDGE_OK on AMD Radeon RX 7900 XTX
 ```
 
-`COMPILE_EXIT=0`, `RUN_EXIT=0`. The test exercises `make_device_buffer<int>(queue)`,
-`make_host_view(int&)`, `getExtentProduct == 1`, 0-D `memcpy`
-host->device->host, 0-D `memset`, and a one-thread kernel that increments the
-scalar through `dBuf.data()`.
+## Package consumer, both targets
 
-### Negative: host-only launch must not compile
+A fresh CMake project with a clean cache calls only
+`find_package(aV2P CONFIG REQUIRED)` and puts the aV2P prefix on
+`CMAKE_PREFIX_PATH`; `alpaka_DIR` is not set. The consumer includes
+`aV2P/alpaka.hpp` and `aV2P/zerodim/ZeroDim.hpp`, allocates
+`aV2P::zerodim::make_host_buffer<int>()`, and links `aV2P::aV2P` with
+`aV2P_finalize()`.
 
-`neg_hostonly_launch.cpp` is compiled with g++ and the host-only defines, then
-calls `aV2P::exec<Acc1D>`:
-
-```
-g++ -std=c++20 -O2 -c -DAV2P_ACC_GPU_HIP_ENABLED -DAV2P_HOST_ONLY \
-  $HIP_INC -I/home/agent/cmssw-hip -I/opt/rocm/include \
-  neg_hostonly_launch.cpp -o /dev/null
-```
-
-`NEG_EXIT=1`, exactly one diagnostic:
+CUDA target: configured with `CMAKE_CUDA_ARCHITECTURES=70`; the cache records
+`alpaka_DIR=<prefix>/lib/cmake/alpaka`. HIP target: configured with the ROCm
+prefix and `gfx1100`. Both build and run:
 
 ```
-/home/agent/av2p-hip/install/include/aV2P/adapter/Kernel.hpp:187:42:
-  error: static assertion failed: aV2P: enqueuing a CUDA/HIP kernel requires a CUDA/HIP compiler.
-  Move this code into a .dev.cc / .cu translation unit.
+PKG_CONSUMER_OK product=1 value=42
 ```
-
-### Layout note
-
-The aV2P install does not ship native alpaka 3 under `install/include/alpaka`;
-that tree is a separate prefix at `install-alpaka/include/alpaka`. Both roots
-are required for every compile above. This is a packaging difference, not a
-code defect.
 
 ## Tree integrity
 
-A sha256 comparison of the tested tree against a fresh `git archive` of the
-final commit found no unexpected differences beyond the intended files, so the
-tested content matches the published branch.
+The tests ran against the same CMSSW HEAD that is pushed. Only the
+`aV2P/zerodim` migration differs from the previous published commit.

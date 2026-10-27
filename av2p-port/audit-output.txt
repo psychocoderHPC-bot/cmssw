@@ -1,3 +1,2 @@
-ALLOW  HeterogeneousCore/AlpakaInterface/interface/ZeroDimCompat.h:228:// views to alpaka 3 Views. That conversion builds alpaka::View<..., Extents>  (native alpaka 3 comment/include, review)
 
-check-av2p-migration: clean (0 findings, 12 allowlisted lines)
+check-av2p-migration: clean (0 findings, 11 allowlisted lines)
