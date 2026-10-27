@@ -259,8 +259,8 @@ namespace cms::alpakatools {
             std::ostringstream out;
             out << "CachingAllocator::free() caught an alpaka error: " << e.what() << "\n";
             out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " freed " << block.bytes << " bytes at "
-                << ptr << " from associated queue " << block.queue->m_spQueueImpl.get() << ", event "
-                << block.event->m_spEventImpl.get() << " .\n\t\t " << cachedBlocks_.size()
+                << ptr << " from associated queue " << aV2P::getNativeHandle(*block.queue) << ", event "
+                << aV2P::getNativeHandle(*block.event) << " .\n\t\t " << cachedBlocks_.size()
                 << " available blocks cached (" << cachedBytes_.free << " bytes), " << liveBlocks_.size()
                 << " live blocks (" << cachedBytes_.live << " bytes) outstanding." << std::endl;
             std::cout << out.str() << std::endl;
@@ -275,8 +275,8 @@ namespace cms::alpakatools {
         if (debug_) {
           std::ostringstream out;
           out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " returned " << block.bytes << " bytes at "
-              << ptr << " from associated queue " << block.queue->m_spQueueImpl.get() << " , event "
-              << block.event->m_spEventImpl.get() << " .\n\t\t " << cachedBlocks_.size() << " available blocks cached ("
+              << ptr << " from associated queue " << aV2P::getNativeHandle(*block.queue) << " , event "
+              << aV2P::getNativeHandle(*block.event) << " .\n\t\t " << cachedBlocks_.size() << " available blocks cached ("
               << cachedBytes_.free << " bytes), " << liveBlocks_.size() << " live blocks (" << cachedBytes_.live
               << " bytes) outstanding." << std::endl;
           std::cout << out.str() << std::endl;
@@ -298,8 +298,8 @@ namespace cms::alpakatools {
             std::ostringstream out;
             out << "CachingAllocator::free() caught an alpaka error: " << e.what() << "\n";
             out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " freed " << block.bytes << " bytes at "
-                << ptr << " from associated queue " << block.queue->m_spQueueImpl.get() << ", event "
-                << block.event->m_spEventImpl.get() << " .\n\t\t " << cachedBlocks_.size()
+                << ptr << " from associated queue " << aV2P::getNativeHandle(*block.queue) << ", event "
+                << aV2P::getNativeHandle(*block.event) << " .\n\t\t " << cachedBlocks_.size()
                 << " available blocks cached (" << cachedBytes_.free << " bytes), " << liveBlocks_.size()
                 << " live blocks (" << cachedBytes_.live << " bytes) outstanding." << std::endl;
             std::cout << out.str() << std::endl;
@@ -310,8 +310,8 @@ namespace cms::alpakatools {
         if (debug_) {
           std::ostringstream out;
           out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " freed " << block.bytes << " bytes at "
-              << ptr << " from associated queue " << block.queue->m_spQueueImpl.get() << ", event "
-              << block.event->m_spEventImpl.get() << " .\n\t\t " << cachedBlocks_.size() << " available blocks cached ("
+              << ptr << " from associated queue " << aV2P::getNativeHandle(*block.queue) << ", event "
+              << aV2P::getNativeHandle(*block.event) << " .\n\t\t " << cachedBlocks_.size() << " available blocks cached ("
               << cachedBytes_.free << " bytes), " << liveBlocks_.size() << " live blocks (" << cachedBytes_.live
               << " bytes) outstanding." << std::endl;
           std::cout << out.str() << std::endl;
@@ -402,9 +402,9 @@ namespace cms::alpakatools {
             std::ostringstream out;
             out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " reused cached block at "
                 << block.buffer->data() << " (" << block.bytes << " bytes) for queue "
-                << block.queue->m_spQueueImpl.get() << ", event " << block.event->m_spEventImpl.get()
-                << " (previously associated with queue " << iBlock->second.queue->m_spQueueImpl.get() << " , event "
-                << iBlock->second.event->m_spEventImpl.get() << ")." << std::endl;
+                << aV2P::getNativeHandle(*block.queue) << ", event " << aV2P::getNativeHandle(*block.event)
+                << " (previously associated with queue " << aV2P::getNativeHandle(*iBlock->second.queue) << " , event "
+                << aV2P::getNativeHandle(*iBlock->second.event) << ")." << std::endl;
             std::cout << out.str() << std::endl;
           }
 
@@ -441,7 +441,7 @@ namespace cms::alpakatools {
         if (debug_) {
           std::ostringstream out;
           out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " failed to allocate " << block.bytes
-              << " bytes for queue " << block.queue->m_spQueueImpl.get()
+              << " bytes for queue " << aV2P::getNativeHandle(*block.queue)
               << ", retrying after freeing cached allocations" << std::endl;
           std::cout << out.str() << std::endl;
         }
@@ -467,7 +467,7 @@ namespace cms::alpakatools {
         std::ostringstream out;
         out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " allocated new block at "
             << block.buffer->data() << " (" << block.bytes << " bytes associated with queue "
-            << block.queue->m_spQueueImpl.get() << ", event " << block.event->m_spEventImpl.get() << "." << std::endl;
+            << aV2P::getNativeHandle(*block.queue) << ", event " << aV2P::getNativeHandle(*block.event) << "." << std::endl;
         std::cout << out.str() << std::endl;
       }
     }

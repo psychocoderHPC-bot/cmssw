@@ -56,31 +56,6 @@ namespace alpaka_cuda_async {
 
 }  // namespace alpaka_cuda_async
 
-#ifdef AV2P_HOST_ONLY
-
-namespace aV2P {
-
-  template <typename TApi,
-            typename TAcc,
-            typename TDim,
-            typename TIdx,
-            typename TKernelFnObj,
-            bool TCooperative,
-            typename... TArgs>
-  class TaskKernelGpuUniformCudaHipRt final {
-    static_assert(std::is_same_v<TApi, aV2P::ApiCudaRt> and AV2P_LANG_CUDA,
-                  "You should move this files to a .dev.cc file under the alpaka/ subdirectory.");
-
-  public:
-    template <typename TWorkDiv>
-    AV2P_FN_HOST TaskKernelGpuUniformCudaHipRt(TWorkDiv&& workDiv, TKernelFnObj const& kernelFnObj, TArgs&&... args) {
-    }
-  };
-
-}  // namespace aV2P
-
-#endif  // AV2P_HOST_ONLY
-
 #ifdef AV2P_ACCELERATOR_NAMESPACE
 #define AV2P_DUPLICATE_NAMESPACE
 #else
@@ -106,31 +81,6 @@ namespace alpaka_rocm_async {
   using Acc3D = Acc<Dim3D>;
 
 }  // namespace alpaka_rocm_async
-
-#ifdef AV2P_HOST_ONLY
-
-namespace aV2P {
-
-  template <typename TApi,
-            typename TAcc,
-            typename TDim,
-            typename TIdx,
-            typename TKernelFnObj,
-            bool TCooperative,
-            typename... TArgs>
-  class TaskKernelGpuUniformCudaHipRt final {
-    static_assert(std::is_same_v<TApi, aV2P::ApiHipRt> and AV2P_LANG_HIP,
-                  "You should move this files to a .dev.cc file under the alpaka/ subdirectory.");
-
-  public:
-    template <typename TWorkDiv>
-    AV2P_FN_HOST TaskKernelGpuUniformCudaHipRt(TWorkDiv&& workDiv, TKernelFnObj const& kernelFnObj, TArgs&&... args) {
-    }
-  };
-
-}  // namespace aV2P
-
-#endif  // AV2P_HOST_ONLY
 
 #ifdef AV2P_ACCELERATOR_NAMESPACE
 #define AV2P_DUPLICATE_NAMESPACE
