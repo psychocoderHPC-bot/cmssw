@@ -78,26 +78,44 @@ strip `AV2P_HOST_ONLY`. Rules for an operator:
 
 1. This external is the only provider of the backend gate macros. Do not
    install a second external that injects `-DALPAKA_ACC_*`.
-2. `$TOOL_BASE/include` must contain both `aV2P/` and native `alpaka/`, and
-   must come first on the include path so that `<aV2P/alpaka.hpp>` resolves to
-   aV2P.
+2. `<aV2P-prefix>/include` must provide `aV2P/`, and a native alpaka 3 prefix
+   must provide `<native-alpaka3-prefix>/include/alpaka/`. The two trees may
+   live in one merged prefix or in two separate prefixes. Put the aV2P root
+   first so that `<aV2P/alpaka.hpp>` resolves to aV2P.
 3. `ALPAKA_BACKENDS` stays. It is a SCRAM/CMake build flag, not a C++ macro.
 
 ## Build layer: include roots, link flags and gates
 
-The validated install is one include root. `$TOOL_BASE/include` must contain
-both `aV2P/` and native `alpaka/`; the validated install ships alpaka 3.0.0 at
-`eb677e8d`. A prefix with only `aV2P/` has no native alpaka, and a prefix with
-only `alpaka/` has no adapter. Check a prefix with:
+Two layouts are supported. Both were validated on hardware.
+
+- **Merged prefix.** One include root contains both `aV2P/` and native
+  `alpaka/`. This is the rosi install: `/home/ubuntu/av2p/install3/include`
+  has aV2P next to alpaka 3.0.0 at `eb677e8d`.
+- **Split prefixes.** aV2P is installed in `<aV2P-prefix>/include` and native
+  alpaka 3 in `<native-alpaka3-prefix>/include`. The tool include list is
+  `<aV2P-prefix>/include:<native-alpaka3-prefix>/include`, with the aV2P root
+  first. This is the HIP install on `hal`:
+  `/home/agent/av2p-hip/install/include` holds only `aV2P/`, and
+  `/home/agent/av2p-hip/install-alpaka/include` holds only `alpaka/`.
+
+aV2P's install step does not reliably bundle native alpaka 3. Packaging must
+either merge the two trees into one include root or declare both roots in the
+tool file and the include path. A prefix with only `aV2P/` has no native alpaka,
+and a prefix with only `alpaka/` has no adapter.
+
+Check a layout with:
 
 ```
-av2p-port/check-tool-prefix.sh "$AV2P_PREFIX" cuda   # or: hip
+av2p-port/check-tool-prefix.sh "$AV2P_PREFIX" cuda                   # merged
+av2p-port/check-tool-prefix.sh "$AV2P_PREFIX" cuda "$ALPAKA_PREFIX"  # split
+# or: hip
 ```
 
-The script checks both include roots and both headers, then preprocesses a tiny
-translation unit with `-DAV2P_ACC_GPU_<BACKEND>_ENABLED -I$AV2P_PREFIX/include`.
-It uses `nvcc` for `cuda` and `hipcc` for `hip` by default; override the
-compiler with `CXX`.
+Without the optional third argument the script requires both include roots in
+`$AV2P_PREFIX` (merged layout). With it, the script requires `aV2P/` in the
+first prefix and `alpaka/` in the second, and preprocesses with both `-I` paths
+in the order aV2P, alpaka. It uses `nvcc` for `cuda` and `hipcc` for `hip` by
+default; override the compiler with `CXX`.
 
 `-lhwloc` is required by the validated install because its vendored alpaka 3
 was built with hwloc. If a package's external builds alpaka with hwloc off,
@@ -112,6 +130,10 @@ HIP host pass, so the kernel launch fails to compile. This is an
 aV2P/alpaka 3 incompatibility, reproduced on gfx1100. The SCRAM tool files in
 `scram/` therefore do not pass `AV2P_ACC_*_ONLY_MODE`.
 
+`--expt-relaxed-constexpr` is an nvcc option. AMD clang 22 (ROCm 7.2) rejects
+it as an unknown argument, so the ROCm tool file does not pass it. The CUDA
+tool file keeps it on `CUDA_FLAGS` for the device pass only.
+
 `aV2PConfig.cmake` does not export `alpaka_DIR`. A CMake consumer that calls
 `find_package(aV2P CONFIG)` must also provide the native alpaka prefix, for
 example on `CMAKE_PREFIX_PATH` or through `alpaka_DIR`. SCRAM consumers use the
@@ -119,27 +141,41 @@ tool file and are not affected.
 
 ## Build and run
 
-The validation below used CUDA 12.6.85, g++ 13.3.0, a Tesla V100-SXM2-32GB
-(`sm_70`) and an aV2P install prefix at `$AV2P_PREFIX`. The commands assume the
-two include roots and the per-package `-lhwloc` decision from the previous
-section.
+`$AV2P_PREFIX` is the aV2P prefix and `$ALPAKA_PREFIX` is the native alpaka 3
+prefix. For a merged prefix set `ALPAKA_PREFIX=$AV2P_PREFIX`. Both `-I` flags
+are required, in the order aV2P, alpaka. The commands assume the per-package
+`-lhwloc` decision from the previous section.
 
-Real device test with the default caching allocator:
+The CUDA validation used CUDA 12.6.85, g++ 13.3.0 and a Tesla V100-SXM2-32GB
+(`sm_70`). Real device test with the default caching allocator:
 
 ```
 nvcc -x cu -std=c++20 -arch=sm_70 --expt-relaxed-constexpr --extended-lambda \
   -DAV2P_ACC_GPU_CUDA_ENABLED \
-  -I$AV2P_PREFIX/include -I<cmssw-tree> \
+  -I$AV2P_PREFIX/include -I$ALPAKA_PREFIX/include -I<cmssw-tree> \
   HeterogeneousTest/AlpakaKernel/test/alpaka/testDeviceAdditionKernel.dev.cc \
   -o test_addkernel -L/usr/lib -lCatch2Main -lCatch2 -lhwloc -ltbb -lcudart -lpthread
 CUDA_VISIBLE_DEVICES=0 ./test_addkernel
 ```
 
-Host-only translation unit with g++:
+The HIP validation used ROCm 7.2.0 (HIP 7.2.26015, AMD clang 22) and a Radeon
+RX 7900 XTX (`gfx1100`). Real device test with the default caching allocator:
+
+```
+hipcc -x hip -std=c++20 --offload-arch=gfx1100 -O2 -DAV2P_ACC_GPU_HIP_ENABLED \
+  -I$AV2P_PREFIX/include -I$ALPAKA_PREFIX/include -I<cmssw-tree> \
+  HeterogeneousTest/AlpakaKernel/test/alpaka/testDeviceAdditionKernel.dev.cc \
+  -o test_addkernel -lCatch2Main -lCatch2 -lhwloc -lamdhip64 -lpthread
+HIP_VISIBLE_DEVICES=0 ./test_addkernel
+```
+
+Host-only translation unit with g++ (the HIP build adds `-I/opt/rocm/include`
+and uses `-DAV2P_ACC_GPU_HIP_ENABLED`):
 
 ```
 g++ -std=c++20 -c -DAV2P_ACC_GPU_CUDA_ENABLED -DAV2P_HOST_ONLY \
-  -I$AV2P_PREFIX/include -I<cmssw-tree> -I/usr/local/cuda-12.6/include \
+  -I$AV2P_PREFIX/include -I$ALPAKA_PREFIX/include -I<cmssw-tree> \
+  -I/usr/local/cuda-12.6/include \
   HeterogeneousCore/AlpakaInterface/src/prefixScan.cc -o prefixScan.o
 ```
 
@@ -147,8 +183,10 @@ A full SCRAM release build needs the SCRAM externals and is out of scope here.
 
 ## Test results
 
-All four hardware checks pass on the final commit. See `test-evidence.md` for
+All hardware checks pass on the final commit. See `test-evidence.md` for
 commands and exact output lines.
+
+CUDA on `rosi_v100`, merged prefix:
 
 | check | result |
 |---|---|
@@ -156,3 +194,13 @@ commands and exact output lines.
 | plugin translation unit plus harness, GPU 0 | `PLUGIN_WRAPPER_OK 1024 elements on Tesla V100-SXM2-32GB` |
 | g++ host-only compile of `prefixScan.cc` and `Backend.cc` | exit 0, 0 errors each |
 | zero-dimensional bridge, GPU 0 | `ZERODIM_BRIDGE_OK on Tesla V100-SXM2-32GB` |
+
+HIP on `hal`, split prefixes:
+
+| check | result |
+|---|---|
+| catch2 device kernel, default allocator, GPU 0 | `All tests passed (1048577 assertions in 1 test case)` |
+| plugin translation unit plus harness, GPU 0 | `PLUGIN_WRAPPER_OK 1024 elements on AMD Radeon RX 7900 XTX` |
+| g++ host-only compile of `prefixScan.cc` and `Backend.cc` | exit 0, 0 errors each |
+| zero-dimensional bridge, GPU 0 | `ZERODIM_BRIDGE_OK on AMD Radeon RX 7900 XTX` |
+| host-only launch of `aV2P::exec` (negative) | exit 1, one `static_assert` |
