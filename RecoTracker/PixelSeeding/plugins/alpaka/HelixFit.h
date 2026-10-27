@@ -1,7 +1,7 @@
 #ifndef RecoTracker_PixelSeeding_plugins_alpaka_HelixFit_h
 #define RecoTracker_PixelSeeding_plugins_alpaka_HelixFit_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include <Eigen/Core>
 
@@ -48,7 +48,7 @@ namespace riemannFit {
 
 }  // namespace riemannFit
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   template <typename TrackerTraits>
   class HelixFit {
@@ -93,6 +93,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     const bool fitNas4_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // RecoTracker_PixelSeeding_plugins_alpaka_HelixFit_h

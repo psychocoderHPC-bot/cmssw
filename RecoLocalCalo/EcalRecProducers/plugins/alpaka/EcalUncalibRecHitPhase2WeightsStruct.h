@@ -3,13 +3,13 @@
 
 #include "DataFormats/EcalDigi/interface/EcalDataFrame_Ph2.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   // define a struct for the data
   struct EcalUncalibRecHitPhase2Weights {
     std::array<float, ecalPh2::sampleSize> weights;
     std::array<float, ecalPh2::sampleSize> timeWeights;
   };
-}  //namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  //namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // RecoLocalCalo_EcalRecProducers_plugins_EcalUncalibRecHitPhase2WeightsStruct_h

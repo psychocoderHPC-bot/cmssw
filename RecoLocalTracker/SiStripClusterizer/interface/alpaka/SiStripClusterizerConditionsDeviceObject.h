@@ -8,7 +8,7 @@
 #include "RecoLocalTracker/SiStripClusterizer/interface/SiStripClusterizerConditionsHostObject.h"
 #include "RecoLocalTracker/SiStripClusterizer/interface/SiStripClusterizerConditionsStruct.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   namespace sistrip {
     // make the names from the top-level sistrip namespace visible for unqualified lookup
     using namespace ::sistrip;
@@ -16,7 +16,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     using SiStripClusterizerConditionsGainNoiseCalsDeviceObject = PortableObject<GainNoiseCals>;
   }  // namespace sistrip
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 // check that the portable device collection for the host device is the same as the portable host collection
 ASSERT_DEVICE_MATCHES_HOST_COLLECTION(sistrip::SiStripClusterizerConditionsDetToFedsDeviceObject,

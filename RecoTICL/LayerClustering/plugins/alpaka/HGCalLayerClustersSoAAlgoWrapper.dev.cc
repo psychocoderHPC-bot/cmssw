@@ -5,7 +5,7 @@
 
 #include "CLUEAlgoAlpaka.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
   using namespace hgcal::constants;
@@ -13,7 +13,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   // Set energy and number of hits in each clusters
   class HGCalLayerClustersSoAAlgoKernelEnergy {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   const unsigned int numer_of_clusters,
                                   const HGCalSoARecHitsDeviceCollection::ConstView input_rechits_soa,
                                   const HGCalSoARecHitsExtraDeviceCollection::ConstView input_clusters_soa,
@@ -25,8 +25,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           continue;
         }
         auto clIdx = input_clusters_soa[i].clusterIndex();
-        alpaka::atomicAdd(acc, &outputs[clIdx].energy(), input_rechits_soa[i].energy());
-        alpaka::atomicAdd(acc, &outputs[clIdx].cells(), 1);
+        aV2P::atomicAdd(acc, &outputs[clIdx].energy(), input_rechits_soa[i].energy());
+        aV2P::atomicAdd(acc, &outputs[clIdx].cells(), 1);
         if (input_clusters_soa[i].isSeed() == 1) {
           outputs[clIdx].seed() = input_rechits_soa[i].detid();
         }
@@ -37,7 +37,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   // Kernel to find the max for every cluster
   class HGCalLayerClustersSoAAlgoKernelPositionByHits {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   const unsigned int numer_of_clusters,
                                   float thresholdW0,
                                   float positionDeltaRho2,
@@ -54,7 +54,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           continue;
         }
 
-        alpaka::atomicAdd(acc, &outputs_service[cluster_index].total_weight(), input_rechits_soa[hit_index].energy());
+        aV2P::atomicAdd(acc, &outputs_service[cluster_index].total_weight(), input_rechits_soa[hit_index].energy());
         // Read the current seed index, and the associated energy.
         int clusterSeed = outputs_service[cluster_index].maxEnergyIndex();
         float clusterEnergy = (clusterSeed == kInvalidIndex) ? 0.f : input_rechits_soa[clusterSeed].energy();
@@ -64,7 +64,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           // store the new value and exit the loop.  Otherwise return the value
           // that has been updated, and decide again if the maximum needs to be
           // updated.
-          int seed = alpaka::atomicCas(acc, &outputs_service[cluster_index].maxEnergyIndex(), clusterSeed, hit_index);
+          int seed = aV2P::atomicCas(acc, &outputs_service[cluster_index].maxEnergyIndex(), clusterSeed, hit_index);
           if (seed == hit_index) {
             // atomicCas has stored the new value.
             break;
@@ -81,7 +81,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   // Real Kernel position
   class HGCalLayerClustersSoAAlgoKernelPositionByHits2 {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   const unsigned int numer_of_clusters,
                                   float thresholdW0,
                                   float positionDeltaRho2,
@@ -108,9 +108,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         float Wi = std::max(thresholdW0 + std::log(input_rechits_soa[hit_index].energy() /
                                                    outputs_service[cluster_index].total_weight()),
                             0.f);
-        alpaka::atomicAdd(acc, &outputs[cluster_index].x(), input_rechits_soa[hit_index].dim1() * Wi);
-        alpaka::atomicAdd(acc, &outputs[cluster_index].y(), input_rechits_soa[hit_index].dim2() * Wi);
-        alpaka::atomicAdd(acc, &outputs_service[cluster_index].total_weight_log(), Wi);
+        aV2P::atomicAdd(acc, &outputs[cluster_index].x(), input_rechits_soa[hit_index].dim1() * Wi);
+        aV2P::atomicAdd(acc, &outputs[cluster_index].y(), input_rechits_soa[hit_index].dim2() * Wi);
+        aV2P::atomicAdd(acc, &outputs_service[cluster_index].total_weight_log(), Wi);
       }  // uniform_elements
     }  // operator()
   };
@@ -118,7 +118,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   // Besides the final position, add also the DetId of the seed of each cluster
   class HGCalLayerClustersSoAAlgoKernelPositionByHits3 {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   const unsigned int numer_of_clusters,
                                   float thresholdW0,
                                   float positionDeltaRho2,
@@ -152,19 +152,19 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                              HGCalSoAClustersDeviceCollection::View outputs,
                                              HGCalSoAClustersExtraDeviceCollection::View outputs_service) const {
     auto x = cms::alpakatools::make_device_view<float>(queue, outputs.x(), size);
-    alpaka::memset(queue, x, 0x0);
+    aV2P::memset(queue, x, 0x0);
     auto y = cms::alpakatools::make_device_view<float>(queue, outputs.y(), size);
-    alpaka::memset(queue, y, 0x0);
+    aV2P::memset(queue, y, 0x0);
     auto energy = cms::alpakatools::make_device_view<float>(queue, outputs.energy(), size);
-    alpaka::memset(queue, energy, 0x0);
+    aV2P::memset(queue, energy, 0x0);
     auto cells = cms::alpakatools::make_device_view<int>(queue, outputs.cells(), size);
-    alpaka::memset(queue, cells, 0x0);
+    aV2P::memset(queue, cells, 0x0);
     auto total_weight = cms::alpakatools::make_device_view<float>(queue, outputs_service.total_weight(), size);
-    alpaka::memset(queue, total_weight, 0x0);
+    aV2P::memset(queue, total_weight, 0x0);
     auto total_weight_log = cms::alpakatools::make_device_view<float>(queue, outputs_service.total_weight_log(), size);
-    alpaka::memset(queue, total_weight_log, 0x0);
+    aV2P::memset(queue, total_weight_log, 0x0);
     auto maxEnergyIndex = cms::alpakatools::make_device_view<int>(queue, outputs_service.maxEnergyIndex(), size);
-    alpaka::memset(queue, maxEnergyIndex, kInvalidIndexByte);
+    aV2P::memset(queue, maxEnergyIndex, kInvalidIndexByte);
 
     // use 64 items per group (this value is arbitrary, but it's a reasonable starting point)
     uint32_t items = 64;
@@ -177,9 +177,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     //   - elements within a single thread on a CPU backend
     auto workDiv = make_workdiv<Acc1D>(groups, items);
 
-    alpaka::exec<Acc1D>(
+    aV2P::exec<Acc1D>(
         queue, workDiv, HGCalLayerClustersSoAAlgoKernelEnergy{}, size, input_rechits_soa, input_clusters_soa, outputs);
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv,
                         HGCalLayerClustersSoAAlgoKernelPositionByHits{},
                         size,
@@ -189,7 +189,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         input_clusters_soa,
                         outputs,
                         outputs_service);
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv,
                         HGCalLayerClustersSoAAlgoKernelPositionByHits2{},
                         size,
@@ -201,7 +201,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         outputs_service);
     uint32_t group_clusters = divide_up_by(size, items);
     auto workDivClusters = make_workdiv<Acc1D>(group_clusters, items);
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDivClusters,
                         HGCalLayerClustersSoAAlgoKernelPositionByHits3{},
                         size,
@@ -212,4 +212,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         outputs,
                         outputs_service);
   }
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

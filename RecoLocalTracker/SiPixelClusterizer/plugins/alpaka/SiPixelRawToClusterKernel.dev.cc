@@ -6,7 +6,7 @@
 #include <type_traits>
 
 // Alpaka includes
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 // CMSSW includes
 #include "CondFormats/SiPixelObjects/interface/SiPixelGainCalibrationForHLTLayout.h"
@@ -39,14 +39,14 @@
 
 //#define GPU_DEBUG
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   namespace pixelDetails {
 
-    ALPAKA_FN_ACC bool isBarrel(uint32_t rawId) {
+    AV2P_FN_ACC bool isBarrel(uint32_t rawId) {
       return (PixelSubdetector::PixelBarrel == ((rawId >> DetId::kSubdetOffset) & DetId::kSubdetMask));
     }
 
-    ALPAKA_FN_ACC ::pixelDetails::DetIdGPU getRawId(const SiPixelMappingSoAConstView &cablingMap,
+    AV2P_FN_ACC ::pixelDetails::DetIdGPU getRawId(const SiPixelMappingSoAConstView &cablingMap,
                                                     uint8_t fed,
                                                     uint32_t link,
                                                     uint32_t roc) {
@@ -59,7 +59,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     //reference http://cmsdoxygen.web.cern.ch/cmsdoxygen/CMSSW_9_2_0/doc/html/dd/d31/FrameConversion_8cc_source.html
     //http://cmslxr.fnal.gov/source/CondFormats/SiPixelObjects/src/PixelROC.cc?v=CMSSW_9_2_0#0071
     // Convert local pixel to pixelDetails::global pixel
-    ALPAKA_FN_ACC ::pixelDetails::Pixel frameConversion(
+    AV2P_FN_ACC ::pixelDetails::Pixel frameConversion(
         bool bpix, int side, uint32_t layer, uint32_t rocIdInDetUnit, ::pixelDetails::Pixel local) {
       int slopeRow = 0, slopeCol = 0;
       int rowOffset = 0, colOffset = 0;
@@ -129,7 +129,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     // error decoding and handling copied from EventFilter/SiPixelRawToDigi/src/ErrorChecker.cc
     template <bool debug = false>
-    ALPAKA_FN_ACC uint8_t conversionError(uint8_t fedId, uint8_t status) {
+    AV2P_FN_ACC uint8_t conversionError(uint8_t fedId, uint8_t status) {
       uint8_t errorType = 0;
 
       switch (status) {
@@ -165,16 +165,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       return errorType;
     }
 
-    ALPAKA_FN_ACC bool rocRowColIsValid(uint32_t rocRow, uint32_t rocCol) {
+    AV2P_FN_ACC bool rocRowColIsValid(uint32_t rocRow, uint32_t rocCol) {
       /// row and column in ROC representation
       return ((rocRow < ::pixelDetails::numRowsInRoc) & (rocCol < ::pixelDetails::numColsInRoc));
     }
 
-    ALPAKA_FN_ACC bool dcolIsValid(uint32_t dcol, uint32_t pxid) { return ((dcol < 26) & (2 <= pxid) & (pxid < 162)); }
+    AV2P_FN_ACC bool dcolIsValid(uint32_t dcol, uint32_t pxid) { return ((dcol < 26) & (2 <= pxid) & (pxid < 162)); }
 
     // error decoding and handling copied from EventFilter/SiPixelRawToDigi/src/ErrorChecker.cc
     template <bool debug = false>
-    ALPAKA_FN_ACC uint8_t
+    AV2P_FN_ACC uint8_t
     checkROC(uint32_t errorWord, uint8_t fedId, uint32_t link, const SiPixelMappingSoAConstView &cablingMap) {
       uint8_t errorType = (errorWord >> ::pixelDetails::ROC_shift) & ::pixelDetails::ERROR_mask;
       if (errorType < 25)
@@ -254,7 +254,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     // error decoding and handling copied from EventFilter/SiPixelRawToDigi/src/ErrorChecker.cc
     template <bool debug = false>
-    ALPAKA_FN_ACC uint32_t
+    AV2P_FN_ACC uint32_t
     getErrRawID(uint8_t fedId, uint32_t errWord, uint32_t errorType, const SiPixelMappingSoAConstView &cablingMap) {
       uint32_t rID = 0xffffffff;
 
@@ -291,7 +291,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // Kernel to perform Raw to Digi conversion
     template <bool debug = false>
     struct RawToDigi_kernel {
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     const SiPixelMappingSoAConstView &cablingMap,
                                     const unsigned char *modToUnp,
                                     const uint32_t wordCounter,
@@ -338,7 +338,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             if (rawId != 0xffffffff)  // Store errors only for valid DetIds
             {
               err[gIndex].pixelErrors() = SiPixelErrorCompact{rawId, ww, errorType, fedId};
-              alpaka::atomicInc(acc, &err.size(), 0xffffffff, alpaka::hierarchy::Blocks{});
+              aV2P::atomicInc(acc, &err.size(), 0xffffffff, aV2P::hierarchy::Blocks{});
             }
             continue;
           }
@@ -352,7 +352,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             if (roc > ::pixelDetails::MAX_ROC and roc < 25) {
               uint8_t error = conversionError<debug>(fedId, 2);
               err[gIndex].pixelErrors() = SiPixelErrorCompact{rawId, ww, error, fedId};
-              alpaka::atomicInc(acc, &err.size(), 0xffffffff, alpaka::hierarchy::Blocks{});
+              aV2P::atomicInc(acc, &err.size(), 0xffffffff, aV2P::hierarchy::Blocks{});
             }
             continue;
           }
@@ -395,7 +395,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             if (includeErrors and not rocRowColIsValid(row, col)) {
               uint8_t error = conversionError<debug>(fedId, 3);
               err[gIndex].pixelErrors() = SiPixelErrorCompact{rawId, ww, error, fedId};
-              alpaka::atomicInc(acc, &err.size(), 0xffffffff, alpaka::hierarchy::Blocks{});
+              aV2P::atomicInc(acc, &err.size(), 0xffffffff, aV2P::hierarchy::Blocks{});
               if constexpr (debug)
                 printf("BPIX1 Error status: %i\n", error);
               continue;
@@ -411,7 +411,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             if (includeErrors and not dcolIsValid(dcol, pxid)) {
               uint8_t error = conversionError<debug>(fedId, 3);
               err[gIndex].pixelErrors() = SiPixelErrorCompact{rawId, ww, error, fedId};
-              alpaka::atomicInc(acc, &err.size(), 0xffffffff, alpaka::hierarchy::Blocks{});
+              aV2P::atomicInc(acc, &err.size(), 0xffffffff, aV2P::hierarchy::Blocks{});
               if constexpr (debug)
                 printf("Error status: %i %d %d %d %d\n", error, dcol, pxid, fedId, roc);
               continue;
@@ -434,8 +434,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // just for debugging
     template <typename TrackerTraits>
     struct ShowHitsModuleStart {
-      template <alpaka::concepts::Acc TAcc>
-      ALPAKA_FN_ACC void operator()(const TAcc &acc, SiPixelClustersSoAView clus_view) const {
+      template <aV2P::concepts::Acc TAcc>
+      AV2P_FN_ACC void operator()(const TAcc &acc, SiPixelClustersSoAView clus_view) const {
         if (cms::alpakatools::once_per_grid(acc)) {
           for (int i = 0; i < TrackerTraits::numberOfModules; i++)
             printf("%d \n", clus_view[i].clusModuleStart());
@@ -484,11 +484,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         // However, only the first half of elements end up eventually used:
         // hence, here, only wordCounter/2 elements are allocated.
         auto fedId_d = cms::alpakatools::make_device_buffer<uint8_t[]>(queue, wordCounter / 2);
-        alpaka::memcpy(queue, word_d, wordFed.word(), wordCounter);
-        alpaka::memcpy(queue, fedId_d, wordFed.fedId(), wordCounter / 2);
+        aV2P::memcpy(queue, word_d, wordFed.word(), wordCounter);
+        aV2P::memcpy(queue, fedId_d, wordFed.fedId(), wordCounter / 2);
         // Launch rawToDigi kernel
         if (debug) {
-          alpaka::exec<Acc1D>(queue,
+          aV2P::exec<Acc1D>(queue,
                               workDiv,
                               RawToDigi_kernel<true>{},
                               cablingMap,
@@ -501,7 +501,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                               useQualityInfo,
                               includeErrors);
         } else {
-          alpaka::exec<Acc1D>(queue,
+          aV2P::exec<Acc1D>(queue,
                               workDiv,
                               RawToDigi_kernel<false>{},
                               cablingMap,
@@ -516,7 +516,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         }
 
 #ifdef GPU_DEBUG
-        alpaka::wait(queue);
+        aV2P::wait(queue);
         std::cout << "RawToDigi_kernel was run smoothly!" << std::endl;
 #endif
       }
@@ -540,7 +540,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         const auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(blocks, threadsPerBlockOrElementsPerThread);
 
         if (debug) {
-          alpaka::exec<Acc1D>(queue,
+          aV2P::exec<Acc1D>(queue,
                               workDiv,
                               CalibDigis<true>{},
                               clusterThresholds,
@@ -549,7 +549,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                               gains,
                               wordCounter);
         } else {
-          alpaka::exec<Acc1D>(queue,
+          aV2P::exec<Acc1D>(queue,
                               workDiv,
                               CalibDigis<false>{},
                               clusterThresholds,
@@ -559,16 +559,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                               wordCounter);
         }
 #ifdef GPU_DEBUG
-        alpaka::wait(queue);
+        aV2P::wait(queue);
         std::cout << "CountModules kernel launch with " << blocks << " blocks of " << threadsPerBlockOrElementsPerThread
                   << " threadsPerBlockOrElementsPerThread\n";
 #endif
 
-        alpaka::exec<Acc1D>(
+        aV2P::exec<Acc1D>(
             queue, workDiv, CountModules<TrackerTraits>{}, digis_d->view(), clusters_d->view(), wordCounter);
 
         auto moduleStartFirstElement = cms::alpakatools::make_device_view(queue, clusters_d->view().moduleStart(), 1u);
-        alpaka::memcpy(queue, nModules_Clusters_h, moduleStartFirstElement);
+        aV2P::memcpy(queue, nModules_Clusters_h, moduleStartFirstElement);
 
         {
           const int blocks = 64;
@@ -581,13 +581,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           // allocate a transient collection for the fake pixels recovered by the digi morphing algorithm
           auto fakes_d = SiPixelDigisSoACollection(queue, blocks * digiMorphingConfig.maxFakesInModule);
 #ifdef GPU_DEBUG
-          alpaka::wait(queue);
+          aV2P::wait(queue);
           std::cout << "FindClus kernel launch with " << blocks << " blocks of " << elementsPerBlockFindClus
                     << " threadsPerBlockOrElementsPerThread\n";
 #endif
 
           // Use device buffer created by producer and the module count stored in digiMorphingConfig
-          alpaka::exec<Acc1D>(queue,
+          aV2P::exec<Acc1D>(queue,
                               workDivFindClus,
                               FindClus<TrackerTraits>{},
                               digis_d->view(),
@@ -599,14 +599,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                               clusters_d->view(),
                               wordCounter);
 #ifdef GPU_DEBUG
-          alpaka::wait(queue);
+          aV2P::wait(queue);
 #endif
         }
 
         constexpr auto threadsPerBlockChargeCut = 256;
         const auto workDivChargeCut = cms::alpakatools::make_workdiv<Acc1D>(numberOfModules, threadsPerBlockChargeCut);
         // apply charge cut
-        alpaka::exec<Acc1D>(queue,
+        aV2P::exec<Acc1D>(queue,
                             workDivChargeCut,
                             ::pixelClustering::ClusterChargeCut<TrackerTraits>{},
                             digis_d->view(),
@@ -622,11 +622,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         constexpr auto blocksPrefixScan = (TrackerTraits::numberOfModules + threadsPrefixScan - 1) / threadsPrefixScan;
         auto workDivPrefixScan = cms::alpakatools::make_workdiv<Acc1D>(blocksPrefixScan, threadsPrefixScan);
         auto bCounter = cms::alpakatools::make_device_buffer<int32_t>(queue);
-        alpaka::memset(queue, bCounter, 0);
+        aV2P::memset(queue, bCounter, 0);
 
         cms::alpakatools::checkSharedMemoryPrefixScan<Acc1D>(
-            TrackerTraits::numberOfModules, blocksPrefixScan, alpaka::getDev(queue));
-        alpaka::exec<Acc1D>(queue,
+            TrackerTraits::numberOfModules, blocksPrefixScan, aV2P::getDev(queue));
+        aV2P::exec<Acc1D>(queue,
                             workDivPrefixScan,
                             cms::alpakatools::multiBlockPrefixScan<uint32_t>(),
                             clusters_d->view().clusInModule().data(),
@@ -634,7 +634,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                             TrackerTraits::numberOfModules,
                             blocksPrefixScan,
                             bCounter.data(),
-                            alpaka::getPreferredWarpSize(alpaka::getDev(queue)));
+                            aV2P::getPreferredWarpSize(aV2P::getDev(queue)));
 
         // last element holds the number of all clusters
         const auto clusModuleStartLastElement = cms::alpakatools::make_device_view(
@@ -644,13 +644,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         const auto bpix2ClusterStart = cms::alpakatools::make_device_view(
             queue, clusters_d->const_view().clusModuleStart().data() + startBPIX2, 1u);
         auto nModules_Clusters_h_1 = cms::alpakatools::make_host_view(nModules_Clusters_h.data() + 1, 1u);
-        alpaka::memcpy(queue, nModules_Clusters_h_1, clusModuleStartLastElement);
+        aV2P::memcpy(queue, nModules_Clusters_h_1, clusModuleStartLastElement);
 
         auto nModules_Clusters_h_2 = cms::alpakatools::make_host_view(nModules_Clusters_h.data() + 2, 1u);
-        alpaka::memcpy(queue, nModules_Clusters_h_2, bpix2ClusterStart);
+        aV2P::memcpy(queue, nModules_Clusters_h_2, bpix2ClusterStart);
 
 #ifdef GPU_DEBUG
-        alpaka::wait(queue);
+        aV2P::wait(queue);
         std::cout << "SiPixelClusterizerAlpaka results:" << std::endl
                   << " > no. of digis: " << nDigis << std::endl
                   << " > no. of active modules: " << nModules_Clusters_h[0] << std::endl
@@ -677,31 +677,31 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           cms::alpakatools::divide_up_by(std::max<int>(numDigis, numberOfModules), threadsPerBlockOrElementsPerThread);
       const auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(blocks, threadsPerBlockOrElementsPerThread);
 
-      alpaka::exec<Acc1D>(
+      aV2P::exec<Acc1D>(
           queue, workDiv, calibPixel::CalibDigisPhase2{}, clusterThresholds, digis_view, clusters_d->view(), numDigis);
 
 #ifdef GPU_DEBUG
-      alpaka::wait(queue);
+      aV2P::wait(queue);
       std::cout << "CountModules kernel launch with " << blocks << " blocks of " << threadsPerBlockOrElementsPerThread
                 << " threadsPerBlockOrElementsPerThread\n";
 #endif
-      alpaka::exec<Acc1D>(
+      aV2P::exec<Acc1D>(
           queue, workDiv, CountModules<pixelTopology::Phase2>{}, digis_view, clusters_d->view(), numDigis);
 
       auto moduleStartFirstElement = cms::alpakatools::make_device_view(queue, clusters_d->view().moduleStart(), 1u);
-      alpaka::memcpy(queue, nModules_Clusters_h, moduleStartFirstElement);
+      aV2P::memcpy(queue, nModules_Clusters_h, moduleStartFirstElement);
 
       const auto elementsPerBlockFindClus = FindClus<TrackerTraits>::maxElementsPerBlock;
       const auto workDivMaxNumModules =
           cms::alpakatools::make_workdiv<Acc1D>(numberOfModules, elementsPerBlockFindClus);
 #ifdef GPU_DEBUG
-      alpaka::wait(queue);
+      aV2P::wait(queue);
       std::cout << "FindClus kernel launch with " << numberOfModules << " blocks of " << elementsPerBlockFindClus
                 << " threadsPerBlockOrElementsPerThread\n";
 #endif
       auto unused = SiPixelDigisSoACollection(queue, 0);
 
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDivMaxNumModules,
                           FindClus<TrackerTraits>{},
                           digis_view,
@@ -713,11 +713,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           clusters_d->view(),
                           numDigis);
 #ifdef GPU_DEBUG
-      alpaka::wait(queue);
+      aV2P::wait(queue);
 #endif
 
       // apply charge cut
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDivMaxNumModules,
                           ::pixelClustering::ClusterChargeCut<TrackerTraits>{},
                           digis_view,
@@ -734,11 +734,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       constexpr auto blocksPrefixScan = (TrackerTraits::numberOfModules + threadsPrefixScan - 1) / threadsPrefixScan;
       auto workDivPrefixScan = cms::alpakatools::make_workdiv<Acc1D>(blocksPrefixScan, threadsPrefixScan);
       auto bCounter = cms::alpakatools::make_device_buffer<int32_t>(queue);
-      alpaka::memset(queue, bCounter, 0);
+      aV2P::memset(queue, bCounter, 0);
 
       cms::alpakatools::checkSharedMemoryPrefixScan<Acc1D>(
-          TrackerTraits::numberOfModules, blocksPrefixScan, alpaka::getDev(queue));
-      alpaka::exec<Acc1D>(queue,
+          TrackerTraits::numberOfModules, blocksPrefixScan, aV2P::getDev(queue));
+      aV2P::exec<Acc1D>(queue,
                           workDivPrefixScan,
                           cms::alpakatools::multiBlockPrefixScan<uint32_t>(),
                           clusters_d->view().clusInModule().data(),
@@ -746,7 +746,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           TrackerTraits::numberOfModules,
                           blocksPrefixScan,
                           bCounter.data(),
-                          alpaka::getPreferredWarpSize(alpaka::getDev(queue)));
+                          aV2P::getPreferredWarpSize(aV2P::getDev(queue)));
 
       // last element holds the number of all clusters
       const auto clusModuleStartLastElement = cms::alpakatools::make_device_view(
@@ -756,13 +756,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       const auto bpix2ClusterStart =
           cms::alpakatools::make_device_view(queue, clusters_d->const_view().clusModuleStart().data() + startBPIX2, 1u);
       auto nModules_Clusters_h_1 = cms::alpakatools::make_host_view(nModules_Clusters_h.data() + 1, 1u);
-      alpaka::memcpy(queue, nModules_Clusters_h_1, clusModuleStartLastElement);
+      aV2P::memcpy(queue, nModules_Clusters_h_1, clusModuleStartLastElement);
 
       auto nModules_Clusters_h_2 = cms::alpakatools::make_host_view(nModules_Clusters_h.data() + 2, 1u);
-      alpaka::memcpy(queue, nModules_Clusters_h_2, bpix2ClusterStart);
+      aV2P::memcpy(queue, nModules_Clusters_h_2, bpix2ClusterStart);
 
 #ifdef GPU_DEBUG
-      alpaka::wait(queue);
+      aV2P::wait(queue);
       std::cout << "SiPixelPhase2DigiToCluster: results \n"
                 << " > no. of digis: " << numDigis << std::endl
                 << " > no. of active modules: " << nModules_Clusters_h[0] << std::endl
@@ -790,4 +790,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   }  // namespace pixelDetails
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

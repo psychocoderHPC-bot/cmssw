@@ -3,12 +3,12 @@
 
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "CondFormats/SiPixelObjects/interface/SiPixelGainCalibrationForHLTLayout.h"
 
 struct SiPixelGainUtilities {
-  ALPAKA_FN_HOST_ACC ALPAKA_FN_ACC ALPAKA_FN_INLINE static std::pair<float, float> getPedAndGain(
+  AV2P_FN_HOST_ACC AV2P_FN_ACC AV2P_FN_INLINE static std::pair<float, float> getPedAndGain(
       const SiPixelGainCalibrationForHLTSoAConstView& view,
       uint32_t moduleInd,
       int col,
@@ -24,9 +24,9 @@ struct SiPixelGainUtilities {
     unsigned int numberOfDataBlocksToSkip = row / view.numberOfRowsAveragedOver();
 
     auto offset = start + col * lengthOfColumnData + lengthOfAveragedDataInEachColumn * numberOfDataBlocksToSkip;
-    ALPAKA_ASSERT_ACC(offset < end);
-    ALPAKA_ASSERT_ACC(offset < 3088384);
-    ALPAKA_ASSERT_ACC(0 == offset % 2);
+    AV2P_ASSERT_ACC(offset < end);
+    AV2P_ASSERT_ACC(offset < 3088384);
+    AV2P_ASSERT_ACC(0 == offset % 2);
 
     auto lp = view.v_pedestals();
     auto s = lp[offset / 2];

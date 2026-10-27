@@ -5,7 +5,7 @@
 #include "DataFormats/HGCalReco/interface/alpaka/HGCalSoARecHitsExtraDeviceCollection.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class HGCalLayerClustersAlgoWrapper {
   public:
@@ -17,6 +17,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
              const HGCalSoARecHitsDeviceCollection::ConstView inputs,
              HGCalSoARecHitsExtraDeviceCollection::View outputs) const;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // RecoLocalCalo_HGCalRecProducers_plugins_alpaka_HGCalLayerClustersAlgoWrapper_h

@@ -1,6 +1,6 @@
 #include <string>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include <catch2/catch_all.hpp>
 
@@ -20,9 +20,9 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/TrivialSerialisation/interface/alpaka/SerialiserFactoryDevice.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
-namespace alpaka_portabletest = ALPAKA_ACCELERATOR_NAMESPACE::portabletest;
-namespace alpaka_ngt = ALPAKA_ACCELERATOR_NAMESPACE::ngt;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
+namespace alpaka_portabletest = AV2P_ACCELERATOR_NAMESPACE::portabletest;
+namespace alpaka_ngt = AV2P_ACCELERATOR_NAMESPACE::ngt;
 
 /*
  * This test demonstrates a way to use the TrivialSerialisation mechanism to copy
@@ -81,10 +81,10 @@ TEST_CASE("Test MemoryCopyTraits", "[MemoryCopyTraits]") {
 
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    FAIL("No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend");
+    FAIL("No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend");
   }
 
-  SECTION("PortableCollection<Device, ALPAKA_ACCELERATOR_NAMESPACE::portabletest::TestSoALayout<128, false>>") {
+  SECTION("PortableCollection<Device, AV2P_ACCELERATOR_NAMESPACE::portabletest::TestSoALayout<128, false>>") {
     using PortableCollectionType = ::PortableCollection<Device, alpaka_portabletest::TestSoALayout<128, false>>;
     using DeviceProductType = detail::DeviceProductType<PortableCollectionType>;
     using PortableHostCollectionType = PortableHostCollection<alpaka_portabletest::TestSoALayout<128, false>>;
@@ -92,7 +92,7 @@ TEST_CASE("Test MemoryCopyTraits", "[MemoryCopyTraits]") {
     const int size = 10;
 
     for (auto const& device : devices) {
-      std::cout << "Running on " << alpaka::getName(device) << std::endl;
+      std::cout << "Running on " << aV2P::getName(device) << std::endl;
       Queue queue(device);
 
       // Create a PortableHostCollection, to be used as a reference for the checks
@@ -116,8 +116,8 @@ TEST_CASE("Test MemoryCopyTraits", "[MemoryCopyTraits]") {
         // Since PortableCollection might be a device collection, copy first its
         // data into an auxiliary PortableHostCollection
         PortableHostCollectionType auxPortableHostCollection(queue, size);
-        alpaka::memcpy(queue, auxPortableHostCollection.buffer(), col.buffer());
-        alpaka::wait(queue);
+        aV2P::memcpy(queue, auxPortableHostCollection.buffer(), col.buffer());
+        aV2P::wait(queue);
 
         REQUIRE(auxPortableHostCollection.const_view().r() == refHostCollection.const_view().r());
         for (int i = 0; i < size; i++) {
@@ -134,7 +134,7 @@ TEST_CASE("Test MemoryCopyTraits", "[MemoryCopyTraits]") {
       PortableCollectionType sourceCollection(queue, size);
 
       // Copy the reference host collection into this newly created one
-      alpaka::memcpy(queue, sourceCollection.buffer(), refHostCollection.buffer());
+      aV2P::memcpy(queue, sourceCollection.buffer(), refHostCollection.buffer());
 
       // Check that the collection has been successfully initialized.
       checkPortableCollection(sourceCollection);
@@ -173,10 +173,10 @@ TEST_CASE("Test MemoryCopyTraits", "[MemoryCopyTraits]") {
         REQUIRE(targets[i].data() != nullptr);
         REQUIRE(targets[i].size_bytes() == sources[i].size_bytes());
 
-        auto src_view = alpaka::createView(device, sources[i].data(), sources[i].size_bytes());
-        auto trg_view = alpaka::createView(device, targets[i].data(), targets[i].size_bytes());
+        auto src_view = aV2P::createView(device, sources[i].data(), sources[i].size_bytes());
+        auto trg_view = aV2P::createView(device, targets[i].data(), targets[i].size_bytes());
 
-        alpaka::memcpy(queue, trg_view, src_view);
+        aV2P::memcpy(queue, trg_view, src_view);
       }
 
       // Retrieve the cloned product back from its type-erased form, and verify its contents
@@ -193,7 +193,7 @@ TEST_CASE("Test MemoryCopyTraits", "[MemoryCopyTraits]") {
     const alpaka_portabletest::TestStruct testData{5.0, 12.0, 13.0, 42};
 
     for (auto const& device : devices) {
-      std::cout << "Running DeviceObject test on " << alpaka::getName(device) << std::endl;
+      std::cout << "Running DeviceObject test on " << aV2P::getName(device) << std::endl;
       Queue queue(device);
 
       // Create a reference host object with known data
@@ -205,7 +205,7 @@ TEST_CASE("Test MemoryCopyTraits", "[MemoryCopyTraits]") {
 
       // Create a DeviceObject, copy the reference host object into it,
       DeviceObjectType sourceObject(queue);
-      alpaka::memcpy(queue, sourceObject.buffer(), hostSource.buffer());
+      aV2P::memcpy(queue, sourceObject.buffer(), hostSource.buffer());
 
       // Wrap it in the WrapperBase (type-erased)
       auto metadata = test::makeMetadata(queue);
@@ -229,9 +229,9 @@ TEST_CASE("Test MemoryCopyTraits", "[MemoryCopyTraits]") {
 
       for (size_t i = 0; i < sources.size(); ++i) {
         REQUIRE(sources[i].size_bytes() == targets[i].size_bytes());
-        auto src_view = alpaka::createView(device, sources[i].data(), sources[i].size_bytes());
-        auto trg_view = alpaka::createView(device, targets[i].data(), targets[i].size_bytes());
-        alpaka::memcpy(queue, trg_view, src_view);
+        auto src_view = aV2P::createView(device, sources[i].data(), sources[i].size_bytes());
+        auto trg_view = aV2P::createView(device, targets[i].data(), targets[i].size_bytes());
+        aV2P::memcpy(queue, trg_view, src_view);
       }
 
       // Get the collection back from its wrapped form
@@ -241,8 +241,8 @@ TEST_CASE("Test MemoryCopyTraits", "[MemoryCopyTraits]") {
 
       // Copy back to host to check
       PortableHostObject<alpaka_portabletest::TestStruct> hostClone(queue);
-      alpaka::memcpy(queue, hostClone.buffer(), test::extractProductFromEdmWrapper(*cloneptr, *metadata).buffer());
-      alpaka::wait(queue);
+      aV2P::memcpy(queue, hostClone.buffer(), test::extractProductFromEdmWrapper(*cloneptr, *metadata).buffer());
+      aV2P::wait(queue);
 
       REQUIRE(hostClone->x == testData.x);
       REQUIRE(hostClone->y == testData.y);
@@ -260,7 +260,7 @@ TEST_CASE("Test MemoryCopyTraits", "[MemoryCopyTraits]") {
     const int size2 = 11;
 
     for (auto const& device : devices) {
-      std::cout << "Running DeviceCollection2 test on " << alpaka::getName(device) << std::endl;
+      std::cout << "Running DeviceCollection2 test on " << aV2P::getName(device) << std::endl;
       Queue queue(device);
 
       // Create reference data on host
@@ -285,7 +285,7 @@ TEST_CASE("Test MemoryCopyTraits", "[MemoryCopyTraits]") {
 
       // Create DeviceCollection2, fill it, and wrap in DeviceProduct
       DeviceCollection2Type sourceCollection(queue, size1, size2);
-      alpaka::memcpy(queue, sourceCollection.buffer(), refHost.buffer());
+      aV2P::memcpy(queue, sourceCollection.buffer(), refHost.buffer());
 
       // Wrap it and cast to WrapperBase
       auto metadata = test::makeMetadata(queue);
@@ -309,9 +309,9 @@ TEST_CASE("Test MemoryCopyTraits", "[MemoryCopyTraits]") {
 
       for (size_t i = 0; i < sources_r.size(); ++i) {
         REQUIRE(sources_r[i].size_bytes() == targets[i].size_bytes());
-        auto src_view = alpaka::createView(device, sources_r[i].data(), sources_r[i].size_bytes());
-        auto trg_view = alpaka::createView(device, targets[i].data(), targets[i].size_bytes());
-        alpaka::memcpy(queue, trg_view, src_view);
+        auto src_view = aV2P::createView(device, sources_r[i].data(), sources_r[i].size_bytes());
+        auto trg_view = aV2P::createView(device, targets[i].data(), targets[i].size_bytes());
+        aV2P::memcpy(queue, trg_view, src_view);
       }
 
       // Get the clone
@@ -321,8 +321,8 @@ TEST_CASE("Test MemoryCopyTraits", "[MemoryCopyTraits]") {
 
       // Copy back to host and check
       HostCollection2Type verifyHost(queue, size1, size2);
-      alpaka::memcpy(queue, verifyHost.buffer(), test::extractProductFromEdmWrapper(*cloneptr, *metadata).buffer());
-      alpaka::wait(queue);
+      aV2P::memcpy(queue, verifyHost.buffer(), test::extractProductFromEdmWrapper(*cloneptr, *metadata).buffer());
+      aV2P::wait(queue);
 
       REQUIRE(verifyHost.const_view().first().r() == 1.11);
       REQUIRE(verifyHost.const_view().second().r2() == 2.22);

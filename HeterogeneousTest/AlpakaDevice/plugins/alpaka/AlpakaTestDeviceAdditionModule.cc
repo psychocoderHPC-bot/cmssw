@@ -3,7 +3,7 @@
 #include <random>
 #include <vector>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -18,7 +18,7 @@
 
 #include "AlpakaTestDeviceAdditionAlgo.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class AlpakaTestDeviceAdditionModule : public edm::global::EDAnalyzer<> {
   public:
@@ -52,9 +52,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                edm::Event const& event,
                                                edm::EventSetup const& setup) const {
     // require a valid Alpaka backend for running
-    edm::Service<ALPAKA_TYPE_ALIAS(AlpakaService)> service;
+    edm::Service<AV2P_TYPE_ALIAS(AlpakaService)> service;
     if (not service or not service->enabled()) {
-      std::cout << "The " << ALPAKA_TYPE_ALIAS_NAME(AlpakaService)
+      std::cout << "The " << AV2P_TYPE_ALIAS_NAME(AlpakaService)
                 << " is not available or disabled, the test will be skipped.\n";
       return;
     }
@@ -89,21 +89,21 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       auto out_d = cms::alpakatools::make_device_buffer<float[]>(queue, size_);
 
       // copy the input data to the device
-      alpaka::memcpy(queue, in1_d, in1_h);
-      alpaka::memcpy(queue, in2_d, in2_h);
+      aV2P::memcpy(queue, in1_d, in1_h);
+      aV2P::memcpy(queue, in2_d, in2_h);
 
       // fill the output buffer with zeros
-      alpaka::memset(queue, out_d, 0);
+      aV2P::memset(queue, out_d, 0);
 
       // launch the 1-dimensional kernel for vector addition
       HeterogeneousTestAlpakaDevicePlugins::wrapper_add_vectors_f(
           queue, in1_d.data(), in2_d.data(), out_d.data(), size_);
 
       // copy the results from the device to the host
-      alpaka::memcpy(queue, out_h, out_d);
+      aV2P::memcpy(queue, out_h, out_d);
 
       // wait for all the operations to complete
-      alpaka::wait(queue);
+      aV2P::wait(queue);
 
       // check the results
       for (uint32_t i = 0; i < size_; ++i) {
@@ -116,7 +116,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     std::cout << "All tests passed.\n";
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(AlpakaTestDeviceAdditionModule);
+DEFINE_FWK_AV2P_MODULE(AlpakaTestDeviceAdditionModule);

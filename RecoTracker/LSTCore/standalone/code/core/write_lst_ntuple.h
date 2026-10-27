@@ -11,7 +11,7 @@
 #include "trkCore.h"
 #include "AccessHelper.h"
 
-using LSTEvent = ALPAKA_ACCELERATOR_NAMESPACE::lst::LSTEvent;
+using LSTEvent = AV2P_ACCELERATOR_NAMESPACE::lst::LSTEvent;
 
 // Common
 void createOutputBranches();

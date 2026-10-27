@@ -8,7 +8,7 @@
  *   also registered at construction time.
  *
  * - Device type aliases (e.g. "sistrip::SiStripClusterDevice") are cloned on
- *   device using alpaka::memcpy. The D->H transformation is registered if
+ *   device using aV2P::memcpy. The D->H transformation is registered if
  *   available.
  *
  * Products are configured as a VPSet with type and InputTag.
@@ -52,7 +52,7 @@
 #include "HeterogeneousCore/TrivialSerialisation/interface/alpaka/SerialiserFactoryDevice.h"
 #include "HeterogeneousCore/TrivialSerialisation/interface/alpaka/WriterBase.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
+namespace AV2P_ACCELERATOR_NAMESPACE::ngt {
 
   class GenericClonerPortable : public ProducerBase<edm::stream::EDProducer> {
   public:
@@ -94,13 +94,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
       // Lookup the right serialiser. In order of preference:
       // SerialiserFactoryDevice, SerialiserFactory, ROOT Serialisation.
       //
-      // If type contains "ALPAKA_ACCELERATOR_NAMESPACE::", then this product
+      // If type contains "AV2P_ACCELERATOR_NAMESPACE::", then this product
       // is a device product. Types without this placeholder are resolved as
       // host or ROOT types.
-      static std::string const kAlpakaNamespacePlaceholder = "ALPAKA_ACCELERATOR_NAMESPACE::";
-      static std::string const kAlpakaNamespace = std::string(EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE)) + "::";
+      static std::string const kAlpakaNamespacePlaceholder = "AV2P_ACCELERATOR_NAMESPACE::";
+      static std::string const kAlpakaNamespace = std::string(EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE)) + "::";
 
-      // Name with "ALPAKA_ACCELERATOR_NAMESPACE::" replaced by this backend's
+      // Name with "AV2P_ACCELERATOR_NAMESPACE::" replaced by this backend's
       // namespace. This will be used to look up a device serialiser.
       std::string deviceTypeName = type;
 
@@ -111,7 +111,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
         isDeviceType = true;
       }
 
-      // Name with "ALPAKA_ACCELERATOR_NAMESPACE::" removed. This will be used
+      // Name with "AV2P_ACCELERATOR_NAMESPACE::" removed. This will be used
       // to look up a host serialiser or a ROOT dictionary.
       std::string bareType = type;
 
@@ -243,9 +243,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
   }
 
   void GenericClonerPortable::produce(edm::Event& event, edm::EventSetup const& /*unused*/) {
-    std::unique_ptr<::ALPAKA_ACCELERATOR_NAMESPACE::detail::EDMetadataSentry> sentry;
+    std::unique_ptr<::AV2P_ACCELERATOR_NAMESPACE::detail::EDMetadataSentry> sentry;
     if (hasDeviceProducts_) {
-      sentry = std::make_unique<::ALPAKA_ACCELERATOR_NAMESPACE::detail::EDMetadataSentry>(event.streamID(),
+      sentry = std::make_unique<::AV2P_ACCELERATOR_NAMESPACE::detail::EDMetadataSentry>(event.streamID(),
                                                                                           this->synchronize());
     }
 
@@ -291,7 +291,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
           assert(sources[j].data() != nullptr);
           assert(targets[j].data() != nullptr);
           assert(targets[j].size_bytes() == sources[j].size_bytes());
-          alpaka::memcpy(sentry->metadata()->queue(),
+          aV2P::memcpy(sentry->metadata()->queue(),
                          cms::alpakatools::make_device_view(sentry->metadata()->queue(), targets[j]),
                          cms::alpakatools::make_device_view(sentry->metadata()->queue(), sources[j]));
         }
@@ -336,8 +336,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
     product.add<std::string>("type")->setComment(
         "Type alias of the product to clone. Use the host type alias "
         "(e.g. \"portabletest::TestHostCollection\") to clone a host product, or use the literal "
-        "\"ALPAKA_ACCELERATOR_NAMESPACE::\" wherever the backend namespace appears in the device type alias "
-        "(e.g. \"ALPAKA_ACCELERATOR_NAMESPACE::sistrip::SiStripClusterDevice\") to clone a device product; "
+        "\"AV2P_ACCELERATOR_NAMESPACE::\" wherever the backend namespace appears in the device type alias "
+        "(e.g. \"AV2P_ACCELERATOR_NAMESPACE::sistrip::SiStripClusterDevice\") to clone a device product; "
         "every occurrence of the placeholder is substituted with this backend's actual namespace at "
         "construction time.");
     product.add<edm::InputTag>("src")->setComment("InputTag (label and instance) of the product to clone.");
@@ -349,6 +349,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
     descriptions.addWithDefaultLabel(desc);
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ngt
 
-DEFINE_FWK_ALPAKA_MODULE(ngt::GenericClonerPortable);
+DEFINE_FWK_AV2P_MODULE(ngt::GenericClonerPortable);

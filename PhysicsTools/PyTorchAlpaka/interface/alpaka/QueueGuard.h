@@ -1,19 +1,19 @@
 #ifndef PhysicsTools_PyTorchAlpaka_interface_alpaka_QueueGuard_h
 #define PhysicsTools_PyTorchAlpaka_interface_alpaka_QueueGuard_h
 
-#include <alpaka/alpaka.hpp>
-#ifdef ALPAKA_ACC_GPU_CUDA_ENABLED
+#include <aV2P/alpaka.hpp>
+#ifdef AV2P_ACC_GPU_CUDA_ENABLED
 #include <c10/cuda/CUDAStream.h>
-#elif defined(ALPAKA_ACC_GPU_HIP_ENABLED)
+#elif defined(AV2P_ACC_GPU_HIP_ENABLED)
 #include <c10/hip/HIPStream.h>
 #endif
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "PhysicsTools/PyTorchAlpaka/interface/GetDevice.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::torch {
+namespace AV2P_ACCELERATOR_NAMESPACE::torch {
 
-#if defined(ALPAKA_ACC_GPU_CUDA_ENABLED) || defined(ALPAKA_ACC_GPU_HIP_ENABLED)
+#if defined(AV2P_ACC_GPU_CUDA_ENABLED) || defined(AV2P_ACC_GPU_HIP_ENABLED)
   class QueueGuard {
   public:
     explicit QueueGuard(const Queue &queue) noexcept : cached_stream_{c10::cuda::getCurrentCUDAStream()} {
@@ -36,6 +36,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torch {
 
 #endif
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::torch
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::torch
 
 #endif  // PhysicsTools_PyTorchAlpaka_interface_alpaka_QueueGuard_h

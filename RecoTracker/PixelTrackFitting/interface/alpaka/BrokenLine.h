@@ -1,7 +1,7 @@
 #ifndef RecoTracker_PixelTrackFitting_interface_alpaka_BrokenLine_h
 #define RecoTracker_PixelTrackFitting_interface_alpaka_BrokenLine_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include <Eigen/Core>
 
@@ -10,7 +10,7 @@
 
 //#define BL_DEEPDEBUG
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
+namespace AV2P_ACCELERATOR_NAMESPACE::brokenline {
 
   using namespace cms::alpakatools;
   using namespace ::riemannFit;
@@ -58,11 +58,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
     
     \return the variance of the planar angle ((theta_0)^2 /3).
   */
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE double multScatt(
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE double multScatt(
       const TAcc& acc, const double& length, const double bField, const double radius, int layer, double slope) {
     // limit R to 20GeV...
-    auto pt2 = alpaka::math::min(acc, 20., bField * radius);
+    auto pt2 = aV2P::math::min(acc, 20., bField * radius);
     pt2 *= pt2;
     constexpr double inv_X0 = 0.06 / 16.;  //!< inverse of radiation length of the material in cm
     //if(Layer==1) XXI_0=0.06/16.;
@@ -72,8 +72,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
     //! number between 1/3 (uniform material) and 1 (thin scatterer) to be manually tuned
     constexpr double geometry_factor = 0.7;
     constexpr double fact = geometry_factor * riemannFit::sqr(13.6 / 1000.);
-    return fact / (pt2 * (1. + riemannFit::sqr(slope))) * (alpaka::math::abs(acc, length) * inv_X0) *
-           riemannFit::sqr(1. + 0.038 * log(alpaka::math::abs(acc, length) * inv_X0));
+    return fact / (pt2 * (1. + riemannFit::sqr(slope))) * (aV2P::math::abs(acc, length) * inv_X0) *
+           riemannFit::sqr(1. + 0.038 * log(aV2P::math::abs(acc, length) * inv_X0));
   }
 
   /*!
@@ -83,10 +83,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
     
     \return 2D rotation matrix.
   */
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE riemannFit::Matrix2d rotationMatrix(const TAcc& acc, double slope) {
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE riemannFit::Matrix2d rotationMatrix(const TAcc& acc, double slope) {
     riemannFit::Matrix2d rot;
-    rot(0, 0) = 1. / alpaka::math::sqrt(acc, 1. + riemannFit::sqr(slope));
+    rot(0, 0) = 1. / aV2P::math::sqrt(acc, 1. + riemannFit::sqr(slope));
     rot(0, 1) = slope * rot(0, 0);
     rot(1, 0) = -rot(0, 1);
     rot(1, 1) = rot(0, 0);
@@ -104,8 +104,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
     \param y0 y coordinate of the translation vector.
     \param jacobian passed by reference in order to save stack.
   */
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void translateKarimaki(
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE void translateKarimaki(
       const TAcc& acc, karimaki_circle_fit& circle, double x0, double y0, riemannFit::Matrix3d& jacobian) {
     // Avoid multiple access to the circle.par vector.
     using scalar = typename std::remove_reference<decltype(circle.par(0))>::type;
@@ -114,8 +114,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
     scalar rho = circle.par(2);
 
     // Avoid repeated trig. computations
-    scalar sinPhi = alpaka::math::sin(acc, phi);
-    scalar cosPhi = alpaka::math::cos(acc, phi);
+    scalar sinPhi = aV2P::math::sin(acc, phi);
+    scalar cosPhi = aV2P::math::cos(acc, phi);
 
     // Intermediate computations for the circle parameters
     scalar deltaPara = x0 * cosPhi + y0 * sinPhi;
@@ -124,7 +124,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
     scalar tempC = -rho * y0 + tempSmallU * cosPhi;
     scalar tempB = rho * x0 + tempSmallU * sinPhi;
     scalar tempA = 2. * deltaOrth + rho * (riemannFit::sqr(deltaOrth) + riemannFit::sqr(deltaPara));
-    scalar tempU = alpaka::math::sqrt(acc, 1. + rho * tempA);
+    scalar tempU = aV2P::math::sqrt(acc, 1. + rho * tempA);
 
     // Intermediate computations for the error matrix transform
     scalar xi = 1. / (riemannFit::sqr(tempB) + riemannFit::sqr(tempC));
@@ -137,7 +137,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
 
     // translated circle parameters
     // phi
-    circle.par(0) = alpaka::math::atan2(acc, tempB, tempC);
+    circle.par(0) = aV2P::math::atan2(acc, tempB, tempC);
     // d
     circle.par(1) = tempA / (1 + tempU);
     // rho after translation. It is invariant, so noop
@@ -155,8 +155,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
     \param bField magnetic field in Gev/cm/c.
     \param results PreparedBrokenLineData to be filled (see description of PreparedBrokenLineData).
   */
-  template <alpaka::concepts::Acc TAcc, typename M3xN, typename V4, int n>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void __attribute__((always_inline)) prepareBrokenLineData(
+  template <aV2P::concepts::Acc TAcc, typename M3xN, typename V4, int n>
+  AV2P_FN_ACC AV2P_FN_INLINE void __attribute__((always_inline)) prepareBrokenLineData(
       const TAcc& acc, const M3xN& hits, const V4& fast_fit, const double bField, PreparedBrokenLineData<n>& results) {
     riemannFit::Vector2d dVec;
     riemannFit::Vector2d eVec;
@@ -185,7 +185,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
       dVec = results.radii.block(0, i, 2, 1);
       results.sTransverse(i) =
           results.qCharge * fast_fit(2) *
-          alpaka::math::atan2(acc, riemannFit::cross2D(acc, dVec, eVec), dVec.dot(eVec));  // calculates the arc length
+          aV2P::math::atan2(acc, riemannFit::cross2D(acc, dVec, eVec), dVec.dot(eVec));  // calculates the arc length
     }
     riemannFit::VectorNd<n> zVec = hits.block(2, 0, 1, n).transpose();
 #ifdef BL_DEEPDEBUG
@@ -234,8 +234,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
     
     \return the n-by-n matrix of the linear system
   */
-  template <alpaka::concepts::Acc TAcc, int n>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE riemannFit::MatrixNd<n> matrixC_u(const TAcc& acc,
+  template <aV2P::concepts::Acc TAcc, int n>
+  AV2P_FN_ACC AV2P_FN_INLINE riemannFit::MatrixNd<n> matrixC_u(const TAcc& acc,
                                                                    const riemannFit::VectorNd<n>& weights,
                                                                    const riemannFit::VectorNd<n>& sTotal,
                                                                    const riemannFit::VectorNd<n>& varBeta) {
@@ -278,8 +278,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
     \warning sign of theta is (intentionally, for now) mistaken for negative charges.
   */
 
-  template <alpaka::concepts::Acc TAcc, typename M3xN, typename V4>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void fastFit(const TAcc& acc, const M3xN& hits, V4& result) {
+  template <aV2P::concepts::Acc TAcc, typename M3xN, typename V4>
+  AV2P_FN_ACC AV2P_FN_INLINE void fastFit(const TAcc& acc, const M3xN& hits, V4& result) {
     constexpr uint32_t n = M3xN::ColsAtCompileTime;
 
     int mId = 1;
@@ -300,8 +300,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
     result(1) = hits(1, 0) + (a(0) * c.squaredNorm() + c(0) * a.squaredNorm()) * tmp;
     // check Wikipedia for these formulas
 
-    result(2) = alpaka::math::sqrt(acc, a.squaredNorm() * b.squaredNorm() * c.squaredNorm()) /
-                (2. * alpaka::math::abs(acc, riemannFit::cross2D(acc, b, a)));
+    result(2) = aV2P::math::sqrt(acc, a.squaredNorm() * b.squaredNorm() * c.squaredNorm()) /
+                (2. * aV2P::math::abs(acc, riemannFit::cross2D(acc, b, a)));
     // Using Math Olympiad's formula R=abc/(4A)
 
     const riemannFit::Vector2d d = hits.block(0, 0, 2, 1) - result.head(2);
@@ -338,8 +338,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
    * in which the first hit is the origin) and then the parameters and their 
    * covariance matrix are transformed to the original coordinate system.
   */
-  template <alpaka::concepts::Acc TAcc, typename M3xN, typename M6xN, typename V4, int n>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void circleFit(const TAcc& acc,
+  template <aV2P::concepts::Acc TAcc, typename M3xN, typename M6xN, typename V4, int n>
+  AV2P_FN_ACC AV2P_FN_INLINE void circleFit(const TAcc& acc,
                                                 const M3xN& hits,
                                                 const M6xN& hits_ge,
                                                 const V4& fast_fit,
@@ -421,7 +421,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
     auto eMinusd = eVec - dVec;
     auto eMinusd2 = eMinusd.squaredNorm();
     auto tmp1 = 1. / eMinusd2;
-    auto tmp2 = alpaka::math::sqrt(acc, riemannFit::sqr(fast_fit(2)) - 0.25 * eMinusd2);
+    auto tmp2 = aV2P::math::sqrt(acc, riemannFit::sqr(fast_fit(2)) - 0.25 * eMinusd2);
 
     circle_results.par << atan2(eMinusd(1), eMinusd(0)), circle_results.qCharge * (tmp2 - fast_fit(2)),
         circle_results.qCharge * (1. / fast_fit(2) + uVec(n));
@@ -487,8 +487,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
    * in which the first hit is the origin) and then the parameters and their covariance 
    * matrix are transformed to the original coordinate system.
    */
-  template <alpaka::concepts::Acc TAcc, typename V4, typename M6xN, int n>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void lineFit(const TAcc& acc,
+  template <aV2P::concepts::Acc TAcc, typename V4, typename M6xN, int n>
+  AV2P_FN_ACC AV2P_FN_INLINE void lineFit(const TAcc& acc,
                                               const M6xN& hits_ge,
                                               const V4& fast_fit,
                                               const double bField,
@@ -616,8 +616,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
   template <int n>
   class helixFit {
   public:
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void operator()(const TAcc& acc,
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE void operator()(const TAcc& acc,
                                                    const riemannFit::Matrix3xNd<n>* hits,
                                                    const Eigen::Matrix<float, 6, 4>* hits_ge,
                                                    const double bField,
@@ -636,8 +636,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
 
       // the circle fit gives k, but here we want p_t, so let's change the parameter and the covariance matrix
       jacobian << 1., 0, 0, 0, 1., 0, 0, 0,
-          -alpaka::math::abs(acc, circle.par(2)) * bField / (riemannFit::sqr(circle.par(2)) * circle.par(2));
-      circle.par(2) = bField / alpaka::math::abs(acc, circle.par(2));
+          -aV2P::math::abs(acc, circle.par(2)) * bField / (riemannFit::sqr(circle.par(2)) * circle.par(2));
+      circle.par(2) = bField / aV2P::math::abs(acc, circle.par(2));
       circle.cov = jacobian * circle.cov * jacobian.transpose();
 
       helix->par << circle.par, line.par;
@@ -650,6 +650,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline {
     }
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::brokenline
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::brokenline
 
 #endif  // RecoTracker_PixelTrackFitting_interface_alpaka_BrokenLine_h

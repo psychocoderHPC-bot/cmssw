@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Common/interface/Uninitialized.h"
 #include "DataFormats/Portable/interface/PortableHostCollection.h"
@@ -37,14 +37,14 @@ namespace reco {
     // Construct the object in pinned host memory associated to the given work
     // queue, accessible by the queue's device.
     template <typename TQueue>
-      requires(alpaka::concepts::Queue<TQueue>)
+      requires(aV2P::concepts::Queue<TQueue>)
     explicit TrackingRecHitHost(TQueue queue, uint32_t nHits, uint32_t nModules)
         : HitPortableCollectionHost(queue, nHits, nModules + 1) {}
     // Why this +1? See TrackingRecHitDevice.h constructor for an explanation
 
     // Constructor from clusters
     template <typename TQueue>
-      requires(alpaka::concepts::Queue<TQueue>)
+      requires(aV2P::concepts::Queue<TQueue>)
     explicit TrackingRecHitHost(TQueue queue, SiPixelClustersHost const& clusters)
         : HitPortableCollectionHost(queue, clusters.nClusters(), clusters.view().metadata().size()) {
       auto hitsView = view().trackingHits();
@@ -55,7 +55,7 @@ namespace reco {
       auto clusters_m = cms::alpakatools::make_host_view(clusters.view().clusModuleStart(), nModules);
       auto hits_m = cms::alpakatools::make_host_view(modsView.moduleStart(), nModules);
 
-      alpaka::memcpy(queue, hits_m, clusters_m);
+      aV2P::memcpy(queue, hits_m, clusters_m);
 
       hitsView.offsetBPIX2() = clusters.offsetBPIX2();
     }
@@ -92,7 +92,7 @@ namespace ngt {
     }
 
     template <typename TQueue>
-      requires(alpaka::concepts::Queue<TQueue>)
+      requires(aV2P::concepts::Queue<TQueue>)
     static void initialize(TQueue& queue, value_type& object, Properties const& prop) {
       // Replace the default-constructed empty object with one where the buffer
       // has been allocated in pinned host memory.
@@ -101,13 +101,13 @@ namespace ngt {
 
     static std::vector<std::span<std::byte>> regions(value_type& object) {
       std::byte* address = reinterpret_cast<std::byte*>(object.buffer().data());
-      size_t size = alpaka::getExtentProduct(object.buffer());
+      size_t size = aV2P::getExtentProduct(object.buffer());
       return {{address, size}};
     }
 
     static std::vector<std::span<const std::byte>> regions(value_type const& object) {
       const std::byte* address = reinterpret_cast<const std::byte*>(object.buffer().data());
-      size_t size = alpaka::getExtentProduct(object.buffer());
+      size_t size = aV2P::getExtentProduct(object.buffer());
       return {{address, size}};
     }
   };

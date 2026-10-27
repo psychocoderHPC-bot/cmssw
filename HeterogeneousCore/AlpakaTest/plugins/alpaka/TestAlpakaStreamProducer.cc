@@ -13,7 +13,7 @@
 
 #include "TestAlgo.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * This class demonstrates a stream EDProducer that
    * - consumes a host EDProduct
@@ -26,11 +26,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     TestAlpakaStreamProducer(edm::ParameterSet const& config)
         : EDProducer<>(config),
           size_{config.getParameter<edm::ParameterSet>("size").getParameter<int32_t>(
-              EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE))},
+              EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE))},
           size2_{config.getParameter<edm::ParameterSet>("size").getParameter<int32_t>(
-              EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE))},
+              EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE))},
           size3_{config.getParameter<edm::ParameterSet>("size").getParameter<int32_t>(
-              EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE))} {
+              EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE))} {
       getToken_ = consumes(config.getParameter<edm::InputTag>("source"));
       esToken_ = esConsumes(config.getParameter<edm::ESInputTag>("eventSetupSource"));
       devicePutToken_ = produces(config.getParameter<std::string>("productInstanceName"));
@@ -86,7 +86,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     TestAlgo algo_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(TestAlpakaStreamProducer);
+DEFINE_FWK_AV2P_MODULE(TestAlpakaStreamProducer);

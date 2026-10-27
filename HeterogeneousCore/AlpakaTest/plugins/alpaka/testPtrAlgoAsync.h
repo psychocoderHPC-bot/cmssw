@@ -4,7 +4,7 @@
 #include "DataFormats/PortableTestObjects/interface/TestProductWithPtr.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   portabletest::TestProductWithPtr<Device> testPtrAlgoAsync(Queue& queue, int size);
 }
 

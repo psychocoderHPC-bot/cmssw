@@ -1,6 +1,6 @@
 #include <boost/core/demangle.hpp>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
@@ -14,15 +14,15 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/getHostCachingAllocator.h"
 #include "HeterogeneousCore/AlpakaServices/interface/alpaka/AlpakaService.h"
 
-#ifdef ALPAKA_ACC_GPU_CUDA_ENABLED
+#ifdef AV2P_ACC_GPU_CUDA_ENABLED
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "HeterogeneousCore/CUDAServices/interface/CUDAInterface.h"
-#endif  // ALPAKA_ACC_GPU_CUDA_ENABLED
+#endif  // AV2P_ACC_GPU_CUDA_ENABLED
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef AV2P_ACC_GPU_HIP_ENABLED
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "HeterogeneousCore/ROCmServices/interface/ROCmInterface.h"
-#endif  // ALPAKA_ACC_GPU_HIP_ENABLED
+#endif  // AV2P_ACC_GPU_HIP_ENABLED
 
 namespace {
 
@@ -93,49 +93,49 @@ namespace {
 
 }  // namespace
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   AlpakaService::AlpakaService(edm::ParameterSet const& config, edm::ActivityRegistry&)
       : enabled_(config.getUntrackedParameter<bool>("enabled")),
         verbose_(config.getUntrackedParameter<bool>("verbose")) {
-#ifdef ALPAKA_ACC_GPU_CUDA_ENABLED
+#ifdef AV2P_ACC_GPU_CUDA_ENABLED
     // rely on the CUDAService to initialise the CUDA devices
     edm::Service<CUDAInterface> cuda;
-#endif  // ALPAKA_ACC_GPU_CUDA_ENABLED
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#endif  // AV2P_ACC_GPU_CUDA_ENABLED
+#ifdef AV2P_ACC_GPU_HIP_ENABLED
     // rely on the ROCmService to initialise the ROCm devices
     edm::Service<ROCmInterface> rocm;
-#endif  // ALPAKA_ACC_GPU_HIP_ENABLED
+#endif  // AV2P_ACC_GPU_HIP_ENABLED
 
     // TODO from Andrea Bocci:
     //   - extract and print more information about the platform and devices
 
     if (not enabled_) {
-      edm::LogInfo("AlpakaService") << ALPAKA_TYPE_ALIAS_NAME(AlpakaService) << " disabled by configuration";
+      edm::LogInfo("AlpakaService") << AV2P_TYPE_ALIAS_NAME(AlpakaService) << " disabled by configuration";
       return;
     }
 
-#ifdef ALPAKA_ACC_GPU_CUDA_ENABLED
+#ifdef AV2P_ACC_GPU_CUDA_ENABLED
     if (not cuda or not cuda->enabled()) {
       enabled_ = false;
-      edm::LogInfo("AlpakaService") << ALPAKA_TYPE_ALIAS_NAME(AlpakaService) << " disabled by CUDAService";
+      edm::LogInfo("AlpakaService") << AV2P_TYPE_ALIAS_NAME(AlpakaService) << " disabled by CUDAService";
       return;
     }
-#endif  // ALPAKA_ACC_GPU_CUDA_ENABLED
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#endif  // AV2P_ACC_GPU_CUDA_ENABLED
+#ifdef AV2P_ACC_GPU_HIP_ENABLED
     if (not rocm or not rocm->enabled()) {
       enabled_ = false;
-      edm::LogInfo("AlpakaService") << ALPAKA_TYPE_ALIAS_NAME(AlpakaService) << " disabled by ROCmService";
+      edm::LogInfo("AlpakaService") << AV2P_TYPE_ALIAS_NAME(AlpakaService) << " disabled by ROCmService";
       return;
     }
-#endif  // ALPAKA_ACC_GPU_HIP_ENABLED
+#endif  // AV2P_ACC_GPU_HIP_ENABLED
 
     // enumerate all devices on this platform
     auto const& devices = cms::alpakatools::devices<Platform>();
     if (devices.empty()) {
       const std::string platform = boost::core::demangle(typeid(Platform).name());
       edm::LogWarning("AlpakaService") << "Could not find any devices on platform " << platform << ".\n"
-                                       << "Disabling " << ALPAKA_TYPE_ALIAS_NAME(AlpakaService) << ".";
+                                       << "Disabling " << AV2P_TYPE_ALIAS_NAME(AlpakaService) << ".";
       enabled_ = false;
       return;
     }
@@ -144,10 +144,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       const char* suffix[] = {"s.", ":", "s:"};
       const auto n = devices.size();
       edm::LogInfo out("AlpakaService");
-      out << ALPAKA_TYPE_ALIAS_NAME(AlpakaService) << " succesfully initialised.\n";
+      out << AV2P_TYPE_ALIAS_NAME(AlpakaService) << " succesfully initialised.\n";
       out << "Found " << n << " device" << suffix[n < 2 ? n : 2];
       for (auto const& device : devices) {
-        out << "\n  - " << alpaka::getName(device);
+        out << "\n  - " << aV2P::getName(device);
       }
     }
 
@@ -185,7 +185,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     desc.addUntracked<edm::ParameterSetDescription>("deviceAllocator", createAllocatorConfig())
         ->setComment("Configuration for the devices' CachingAllocator");
 
-    descriptions.add(ALPAKA_TYPE_ALIAS_NAME(AlpakaService), desc);
+    descriptions.add(AV2P_TYPE_ALIAS_NAME(AlpakaService), desc);
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

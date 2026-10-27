@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Portable/interface/alpaka/PortableCollection.h"
 #include "DataFormats/TrackingRecHitSoA/interface/TrackingRecHitsDevice.h"
@@ -18,12 +18,12 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/concepts.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::reco {
+namespace AV2P_ACCELERATOR_NAMESPACE::reco {
 
-  using TrackingRecHitsSoACollection = std::conditional_t<std::is_same_v<Device, alpaka::DevCpu>,
+  using TrackingRecHitsSoACollection = std::conditional_t<std::is_same_v<Device, aV2P::DevCpu>,
                                                           ::reco::TrackingRecHitHost,
                                                           ::reco::TrackingRecHitDevice<Device>>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::reco
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::reco
 
 namespace cms::alpakatools {
   template <typename TDevice>
@@ -39,14 +39,14 @@ namespace cms::alpakatools {
         std::memset(
             hostData.buffer().data(),
             0,
-            alpaka::getExtentProduct(hostData.buffer()) * sizeof(alpaka::Elem<reco::TrackingRecHitHost::Buffer>));
+            aV2P::getExtentProduct(hostData.buffer()) * sizeof(aV2P::Elem<reco::TrackingRecHitHost::Buffer>));
         return hostData;
       }
 
-      alpaka::memcpy(queue, hostData.buffer(), deviceData.buffer());
+      aV2P::memcpy(queue, hostData.buffer(), deviceData.buffer());
 #ifdef GPU_DEBUG
       printf("TrackingRecHitsSoACollection: I'm copying to host.\n");
-      alpaka::wait(queue);
+      aV2P::wait(queue);
       assert(deviceData.nHits() == hostData.nHits());
       assert(deviceData.nModules() == hostData.nModules());
       assert(deviceData.offsetBPIX2() == hostData.offsetBPIX2());
@@ -60,7 +60,7 @@ namespace cms::alpakatools {
   struct CopyToDevice<::reco::TrackingRecHitHost> {
     template <cms::alpakatools::NonCPUQueue TQueue>
     static auto copyAsync(TQueue& queue, reco::TrackingRecHitHost const& hostData) {
-      using TDevice = typename alpaka::trait::DevType<TQueue>::type;
+      using TDevice = typename aV2P::trait::DevType<TQueue>::type;
 
       auto nHits = hostData.nHits();
 
@@ -71,11 +71,11 @@ namespace cms::alpakatools {
         return deviceData;
       }
 
-      alpaka::memcpy(queue, deviceData.buffer(), hostData.buffer());
+      aV2P::memcpy(queue, deviceData.buffer(), hostData.buffer());
 
 #ifdef GPU_DEBUG
       printf("TrackingRecHitsSoACollection: I'm copying to device.\n");
-      alpaka::wait(queue);
+      aV2P::wait(queue);
       assert(deviceData.nHits() == hostData.nHits());
       assert(deviceData.nModules() == hostData.nModules());
       assert(deviceData.offsetBPIX2() == hostData.offsetBPIX2());

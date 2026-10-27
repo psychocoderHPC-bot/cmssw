@@ -5,7 +5,7 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/ESDeviceProductType.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::device {
+namespace AV2P_ACCELERATOR_NAMESPACE::device {
   class EventSetup;
   template <typename T>
   class Record;
@@ -13,7 +13,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::device {
   /**
    * The device::ESGetToken is similar to edm::ESGetToken, but is
    * intended for EventSetup data products in the device memory space
-   * defined by the backend (i.e. ALPAKA_ACCELERATOR_NAMESPACE). It
+   * defined by the backend (i.e. AV2P_ACCELERATOR_NAMESPACE). It
    * can be used only to get data from a device::EventSetup and
    * device::Record<T>.
    */
@@ -35,6 +35,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::device {
     using ProductType = detail::ESDeviceProductType<ESProduct>;
     edm::ESGetToken<ProductType, ESRecord> token_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::device
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::device
 
 #endif

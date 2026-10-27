@@ -6,10 +6,10 @@
 
 #include "RecoParticleFlow/PFClusterProducer/interface/PFClusteringVarsSoA.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::reco {
+namespace AV2P_ACCELERATOR_NAMESPACE::reco {
 
   using PFClusteringVarsDeviceCollection = PortableCollection<::reco::PFClusteringVarsSoA>;
   // needs nRH allocation
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::reco
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::reco
 
 #endif

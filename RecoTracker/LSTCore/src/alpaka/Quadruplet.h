@@ -21,8 +21,8 @@
 
 #include "NeuralNetwork.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void addQuadrupletToMemory(ModulesConst modules,
+namespace AV2P_ACCELERATOR_NAMESPACE::lst {
+  AV2P_FN_ACC AV2P_FN_INLINE void addQuadrupletToMemory(ModulesConst modules,
                                                             MiniDoubletsConst mds,
                                                             SegmentsConst segments,
                                                             TripletsConst triplets,
@@ -103,8 +103,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     quadruplets.regressionCenterY()[quadrupletIndex] = regressionCenterY;
   };
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool passT4RZConstraint(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool passT4RZConstraint(TAcc const& acc,
                                                          ModulesConst modules,
                                                          MiniDoubletsConst mds,
                                                          unsigned int firstMDIndex,
@@ -177,35 +177,35 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     // But if the initial T4 curve goes across quarters(i.e. cross axis to separate the quarters), need special redeclaration of px,py signs on these to avoid errors
     if (moduleType3 == 0) {  // 0 is ps
       if (x4 < x3 && x3 < x2)
-        px = -alpaka::math::abs(acc, px);
+        px = -aV2P::math::abs(acc, px);
       else if (x4 > x3 && x3 > x2)
-        px = alpaka::math::abs(acc, px);
+        px = aV2P::math::abs(acc, px);
       if (y4 < y3 && y3 < y2)
-        py = -alpaka::math::abs(acc, py);
+        py = -aV2P::math::abs(acc, py);
       else if (y4 > y3 && y3 > y2)
-        py = alpaka::math::abs(acc, py);
+        py = aV2P::math::abs(acc, py);
     } else if (moduleType3 == 1)  // 1 is 2s
     {
       if (x3 < x2 && x2 < x1)
-        px = -alpaka::math::abs(acc, px);
+        px = -aV2P::math::abs(acc, px);
       else if (x3 > x2 && x2 > x1)
-        px = alpaka::math::abs(acc, px);
+        px = aV2P::math::abs(acc, px);
       if (y3 < y2 && y2 < y1)
-        py = -alpaka::math::abs(acc, py);
+        py = -aV2P::math::abs(acc, py);
       else if (y3 > y2 && y2 > y1)
-        py = alpaka::math::abs(acc, py);
+        py = aV2P::math::abs(acc, py);
     }
 
     //to get pz, we use pt/pz=ds/dz, ds is the arclength between MD1 and MD3.
-    float AO = alpaka::math::sqrt(acc, (x1 - x_center) * (x1 - x_center) + (y1 - y_center) * (y1 - y_center));
+    float AO = aV2P::math::sqrt(acc, (x1 - x_center) * (x1 - x_center) + (y1 - y_center) * (y1 - y_center));
     float BO =
-        alpaka::math::sqrt(acc, (x_init - x_center) * (x_init - x_center) + (y_init - y_center) * (y_init - y_center));
+        aV2P::math::sqrt(acc, (x_init - x_center) * (x_init - x_center) + (y_init - y_center) * (y_init - y_center));
     float AB2 = (x1 - x_init) * (x1 - x_init) + (y1 - y_init) * (y1 - y_init);
-    float dPhi = alpaka::math::acos(acc, (AO * AO + BO * BO - AB2) / (2 * AO * BO));
+    float dPhi = aV2P::math::acos(acc, (AO * AO + BO * BO - AB2) / (2 * AO * BO));
     float ds = innerRadius / 100 * dPhi;
 
     float pz = (z_init - z1) / ds * pt;
-    float p = alpaka::math::sqrt(acc, px * px + py * py + pz * pz);
+    float p = aV2P::math::sqrt(acc, px * px + py * py + pz * pz);
 
     float a = -2.f * k2Rinv1GeVf * 100 * charge;
 
@@ -236,9 +236,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       float rou = a / p;
       // for endcap
       float s = (zsi - z_init) * p / pz;
-      float x = x_init + px / a * alpaka::math::sin(acc, rou * s) - py / a * (1 - alpaka::math::cos(acc, rou * s));
-      float y = y_init + py / a * alpaka::math::sin(acc, rou * s) + px / a * (1 - alpaka::math::cos(acc, rou * s));
-      diffr = (rtsi - alpaka::math::sqrt(acc, x * x + y * y)) * 100;
+      float x = x_init + px / a * aV2P::math::sin(acc, rou * s) - py / a * (1 - aV2P::math::cos(acc, rou * s));
+      float y = y_init + py / a * aV2P::math::sin(acc, rou * s) + px / a * (1 - aV2P::math::cos(acc, rou * s));
+      diffr = (rtsi - aV2P::math::sqrt(acc, x * x + y * y)) * 100;
 
       // for barrel
       if (layeri <= 6) {
@@ -249,16 +249,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
         float A = paraB * paraB + paraC * paraC;
         float B = 2 * paraA * paraB;
         float C = paraA * paraA - paraC * paraC;
-        float sol1 = (-B + alpaka::math::sqrt(acc, B * B - 4 * A * C)) / (2 * A);
-        float sol2 = (-B - alpaka::math::sqrt(acc, B * B - 4 * A * C)) / (2 * A);
-        float solz1 = alpaka::math::asin(acc, sol1) / rou * pz / p + z_init;
-        float solz2 = alpaka::math::asin(acc, sol2) / rou * pz / p + z_init;
+        float sol1 = (-B + aV2P::math::sqrt(acc, B * B - 4 * A * C)) / (2 * A);
+        float sol2 = (-B - aV2P::math::sqrt(acc, B * B - 4 * A * C)) / (2 * A);
+        float solz1 = aV2P::math::asin(acc, sol1) / rou * pz / p + z_init;
+        float solz2 = aV2P::math::asin(acc, sol2) / rou * pz / p + z_init;
         float diffz1 = (solz1 - zsi) * 100;
         float diffz2 = (solz2 - zsi) * 100;
         diffz = edm::isNotFinite(diffz1) ? diffz2
                 : edm::isNotFinite(diffz2)
                     ? diffz1
-                    : ((alpaka::math::abs(acc, diffz1) < alpaka::math::abs(acc, diffz2)) ? diffz1 : diffz2);
+                    : ((aV2P::math::abs(acc, diffz1) < aV2P::math::abs(acc, diffz2)) ? diffz1 : diffz2);
       }
       residual = (layeri > 6) ? diffr : diffz;
 
@@ -268,7 +268,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       //check the tilted module, side: PosZ, NegZ, Center(for not tilted)
       if (i == 2 || i == 3) {
         uint16_t moduleIndex = (i == 2) ? lowerModuleIndex2 : lowerModuleIndex3;
-        float drdz = alpaka::math::abs(acc, modules.drdzs()[moduleIndex]);
+        float drdz = aV2P::math::abs(acc, modules.drdzs()[moduleIndex]);
         short side = modules.sides()[moduleIndex];
         short subdets = modules.subdets()[moduleIndex];
         const bool isEndcapOrCenter = (subdets == lst::Endcap) or (side == lst::Center);
@@ -299,7 +299,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       rzChiSquared = 12 * (residual4_linear * residual4_linear);
       return rzChiSquared < 11.678f;
     }
-    float eta1 = alpaka::math::abs(acc, mds.anchorEta()[firstMDIndex]);
+    float eta1 = aV2P::math::abs(acc, mds.anchorEta()[firstMDIndex]);
     uint8_t bin_index = (eta1 > 2.5f) ? (25 - 1) : static_cast<unsigned int>(eta1 / 0.1f);
     float chi2_cuts[] = {63.0164, 49.1308, 57.8446, 71.1812, 64.1492, 45.2832, 78.2952, 82.1582, 60.5490,
                          80.5764, 62.4270, 35.7822, 18.0594, 15.3724, 5.5182,  10.1174, 12.8028, 7.4696,
@@ -307,8 +307,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     return rzChiSquared < chi2_cuts[bin_index];
   };
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool runQuadrupletDefaultAlgo(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool runQuadrupletDefaultAlgo(TAcc const& acc,
                                                                ModulesConst modules,
                                                                MiniDoubletsConst mds,
                                                                SegmentsConst segments,
@@ -524,7 +524,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
   template <bool ReduceMem>
   struct CreateQuadrupletsT {
-    ALPAKA_FN_ACC void operator()(Acc3D const& acc,
+    AV2P_FN_ACC void operator()(Acc3D const& acc,
                                   ModulesConst modules,
                                   MiniDoubletsConst mds,
                                   SegmentsConst segments,
@@ -539,13 +539,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
                                   ObjectRangesConst ranges,
                                   uint16_t nEligibleT4Modules,
                                   const float ptCut) const {
-      ALPAKA_ASSERT_ACC((alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[1] == 1) &&
-                        (alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[2] == 1));
+      AV2P_ASSERT_ACC((aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[1] == 1) &&
+                        (aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[2] == 1));
 
-      unsigned int& matchCount = alpaka::declareSharedVar<unsigned int, __COUNTER__>(acc);
+      unsigned int& matchCount = aV2P::declareSharedVar<unsigned int, __COUNTER__>(acc);
 
-      const auto threadIdx = alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc);
-      const auto blockDim = alpaka::getWorkDiv<alpaka::Block, alpaka::Threads>(acc);
+      const auto threadIdx = aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc);
+      const auto blockDim = aV2P::getWorkDiv<aV2P::Block, aV2P::Threads>(acc);
 
       const int threadIdX = threadIdx.x();
       const int threadIdY = threadIdx.y();
@@ -595,7 +595,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
         if (nInnerTriplets == 0)
           continue;
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // Step 1: Make inner and outer triplet pairs
         const auto innerTripletOffset = tripIdx[lowerModule1];
@@ -670,10 +670,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
                                                       fakeScore);
               if (success) {
                 int totOccupancyQuadruplets =
-                    alpaka::atomicAdd(acc,
+                    aV2P::atomicAdd(acc,
                                       &quadrupletsOccupancy.totOccupancyQuadruplets()[lowerModule1],
                                       1u,
-                                      alpaka::hierarchy::Threads{});
+                                      aV2P::hierarchy::Threads{});
                 if (totOccupancyQuadruplets >= ranges.quadrupletModuleOccupancy()[lowerModule1]) {
 #ifdef WARNINGS
                   printf("Quadruplet excess alert! Module index = %d, Occupancy = %d\n",
@@ -681,8 +681,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
                          totOccupancyQuadruplets);
 #endif
                 } else {
-                  int quadrupletModuleIndex = alpaka::atomicAdd(
-                      acc, &quadrupletsOccupancy.nQuadruplets()[lowerModule1], 1u, alpaka::hierarchy::Threads{});
+                  int quadrupletModuleIndex = aV2P::atomicAdd(
+                      acc, &quadrupletsOccupancy.nQuadruplets()[lowerModule1], 1u, aV2P::hierarchy::Threads{});
                   unsigned int quadrupletIndex = ranges.quadrupletModuleIndices()[lowerModule1] + quadrupletModuleIndex;
                   const unsigned int layer3MDIndex =
                       mdIndices[segIdx[innerTripletIndex][md_adjustment]][layer2_adjustment];
@@ -738,7 +738,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
               continue;
             }
 
-            int mIdx = alpaka::atomicAdd(acc, &matchCount, 1u, alpaka::hierarchy::Threads{});
+            int mIdx = aV2P::atomicAdd(acc, &matchCount, 1u, aV2P::hierarchy::Threads{});
             const unsigned int quadrupletIndex = ranges.quadrupletModuleIndices()[lowerModule1] + mIdx;
 
 #ifdef WARNINGS
@@ -762,7 +762,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
         if constexpr (ReduceMem)
           continue;
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
         if (matchCount == 0) {
           continue;
         }
@@ -811,8 +811,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
                                                   displacedScore,
                                                   fakeScore);
           if (success) {
-            int totOccupancyQuadruplets = alpaka::atomicAdd(
-                acc, &quadrupletsOccupancy.totOccupancyQuadruplets()[lowerModule1], 1u, alpaka::hierarchy::Threads{});
+            int totOccupancyQuadruplets = aV2P::atomicAdd(
+                acc, &quadrupletsOccupancy.totOccupancyQuadruplets()[lowerModule1], 1u, aV2P::hierarchy::Threads{});
             if (totOccupancyQuadruplets >= ranges.quadrupletModuleOccupancy()[lowerModule1]) {
 #ifdef WARNINGS
               printf("Quadruplet excess alert! Module index = %d, Occupancy = %d\n",
@@ -820,8 +820,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
                      totOccupancyQuadruplets);
 #endif
             } else {
-              int quadrupletModuleIndex = alpaka::atomicAdd(
-                  acc, &quadrupletsOccupancy.nQuadruplets()[lowerModule1], 1u, alpaka::hierarchy::Threads{});
+              int quadrupletModuleIndex = aV2P::atomicAdd(
+                  acc, &quadrupletsOccupancy.nQuadruplets()[lowerModule1], 1u, aV2P::hierarchy::Threads{});
               const unsigned int quadrupletIndex =
                   ranges.quadrupletModuleIndices()[lowerModule1] + quadrupletModuleIndex;
               const unsigned int layer3MDIndex = mdIndices[segIdx[innerTripletIndex][md_adjustment]][layer2_adjustment];
@@ -882,7 +882,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   using CreateQuadruplets = CreateQuadrupletsT<false>;
   using CreateQuadrupletsReduceMem = CreateQuadrupletsT<true>;
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool isValidQuadRegion(ModulesConst modules, uint16_t lowerModule) {
+  AV2P_FN_ACC AV2P_FN_INLINE bool isValidQuadRegion(ModulesConst modules, uint16_t lowerModule) {
     const short layer = modules.layers()[lowerModule];
     const short subdet = modules.subdets()[lowerModule];
     // Quadruplets starting outside these regions are not built.
@@ -891,7 +891,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
   template <bool ReduceMem>
   struct CountTripletLSConnectionsT {
-    ALPAKA_FN_ACC void operator()(Acc3D const& acc,
+    AV2P_FN_ACC void operator()(Acc3D const& acc,
                                   ModulesConst modules,
                                   MiniDoubletsConst mds,
                                   SegmentsConst segments,
@@ -904,8 +904,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
                                   ObjectRangesConst ranges,
                                   const float ptCut) const {
       // The atomicAdd below with hierarchy::Threads{} requires one block in x, y dimensions.
-      ALPAKA_ASSERT_ACC((alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[1] == 1) &&
-                        (alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[2] == 1));
+      AV2P_ASSERT_ACC((aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[1] == 1) &&
+                        (aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[2] == 1));
       const auto& segIdx = triplets.segmentIndices();
       const auto& lmIdx = triplets.lowerModuleIndices();
       const auto& partOfPT5 = triplets.partOfPT5();
@@ -959,7 +959,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
             // Will only perform runQuadrupletDefaultAlgorithm() checks if densely connected
             if (!ReduceMem && nInnerTriplets < kNTripletThreshold && nOuterTriplets < kNTripletThreshold) {
-              alpaka::atomicAdd(acc, &triplets.connectedLSMax()[innerTripletIndex], 1u, alpaka::hierarchy::Threads{});
+              aV2P::atomicAdd(acc, &triplets.connectedLSMax()[innerTripletIndex], 1u, aV2P::hierarchy::Threads{});
             } else {
               const uint16_t lowerModule3 = lmIdx[outerTripletIndex][1];
               const uint16_t lowerModule4 = lmIdx[outerTripletIndex][2];
@@ -993,7 +993,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
                                                        displacedScore,
                                                        fakeScore);
               if (ok) {
-                alpaka::atomicAdd(acc, &triplets.connectedLSMax()[innerTripletIndex], 1u, alpaka::hierarchy::Threads{});
+                aV2P::atomicAdd(acc, &triplets.connectedLSMax()[innerTripletIndex], 1u, aV2P::hierarchy::Threads{});
               }
             }
           }
@@ -1006,21 +1006,21 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   using CountTripletLSConnectionsReduceMem = CountTripletLSConnectionsT<true>;
 
   struct CreateEligibleModulesListForQuadruplets {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   ModulesConst modules,
                                   TripletsOccupancyConst tripletsOcc,
                                   ObjectRanges ranges,
                                   Triplets triplets) const {
       // Single-block kernel
-      ALPAKA_ASSERT_ACC((alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[0] == 1));
+      AV2P_ASSERT_ACC((aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[0] == 1));
 
-      int& nEligibleT4Modulesx = alpaka::declareSharedVar<int, __COUNTER__>(acc);
-      int& nTotalQuadrupletsx = alpaka::declareSharedVar<int, __COUNTER__>(acc);
+      int& nEligibleT4Modulesx = aV2P::declareSharedVar<int, __COUNTER__>(acc);
+      int& nTotalQuadrupletsx = aV2P::declareSharedVar<int, __COUNTER__>(acc);
       if (cms::alpakatools::once_per_block(acc)) {
         nTotalQuadrupletsx = 0;
         nEligibleT4Modulesx = 0;
       }
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
 
       for (uint16_t lowerModule : cms::alpakatools::uniform_elements(acc, modules.nLowerModules())) {
         if (!isValidQuadRegion(modules, lowerModule))
@@ -1041,8 +1041,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
         if (dynamic_count == 0)
           continue;
 
-        int nEligibleT4Modules = alpaka::atomicAdd(acc, &nEligibleT4Modulesx, 1, alpaka::hierarchy::Threads{});
-        int nTotQ = alpaka::atomicAdd(acc, &nTotalQuadrupletsx, dynamic_count, alpaka::hierarchy::Threads{});
+        int nEligibleT4Modules = aV2P::atomicAdd(acc, &nEligibleT4Modulesx, 1, aV2P::hierarchy::Threads{});
+        int nTotQ = aV2P::atomicAdd(acc, &nTotalQuadrupletsx, dynamic_count, aV2P::hierarchy::Threads{});
 
         ranges.quadrupletModuleIndices()[lowerModule] = nTotQ;
         ranges.indicesOfEligibleT4Modules()[nEligibleT4Modules] = lowerModule;
@@ -1050,7 +1050,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       }
 
       // Wait for all threads to finish before reporting final values
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
       if (cms::alpakatools::once_per_block(acc)) {
         ranges.nEligibleT4Modules() = static_cast<uint16_t>(nEligibleT4Modulesx);
         ranges.nTotalQuads() = static_cast<unsigned int>(nTotalQuadrupletsx);
@@ -1059,12 +1059,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   };
 
   struct AddQuadrupletRangesToEventExplicit {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   ModulesConst modules,
                                   QuadrupletsOccupancyConst quadrupletsOccupancy,
                                   ObjectRanges ranges) const {
       // implementation is 1D with a single block
-      ALPAKA_ASSERT_ACC((alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[0] == 1));
+      AV2P_ASSERT_ACC((aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[0] == 1));
 
       for (uint16_t i : cms::alpakatools::uniform_elements(acc, modules.nLowerModules())) {
         if (quadrupletsOccupancy.nQuadruplets()[i] == 0 or ranges.quadrupletModuleIndices()[i] == -1) {
@@ -1078,5 +1078,5 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       }
     }
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::lst
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::lst
 #endif

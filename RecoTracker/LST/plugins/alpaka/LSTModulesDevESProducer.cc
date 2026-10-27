@@ -12,7 +12,7 @@
 
 #include "RecoTracker/Record/interface/TrackerRecoGeometryRecord.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class LSTModulesDevESProducer : public ESProducer {
   private:
@@ -40,6 +40,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     }
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(LSTModulesDevESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(LSTModulesDevESProducer);

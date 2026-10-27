@@ -9,7 +9,7 @@
 
 class EcalSampleMask;
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit {
 
   enum class TimeComputationState : char { NotFinished = 0, Finished = 1 };
   enum class MinimizationState : char {
@@ -125,13 +125,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
     std::optional<cms::alpakatools::device_buffer<Device, TimeComputationState[]>> tcStateDevBuf;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit
 
 //
 // ECAL Rechit producer
 //
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::rechit {
 
   // parameters that are read from the configuration file for rechit producer
   struct ConfigurationParameters {
@@ -152,6 +152,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit {
     uint32_t flagmask;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::rechit
 
 #endif  // RecoLocalCalo_EcalRecProducers_plugins_alpaka_DeclsForKernels_h

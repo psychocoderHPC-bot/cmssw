@@ -1,6 +1,6 @@
 #include <iostream>
 #include <limits>
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
@@ -10,9 +10,9 @@
 #include "TimeComputationKernels.h"
 
 //#define DEBUG
-//#define ECAL_RECO_ALPAKA_DEBUG
+//#define ECAL_RECO_AV2P_DEBUG
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit {
 
   using namespace cms::alpakatools;
 
@@ -46,7 +46,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
     auto workDivPrep1D = cms::alpakatools::make_workdiv<Acc1D>(blocks_1d, threads_1d);
     // Since the ::ecal::multifit::X objects are non-dynamic Eigen::Matrix types the returned pointers from the buffers
     // and the ::ecal::multifit::X* both point to the data.
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDivPrep1D,
                         Kernel_prep_1d_and_initialize{},
                         digisDevEB.const_view(),
@@ -70,7 +70,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
     Vec2D const blocks_2d{1u, totalChannels};  // {y, x} coordiantes
     Vec2D const threads_2d{kMaxSamples, kMaxSamples};
     auto workDivPrep2D = cms::alpakatools::make_workdiv<Acc2D>(blocks_2d, threads_2d);
-    alpaka::exec<Acc2D>(queue,
+    aV2P::exec<Acc2D>(queue,
                         workDivPrep2D,
                         Kernel_prep_2d{},
                         digisDevEB.const_view(),
@@ -102,7 +102,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
       auto const blocks_time_init = blocks_1d;
       auto const threads_time_init = threads_1d;
       auto workDivTimeCompInit1D = cms::alpakatools::make_workdiv<Acc1D>(blocks_time_init, threads_time_init);
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDivTimeCompInit1D,
                           Kernel_time_computation_init{},
                           digisDevEB.const_view(),
@@ -124,7 +124,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
         auto const threadsFixMGPA = threads_1d;
         auto const blocksFixMGPA = cms::alpakatools::divide_up_by(kMaxSamples * ebSize, threadsFixMGPA);
         auto workDivTimeFixMGPAslew1D = cms::alpakatools::make_workdiv<Acc1D>(blocksFixMGPA, threadsFixMGPA);
-        alpaka::exec<Acc1D>(queue,
+        aV2P::exec<Acc1D>(queue,
                             workDivTimeFixMGPAslew1D,
                             Kernel_time_compute_fixMGPAslew{},
                             digisDevEB.const_view(),
@@ -138,7 +138,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
       auto const threads_nullhypot = threads_1d;
       auto const blocks_nullhypot = blocks_1d;
       auto workDivTimeNullhypot1D = cms::alpakatools::make_workdiv<Acc1D>(blocks_nullhypot, threads_nullhypot);
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDivTimeNullhypot1D,
                           Kernel_time_compute_nullhypot{},
                           scratch.sample_valuesDevBuf.value().data(),
@@ -156,7 +156,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
       auto const blocks_makeratio =
           cms::alpakatools::divide_up_by(nthreads_per_channel * totalChannels, threads_makeratio);
       auto workDivTimeMakeRatio1D = cms::alpakatools::make_workdiv<Acc1D>(blocks_makeratio, threads_makeratio);
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDivTimeMakeRatio1D,
                           Kernel_time_compute_makeratio{},
                           digisDevEB.const_view(),
@@ -181,7 +181,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
       auto const threads_findamplchi2 = threads_1d;
       auto const blocks_findamplchi2 = blocks_1d;
       auto workDivTimeFindAmplChi21D = cms::alpakatools::make_workdiv<Acc1D>(blocks_findamplchi2, threads_findamplchi2);
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDivTimeFindAmplChi21D,
                           Kernel_time_compute_findamplchi2_and_finish{},
                           digisDevEB.const_view(),
@@ -206,7 +206,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
       auto const threads_timecorr = 32;
       auto const blocks_timecorr = cms::alpakatools::divide_up_by(totalChannels, threads_timecorr);
       auto workDivCorrFinal1D = cms::alpakatools::make_workdiv<Acc1D>(blocks_timecorr, threads_timecorr);
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDivCorrFinal1D,
                           Kernel_time_correction_and_finalize{},
                           digisDevEB.const_view(),
@@ -233,4 +233,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
     }
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit

@@ -21,7 +21,7 @@
 #include <fstream>
 #include <sstream>
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   namespace hgcal {
 
@@ -114,6 +114,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   }  // namespace hgcal
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(hgcal::HGCalMappingModuleESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(hgcal::HGCalMappingModuleESProducer);

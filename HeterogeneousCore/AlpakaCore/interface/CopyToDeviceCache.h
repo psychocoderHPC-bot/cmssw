@@ -1,7 +1,7 @@
 #ifndef HeterogeneousCore_AlpakaInterface_interface_CopyToDeviceCache_h
 #define HeterogeneousCore_AlpakaInterface_interface_CopyToDeviceCache_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/CopyToDevice.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/QueueCache.h"
@@ -19,13 +19,13 @@ namespace cms::alpakatools {
     class CopyToDeviceCacheImpl {
     public:
       using Device = TDevice;
-      using Queue = alpaka::Queue<Device, alpaka::NonBlocking>;
+      using Queue = aV2P::Queue<Device, aV2P::NonBlocking>;
       using HostObject = THostObject;
       using Copy = CopyToDevice<HostObject>;
       using DeviceObject = decltype(Copy::copyAsync(std::declval<Queue&>(), std::declval<HostObject const&>()));
 
       CopyToDeviceCacheImpl(HostObject const& srcObject) {
-        using Platform = alpaka::Platform<Device>;
+        using Platform = aV2P::Platform<Device>;
         auto const& devices = cms::alpakatools::devices<Platform>();
         std::vector<std::shared_ptr<Queue>> queues;
         queues.reserve(devices.size());
@@ -36,7 +36,7 @@ namespace cms::alpakatools {
           queues.emplace_back(std::move(queue));
         }
         for (auto& queuePtr : queues) {
-          alpaka::wait(*queuePtr);
+          aV2P::wait(*queuePtr);
         }
       }
 
@@ -79,7 +79,7 @@ namespace cms::alpakatools {
    * queue or device argument.
    */
   template <typename TDevice, typename THostObject>
-    requires alpaka::concepts::Device<TDevice>
+    requires aV2P::concepts::Device<TDevice>
   class CopyToDeviceCache {
     using Device = TDevice;
     using HostObject = THostObject;
@@ -89,11 +89,11 @@ namespace cms::alpakatools {
   public:
     CopyToDeviceCache(THostObject const& srcData) : data_(srcData) {}
 
-    DeviceObject const& get(Device const& dev) const { return data_.get(alpaka::getNativeHandle(dev)); }
+    DeviceObject const& get(Device const& dev) const { return data_.get(aV2P::getNativeHandle(dev)); }
 
     template <typename TQueue>
     DeviceObject const& get(TQueue const& queue) const {
-      return get(alpaka::getDev(queue));
+      return get(aV2P::getDev(queue));
     }
 
   private:

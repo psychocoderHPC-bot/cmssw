@@ -7,9 +7,9 @@
 #include "RecoTracker/LSTGeometry/interface/Common.h"
 
 #if defined(FP16_Base)
-#if defined ALPAKA_ACC_GPU_CUDA_ENABLED
+#if defined AV2P_ACC_GPU_CUDA_ENABLED
 #include <cuda_fp16.h>
-#elif defined ALPAKA_ACC_GPU_HIP_ENABLED
+#elif defined AV2P_ACC_GPU_HIP_ENABLED
 #include <hip/hip_fp16.h>
 #endif
 #endif

@@ -5,7 +5,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "CalorimeterDefinitions.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   template <typename CAL>
   class PFRecHitProducerKernel {
@@ -31,6 +31,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     WorkDiv<Dim1D> work_div_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // RecoParticleFlow_PFRecHitProducer_plugins_alpaka_PFRecHitProducerKernel_h

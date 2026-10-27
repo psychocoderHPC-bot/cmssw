@@ -6,7 +6,7 @@
 #include <memory>
 #include <random>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Utilities/interface/stringize.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
@@ -19,7 +19,7 @@ constexpr uint32_t MaxTk = 8000;
 constexpr uint32_t MaxAssocs = 4 * MaxTk;
 
 using namespace cms::alpakatools;
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 using AssocRandomAccess = OneToManyAssocRandomAccess<uint16_t, MaxElem, MaxAssocs>;
 using AssocSequential = OneToManyAssocSequential<uint16_t, MaxElem, MaxAssocs>;
@@ -28,20 +28,20 @@ using Multiplicity = OneToManyAssocRandomAccess<uint16_t, 8, MaxTk>;
 using TK = std::array<uint16_t, 4>;
 
 struct countMultiLocal {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+  AV2P_FN_ACC void operator()(Acc1D const& acc,
                                 TK const* __restrict__ tk,
                                 Multiplicity* __restrict__ assoc,
                                 uint32_t n) const {
     for (auto i : uniform_elements(acc, n)) {
-      auto& local = alpaka::declareSharedVar<Multiplicity::CountersOnly, __COUNTER__>(acc);
-      const uint32_t threadIdxLocal(alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[0u]);
+      auto& local = aV2P::declareSharedVar<Multiplicity::CountersOnly, __COUNTER__>(acc);
+      const uint32_t threadIdxLocal(aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc)[0u]);
       const bool oncePerSharedMemoryAccess = (threadIdxLocal == 0);
       if (oncePerSharedMemoryAccess) {
         local.zero();
       }
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
       local.count(acc, 2 + i % 4);
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
       if (oncePerSharedMemoryAccess) {
         assoc->add(acc, local);
       }
@@ -50,7 +50,7 @@ struct countMultiLocal {
 };
 
 struct countMulti {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+  AV2P_FN_ACC void operator()(Acc1D const& acc,
                                 TK const* __restrict__ tk,
                                 Multiplicity* __restrict__ assoc,
                                 uint32_t n) const {
@@ -61,22 +61,22 @@ struct countMulti {
 };
 
 struct verifyMulti {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, Multiplicity* __restrict__ m1, Multiplicity* __restrict__ m2) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, Multiplicity* __restrict__ m1, Multiplicity* __restrict__ m2) const {
     for ([[maybe_unused]] auto i : uniform_elements(acc, Multiplicity{}.totOnes())) {
-      ALPAKA_ASSERT_ACC(m1->off[i] == m2->off[i]);
+      AV2P_ASSERT_ACC(m1->off[i] == m2->off[i]);
     }
   }
 };
 
 struct count {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+  AV2P_FN_ACC void operator()(Acc1D const& acc,
                                 TK const* __restrict__ tk,
                                 AssocRandomAccess* __restrict__ assoc,
                                 uint32_t n) const {
     for (auto i : uniform_elements(acc, 4 * n)) {
       auto k = i / 4;
       auto j = i - 4 * k;
-      ALPAKA_ASSERT_ACC(j < 4);
+      AV2P_ASSERT_ACC(j < 4);
       if (k >= n) {
         return;
       }
@@ -88,14 +88,14 @@ struct count {
 };
 
 struct fill {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+  AV2P_FN_ACC void operator()(Acc1D const& acc,
                                 TK const* __restrict__ tk,
                                 AssocRandomAccess* __restrict__ assoc,
                                 uint32_t n) const {
     for (auto i : uniform_elements(acc, 4 * n)) {
       auto k = i / 4;
       auto j = i - 4 * k;
-      ALPAKA_ASSERT_ACC(j < 4);
+      AV2P_ASSERT_ACC(j < 4);
       if (k >= n) {
         return;
       }
@@ -108,14 +108,14 @@ struct fill {
 
 struct verify {
   template <typename Assoc>
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, Assoc* __restrict__ assoc) const {
-    ALPAKA_ASSERT_ACC(assoc->size() < Assoc{}.capacity());
+  AV2P_FN_ACC void operator()(Acc1D const& acc, Assoc* __restrict__ assoc) const {
+    AV2P_ASSERT_ACC(assoc->size() < Assoc{}.capacity());
   }
 };
 
 struct fillBulk {
   template <typename Assoc>
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+  AV2P_FN_ACC void operator()(Acc1D const& acc,
                                 AtomicPairCounter* apc,
                                 TK const* __restrict__ tk,
                                 Assoc* __restrict__ assoc,
@@ -129,11 +129,11 @@ struct fillBulk {
 
 struct verifyBulk {
   template <typename Assoc>
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, Assoc const* __restrict__ assoc, AtomicPairCounter const* apc) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, Assoc const* __restrict__ assoc, AtomicPairCounter const* apc) const {
     if (apc->get().first >= Assoc::ctNOnes()) {
       printf("Overflow %d %d\n", apc->get().first, Assoc::ctNOnes());
     }
-    ALPAKA_ASSERT_ACC(assoc->size() < Assoc::ctCapacity());
+    AV2P_ASSERT_ACC(assoc->size() < Assoc::ctCapacity());
   }
 };
 
@@ -141,7 +141,7 @@ int main() {
   // get the list of devices on the current platform
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }
@@ -192,16 +192,16 @@ int main() {
         }
         ++z;
       }
-      ALPAKA_ASSERT_ACC(n <= MaxElem);
-      ALPAKA_ASSERT_ACC(j <= N);
+      AV2P_ASSERT_ACC(n <= MaxElem);
+      AV2P_ASSERT_ACC(j <= N);
     }
     std::cout << "filled with " << n << " elements " << double(ave) / n << ' ' << imax << ' ' << nz << std::endl;
 
     auto v_d = make_device_buffer<std::array<uint16_t, 4>[]>(queue, N);
-    alpaka::memcpy(queue, v_d, tr);
+    aV2P::memcpy(queue, v_d, tr);
 
     auto ara_d = make_device_buffer<AssocRandomAccess>(queue);
-    alpaka::memset(queue, ara_d, 0);
+    aV2P::memset(queue, ara_d, 0);
 
     const auto threadsPerBlockOrElementsPerThread = 256u;
     const auto blocksPerGrid4N = divide_up_by(4 * N, threadsPerBlockOrElementsPerThread);
@@ -209,17 +209,17 @@ int main() {
 
     AssocRandomAccess::template launchZero<Acc1D>(ara_d.data(), queue);
 
-    alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDiv4N, count(), v_d.data(), ara_d.data(), N));
+    aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDiv4N, count(), v_d.data(), ara_d.data(), N));
 
     AssocRandomAccess::template launchFinalize<Acc1D>(ara_d.data(), queue);
 
-    alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(WorkDiv1D{1u, 1u, 1u}, verify(), ara_d.data()));
+    aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(WorkDiv1D{1u, 1u, 1u}, verify(), ara_d.data()));
 
-    alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDiv4N, fill(), v_d.data(), ara_d.data(), N));
+    aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDiv4N, fill(), v_d.data(), ara_d.data(), N));
 
     auto ara_h = make_host_buffer<AssocRandomAccess>(queue);
-    alpaka::memcpy(queue, ara_h, ara_d);
-    alpaka::wait(queue);
+    aV2P::memcpy(queue, ara_h, ara_d);
+    aV2P::wait(queue);
 
     std::cout << ara_h->size() << std::endl;
     imax = 0;
@@ -234,45 +234,45 @@ int main() {
       ave += x;
       imax = std::max(imax, int(x));
     }
-    ALPAKA_ASSERT_ACC(0 == ara_h->size(n));
+    AV2P_ASSERT_ACC(0 == ara_h->size(n));
     std::cout << "found with " << n << " elements " << double(ave) / n << ' ' << imax << ' ' << z << std::endl;
 
     // now the inverse map (actually this is the direct....)
     auto dc_d = make_device_buffer<AtomicPairCounter>(queue);
-    alpaka::memset(queue, dc_d, 0);
+    aV2P::memset(queue, dc_d, 0);
 
     const auto blocksPerGrid = divide_up_by(N, threadsPerBlockOrElementsPerThread);
     const auto workDiv = make_workdiv<Acc1D>(blocksPerGrid, threadsPerBlockOrElementsPerThread);
 
     auto as_d = make_device_buffer<AssocSequential>(queue);
-    alpaka::enqueue(queue,
-                    alpaka::createTaskKernel<Acc1D>(workDiv, fillBulk(), dc_d.data(), v_d.data(), as_d.data(), N));
+    aV2P::enqueue(queue,
+                    aV2P::createTaskKernel<Acc1D>(workDiv, fillBulk(), dc_d.data(), v_d.data(), as_d.data(), N));
 
-    alpaka::enqueue(
-        queue, alpaka::createTaskKernel<Acc1D>(workDiv, AssocSequential::finalizeBulk(), dc_d.data(), as_d.data()));
+    aV2P::enqueue(
+        queue, aV2P::createTaskKernel<Acc1D>(workDiv, AssocSequential::finalizeBulk(), dc_d.data(), as_d.data()));
 
-    alpaka::enqueue(queue,
-                    alpaka::createTaskKernel<Acc1D>(WorkDiv1D{1u, 1u, 1u}, verifyBulk(), as_d.data(), dc_d.data()));
+    aV2P::enqueue(queue,
+                    aV2P::createTaskKernel<Acc1D>(WorkDiv1D{1u, 1u, 1u}, verifyBulk(), as_d.data(), dc_d.data()));
 
     auto as_h = make_host_buffer<AssocSequential>(queue);
-    alpaka::memcpy(queue, as_h, as_d);
+    aV2P::memcpy(queue, as_h, as_d);
 
     auto dc_h = make_host_buffer<AtomicPairCounter>(queue);
-    alpaka::memcpy(queue, dc_h, dc_d);
-    alpaka::wait(queue);
+    aV2P::memcpy(queue, dc_h, dc_d);
+    aV2P::wait(queue);
 
-    alpaka::memset(queue, dc_d, 0);
+    aV2P::memset(queue, dc_d, 0);
     auto sa_d = make_device_buffer<SmallAssoc>(queue);
-    alpaka::memset(queue, sa_d, 0);
+    aV2P::memset(queue, sa_d, 0);
 
-    alpaka::enqueue(queue,
-                    alpaka::createTaskKernel<Acc1D>(workDiv, fillBulk(), dc_d.data(), v_d.data(), sa_d.data(), N));
+    aV2P::enqueue(queue,
+                    aV2P::createTaskKernel<Acc1D>(workDiv, fillBulk(), dc_d.data(), v_d.data(), sa_d.data(), N));
 
-    alpaka::enqueue(queue,
-                    alpaka::createTaskKernel<Acc1D>(workDiv, SmallAssoc::finalizeBulk(), dc_d.data(), sa_d.data()));
+    aV2P::enqueue(queue,
+                    aV2P::createTaskKernel<Acc1D>(workDiv, SmallAssoc::finalizeBulk(), dc_d.data(), sa_d.data()));
 
-    alpaka::enqueue(queue,
-                    alpaka::createTaskKernel<Acc1D>(WorkDiv1D{1u, 1u, 1u}, verifyBulk(), sa_d.data(), dc_d.data()));
+    aV2P::enqueue(queue,
+                    aV2P::createTaskKernel<Acc1D>(WorkDiv1D{1u, 1u, 1u}, verifyBulk(), sa_d.data(), dc_d.data()));
 
     std::cout << "final counter value " << dc_h->get().second << ' ' << dc_h->get().first << std::endl;
 
@@ -284,38 +284,38 @@ int main() {
       if (!(x == 4 || x == 3)) {
         std::cout << "i=" << i << " x=" << x << std::endl;
       }
-      ALPAKA_ASSERT_ACC(x == 4 || x == 3);
+      AV2P_ASSERT_ACC(x == 4 || x == 3);
       ave += x;
       imax = std::max(imax, int(x));
     }
-    ALPAKA_ASSERT_ACC(0 == as_h->size(N));
+    AV2P_ASSERT_ACC(0 == as_h->size(N));
     std::cout << "found with ave occupancy " << double(ave) / N << ' ' << imax << std::endl;
 
     // here verify use of block local counters
     auto m1_d = make_device_buffer<Multiplicity>(queue);
-    alpaka::memset(queue, m1_d, 0);
+    aV2P::memset(queue, m1_d, 0);
     auto m2_d = make_device_buffer<Multiplicity>(queue);
-    alpaka::memset(queue, m2_d, 0);
+    aV2P::memset(queue, m2_d, 0);
 
     Multiplicity::template launchZero<Acc1D>(m1_d.data(), queue);
     Multiplicity::template launchZero<Acc1D>(m2_d.data(), queue);
 
-    alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDiv4N, countMulti(), v_d.data(), m1_d.data(), N));
+    aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDiv4N, countMulti(), v_d.data(), m1_d.data(), N));
 
-    alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDiv4N, countMultiLocal(), v_d.data(), m2_d.data(), N));
+    aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDiv4N, countMultiLocal(), v_d.data(), m2_d.data(), N));
 
     const auto blocksPerGridTotBins = 1u;
     const auto threadsPerBlockOrElementsPerThreadTotBins = Multiplicity::ctNOnes();
     const auto workDivTotBins = make_workdiv<Acc1D>(blocksPerGridTotBins, threadsPerBlockOrElementsPerThreadTotBins);
 
-    alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDivTotBins, verifyMulti(), m1_d.data(), m2_d.data()));
+    aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDivTotBins, verifyMulti(), m1_d.data(), m2_d.data()));
 
     Multiplicity::launchFinalize<Acc1D>(m1_d.data(), queue);
     Multiplicity::launchFinalize<Acc1D>(m2_d.data(), queue);
 
-    alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDivTotBins, verifyMulti(), m1_d.data(), m2_d.data()));
+    aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDivTotBins, verifyMulti(), m1_d.data(), m2_d.data()));
 
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
     return 0;
   }

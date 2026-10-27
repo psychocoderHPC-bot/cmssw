@@ -1,7 +1,7 @@
 #include <utility>
 #include <vector>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/ParticleFlowReco/interface/alpaka/PFRecHitDeviceCollection.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
@@ -15,7 +15,7 @@
 #include "CalorimeterDefinitions.h"
 #include "PFRecHitProducerKernel.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   using namespace particleFlowRecHitProducer;
 
   template <typename CAL>
@@ -53,7 +53,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               event.queue(), event.get(token.first), setup.getData(token.second), topology, *pfRecHits_);
         kernel.associateTopologyInfo(event.queue(), topology, *pfRecHits_);
         auto size_d = cms::alpakatools::make_device_view<uint32_t>(event.queue(), pfRecHits_->view().size());
-        alpaka::memcpy(event.queue(), size_, size_d);
+        aV2P::memcpy(event.queue(), size_, size_d);
       }
     }
 
@@ -63,7 +63,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       pfRecHits_.reset();
 
       if (synchronise_)
-        alpaka::wait(event.queue());
+        aV2P::wait(event.queue());
     }
 
     static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
@@ -98,8 +98,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   using PFRecHitSoAProducerHCAL = PFRecHitSoAProducer<HCAL>;
   using PFRecHitSoAProducerECAL = PFRecHitSoAProducer<ECAL>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(PFRecHitSoAProducerHCAL);
-DEFINE_FWK_ALPAKA_MODULE(PFRecHitSoAProducerECAL);
+DEFINE_FWK_AV2P_MODULE(PFRecHitSoAProducerHCAL);
+DEFINE_FWK_AV2P_MODULE(PFRecHitSoAProducerECAL);

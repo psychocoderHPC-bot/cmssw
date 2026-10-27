@@ -1,6 +1,6 @@
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/TrackSoA/interface/TrackDefinitions.h"
 #include "DataFormats/TrackSoA/interface/TracksDevice.h"
@@ -14,7 +14,7 @@
 using namespace reco;
 
 using Quality = pixelTrack::Quality;
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   using namespace cms::alpakatools;
   namespace testTrackSoA {
 
@@ -22,7 +22,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // to test writing to it
     class TestFillKernel {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const& acc, TrackSoAView tracks_view, int32_t nTracks) const {
+      AV2P_FN_ACC void operator()(Acc1D const& acc, TrackSoAView tracks_view, int32_t nTracks) const {
         if (cms::alpakatools::once_per_grid(acc)) {
           tracks_view.nTracks() = nTracks;
         }
@@ -42,17 +42,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // that it was written correctly from the fill kernel
     class TestVerifyKernel {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const& acc, TrackSoAConstView tracks_view, int32_t nTracks) const {
+      AV2P_FN_ACC void operator()(Acc1D const& acc, TrackSoAConstView tracks_view, int32_t nTracks) const {
         if (cms::alpakatools::once_per_grid(acc)) {
-          ALPAKA_ASSERT(tracks_view.nTracks() == nTracks);
+          AV2P_ASSERT(tracks_view.nTracks() == nTracks);
         }
         for (int32_t j : uniform_elements(acc, tracks_view.nTracks())) {
-          ALPAKA_ASSERT(abs(tracks_view[j].pt() - (float)j) < .0001);
-          ALPAKA_ASSERT(abs(tracks_view[j].eta() - (float)j) < .0001);
-          ALPAKA_ASSERT(abs(tracks_view[j].chi2() - (float)j) < .0001);
-          ALPAKA_ASSERT(tracks_view[j].quality() == (Quality)(j % 256));
-          ALPAKA_ASSERT(tracks_view[j].nLayers() == j % 128);
-          ALPAKA_ASSERT(tracks_view[j].hitOffsets() == uint32_t(j));
+          AV2P_ASSERT(abs(tracks_view[j].pt() - (float)j) < .0001);
+          AV2P_ASSERT(abs(tracks_view[j].eta() - (float)j) < .0001);
+          AV2P_ASSERT(abs(tracks_view[j].chi2() - (float)j) < .0001);
+          AV2P_ASSERT(tracks_view[j].quality() == (Quality)(j % 256));
+          AV2P_ASSERT(tracks_view[j].nLayers() == j % 128);
+          AV2P_ASSERT(tracks_view[j].hitOffsets() == uint32_t(j));
         }
       }
     };
@@ -63,10 +63,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       uint32_t items = 64;
       uint32_t groups = divide_up_by(tracks, items);
       auto workDiv = make_workdiv<Acc1D>(groups, items);
-      alpaka::exec<Acc1D>(queue, workDiv, TestFillKernel{}, tracks_view, tracks);
-      alpaka::exec<Acc1D>(queue, workDiv, TestVerifyKernel{}, tracks_view, tracks);
+      aV2P::exec<Acc1D>(queue, workDiv, TestFillKernel{}, tracks_view, tracks);
+      aV2P::exec<Acc1D>(queue, workDiv, TestVerifyKernel{}, tracks_view, tracks);
     }
 
   }  // namespace testTrackSoA
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

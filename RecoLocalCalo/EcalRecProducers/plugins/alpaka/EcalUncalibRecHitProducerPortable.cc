@@ -19,7 +19,7 @@
 
 #include <algorithm>
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   namespace {
     using EcalMultifitParametersCache =
         cms::alpakatools::MoveToDeviceCache<Device, PortableHostObject<EcalMultifitParameters>>;
@@ -224,8 +224,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         cms::alpakatools::make_device_view<const uint32_t>(queue, ebDigisDev.const_view().size());
     auto eeDigisSizeDevConstView =
         cms::alpakatools::make_device_view<const uint32_t>(queue, eeDigisDev.const_view().size());
-    alpaka::memcpy(queue, ebDigisSizeHostBuf_, ebDigisSizeDevConstView);
-    alpaka::memcpy(queue, eeDigisSizeHostBuf_, eeDigisSizeDevConstView);
+    aV2P::memcpy(queue, ebDigisSizeHostBuf_, ebDigisSizeDevConstView);
+    aV2P::memcpy(queue, eeDigisSizeHostBuf_, eeDigisSizeDevConstView);
   }
 
   void EcalUncalibRecHitProducerPortable::produce(device::Event& event, device::EventSetup const& setup) {
@@ -248,8 +248,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         cms::alpakatools::make_device_view<uint32_t>(queue, uncalibRecHitsDevEB.view().size());
     auto uncalibRecHitSizeViewEE =
         cms::alpakatools::make_device_view<uint32_t>(queue, uncalibRecHitsDevEE.view().size());
-    alpaka::memset(queue, uncalibRecHitSizeViewEB, 0);
-    alpaka::memset(queue, uncalibRecHitSizeViewEE, 0);
+    aV2P::memset(queue, uncalibRecHitSizeViewEB, 0);
+    aV2P::memset(queue, uncalibRecHitSizeViewEE, 0);
 
     // stop here if there are no digis
     if (ebDigisSize + eeDigisSize > 0) {
@@ -275,7 +275,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     event.emplace(uncalibRecHitsTokenEE_, std::move(uncalibRecHitsDevEE));
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(EcalUncalibRecHitProducerPortable);
+DEFINE_FWK_AV2P_MODULE(EcalUncalibRecHitProducerPortable);

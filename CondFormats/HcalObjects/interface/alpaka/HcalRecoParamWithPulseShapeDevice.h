@@ -4,10 +4,10 @@
 #include "CondFormats/HcalObjects/interface/HcalRecoParamWithPulseShapeT.h"
 #include "DataFormats/Portable/interface/alpaka/PortableCollection.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   namespace hcal {
     using HcalRecoParamWithPulseShapeDevice = ::hcal::HcalRecoParamWithPulseShapeT<Device>;
   }
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

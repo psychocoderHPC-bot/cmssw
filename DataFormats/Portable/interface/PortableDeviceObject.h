@@ -5,7 +5,7 @@
 #include <optional>
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Common/interface/Uninitialized.h"
 #include "DataFormats/TrivialSerialisation/interface/MemoryCopyTraits.h"
@@ -13,7 +13,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 
 // generic object in device memory
-template <typename TDev, typename T, typename = std::enable_if_t<alpaka::concepts::Device<TDev>>>
+template <typename TDev, typename T, typename = std::enable_if_t<aV2P::concepts::Device<TDev>>>
 class PortableDeviceObject {
   static_assert(not std::is_same_v<TDev, alpaka_common::DevHost>,
                 "Use PortableHostObject<T> instead of PortableDeviceObject<T, DevHost>");
@@ -33,7 +33,7 @@ public:
     assert(reinterpret_cast<uintptr_t>(buffer_->data()) % alignof(Product) == 0);
   }
 
-  template <typename TQueue, typename = std::enable_if_t<alpaka::concepts::Queue<TQueue>>>
+  template <typename TQueue, typename = std::enable_if_t<aV2P::concepts::Queue<TQueue>>>
   PortableDeviceObject(TQueue const& queue)
       // allocate global device memory with queue-ordered semantic
       : buffer_{cms::alpakatools::make_device_buffer<Product>(queue)} {
@@ -72,9 +72,9 @@ public:
   ConstBuffer const_buffer() const { return *buffer_; }
 
   // erases the data in the Buffer by writing zeros (bytes containing '\0') to it
-  template <typename TQueue, typename = std::enable_if_t<alpaka::concepts::Queue<TQueue>>>
+  template <typename TQueue, typename = std::enable_if_t<aV2P::concepts::Queue<TQueue>>>
   void zeroInitialise(TQueue&& queue) {
-    alpaka::memset(std::forward<TQueue>(queue), *buffer_, 0x00);
+    aV2P::memset(std::forward<TQueue>(queue), *buffer_, 0x00);
   }
 
 private:
@@ -87,7 +87,7 @@ namespace ngt {
   template <typename TDev, typename T>
   struct MemoryCopyTraits<PortableDeviceObject<TDev, T>> {
     template <typename TQueue>
-      requires(alpaka::concepts::Queue<TQueue>)
+      requires(aV2P::concepts::Queue<TQueue>)
     static void initialize(TQueue& queue, PortableDeviceObject<TDev, T>& object) {
       // Replace the default-constructed empty object with one where the
       // buffer has been allocated in global device memory

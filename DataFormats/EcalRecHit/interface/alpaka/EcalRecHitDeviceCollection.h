@@ -5,11 +5,11 @@
 #include "DataFormats/EcalRecHit/interface/EcalRecHitSoA.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   // EcalRecHitSoA in device global memory
   using EcalRecHitDeviceCollection = PortableCollection<EcalRecHitSoA>;
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

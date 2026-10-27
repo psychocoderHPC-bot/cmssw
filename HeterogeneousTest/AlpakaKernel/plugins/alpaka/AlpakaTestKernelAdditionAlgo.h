@@ -5,7 +5,7 @@
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::HeterogeneousTestAlpakaKernelPlugins {
+namespace AV2P_ACCELERATOR_NAMESPACE::HeterogeneousTestAlpakaKernelPlugins {
 
   void wrapper_add_vectors_f(Queue& queue,
                              const float* __restrict__ in1,
@@ -13,6 +13,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::HeterogeneousTestAlpakaKernelPlugins {
                              float* __restrict__ out,
                              uint32_t size);
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::HeterogeneousTestAlpakaKernelPlugins
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::HeterogeneousTestAlpakaKernelPlugins
 
 #endif  // HeterogeneousTest_AlpakaKernel_plugins_alpaka_AlpakaTestKernelAdditionAlgo_h

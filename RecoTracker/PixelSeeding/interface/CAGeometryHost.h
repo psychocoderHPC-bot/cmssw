@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Portable/interface/PortableHostCollection.h"
 #include "RecoTracker/PixelSeeding/interface/CAGeometrySoA.h"

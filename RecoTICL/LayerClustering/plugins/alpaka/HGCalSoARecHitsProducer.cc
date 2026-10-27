@@ -13,7 +13,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/TICLGeomTools.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class HGCalSoARecHitsProducer : public stream::EDProducer<> {
   public:
@@ -131,7 +131,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         // Trigger copy async to GPU
         //std::cout << "GPU" << std::endl;
         HGCalSoARecHitsDeviceCollection deviceProduct{iEvent.queue(), cells->metadata().size()};
-        alpaka::memcpy(iEvent.queue(), deviceProduct.buffer(), cells.const_buffer());
+        aV2P::memcpy(iEvent.queue(), deviceProduct.buffer(), cells.const_buffer());
         iEvent.emplace(deviceToken_, std::move(deviceProduct));
       } else {
         //std::cout << "CPU" << std::endl;
@@ -214,7 +214,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     }
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(HGCalSoARecHitsProducer);
+DEFINE_FWK_AV2P_MODULE(HGCalSoARecHitsProducer);

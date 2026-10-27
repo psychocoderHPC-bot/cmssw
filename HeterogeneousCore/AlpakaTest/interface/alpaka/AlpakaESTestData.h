@@ -7,7 +7,7 @@
 #include "HeterogeneousCore/AlpakaTest/interface/AlpakaESTestData.h"
 #include "HeterogeneousCore/AlpakaTest/interface/AlpakaESTestSoA.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   // PortableCollection-based model
   using AlpakaESTestDataAHost = cms::alpakatest::AlpakaESTestDataAHost;
   using AlpakaESTestDataADevice = PortableCollection<cms::alpakatest::AlpakaESTestSoAA>;
@@ -24,7 +24,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   using AlpakaESTestDataBlocksACHost = cms::alpakatest::AlpakaESTestDataBlocksACHost;
   using AlpakaESTestDataACBlocksDevice = PortableCollection<cms::alpakatest::AlpakaESTestSoABlocksAC>;
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 // check that the portable device collections for the host device are the same as the portable host collections
 ASSERT_DEVICE_MATCHES_HOST_COLLECTION(AlpakaESTestDataADevice, cms::alpakatest::AlpakaESTestDataAHost);

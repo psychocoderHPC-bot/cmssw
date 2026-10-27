@@ -1,6 +1,6 @@
 #include <utility>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Common/interface/SortedCollection.h"
 #include "DataFormats/ParticleFlowReco/interface/CaloRecHitHostCollection.h"
@@ -19,7 +19,7 @@
 
 #define DEBUG false
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   using namespace particleFlowRecHitProducer;
 
   template <typename CAL>
@@ -48,9 +48,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
 
       hcal::RecHitDeviceCollection deviceProduct{event.queue(), num_recHits};
-      alpaka::memcpy(event.queue(), deviceProduct.buffer(), hostProduct.buffer());
+      aV2P::memcpy(event.queue(), deviceProduct.buffer(), hostProduct.buffer());
       if (synchronise_)
-        alpaka::wait(event.queue());
+        aV2P::wait(event.queue());
       event.emplace(deviceToken_, std::move(deviceProduct));
     }
 
@@ -103,8 +103,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   // Purposely commented out; see above.
   //using ECALRecHitSoAProducer = CaloRecHitSoAProducer<ECAL>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(HCALRecHitSoAProducer);
-//DEFINE_FWK_ALPAKA_MODULE(ECALRecHitSoAProducer);
+DEFINE_FWK_AV2P_MODULE(HCALRecHitSoAProducer);
+//DEFINE_FWK_AV2P_MODULE(ECALRecHitSoAProducer);

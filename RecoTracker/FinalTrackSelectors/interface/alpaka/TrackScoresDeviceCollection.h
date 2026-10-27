@@ -5,8 +5,8 @@
 #include "RecoTracker/FinalTrackSelectors/interface/TrackTorchClassifierFeaturesSoA.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   using TrackScoresDeviceCollection = PortableCollection<TrackTorchClassifierScoresSoA>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // RecoTracker_FinalTrackSelectors_alpaka_TrackScoresDeviceCollection_h

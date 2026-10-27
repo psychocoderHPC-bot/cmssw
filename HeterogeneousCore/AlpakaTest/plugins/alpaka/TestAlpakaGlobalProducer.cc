@@ -12,7 +12,7 @@
 
 #include "TestAlgo.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * This class demonstrates a global EDProducer that
    * - consumes a device ESProduct
@@ -28,11 +28,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           deviceTokenMulti2_{produces()},
           deviceTokenMulti3_{produces()},
           size_{config.getParameter<edm::ParameterSet>("size").getParameter<int32_t>(
-              EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE))},
+              EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE))},
           size2_{config.getParameter<edm::ParameterSet>("size").getParameter<int32_t>(
-              EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE))},
+              EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE))},
           size3_{config.getParameter<edm::ParameterSet>("size").getParameter<int32_t>(
-              EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE))} {}
+              EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE))} {}
 
     void produce(edm::StreamID, device::Event& iEvent, device::EventSetup const& iSetup) const override {
       [[maybe_unused]] auto const& esData = iSetup.getData(esToken_);
@@ -80,7 +80,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     TestAlgo algo_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(TestAlpakaGlobalProducer);
+DEFINE_FWK_AV2P_MODULE(TestAlpakaGlobalProducer);

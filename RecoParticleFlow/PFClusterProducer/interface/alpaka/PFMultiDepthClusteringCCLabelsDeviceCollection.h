@@ -6,9 +6,9 @@
 
 #include "RecoParticleFlow/PFClusterProducer/interface/PFMultiDepthClusteringCCLabelsSoA.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::reco {
+namespace AV2P_ACCELERATOR_NAMESPACE::reco {
 
   using PFMultiDepthClusteringCCLabelsDeviceCollection = PortableCollection<::reco::PFMultiDepthClusteringCCLabelsSoA>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::reco
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::reco
 
 #endif

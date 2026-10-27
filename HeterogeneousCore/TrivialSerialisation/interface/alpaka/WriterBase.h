@@ -11,7 +11,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/TrivialSerialisation/interface/AnyBuffer.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
+namespace AV2P_ACCELERATOR_NAMESPACE::ngt {
 
   // Base class for creating a new device product and exposing its memory regions for writing
   class WriterBase {
@@ -27,6 +27,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
     virtual std::unique_ptr<edm::WrapperBase> get(std::shared_ptr<EDMetadata> metadata) = 0;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ngt
 
 #endif  // HeterogeneousCore_TrivialSerialisation_interface_alpaka_WriterBase_h

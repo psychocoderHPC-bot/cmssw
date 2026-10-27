@@ -3,14 +3,14 @@
 
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
 #include "CAPixelDoubletsAlgos.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
+namespace AV2P_ACCELERATOR_NAMESPACE::caPixelDoublets {
 
   template <typename TrackerTraits>
   class GetDoubletsFromHisto {
@@ -18,7 +18,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
     // #ifdef __CUDACC__
     //       __launch_bounds__(getDoubletsFromHistoMaxBlockSize, getDoubletsFromHistoMinBlocksPerMP)  // TODO: Alapakafy
     // #endif
-    ALPAKA_FN_ACC void operator()(Acc2D const& acc,
+    AV2P_FN_ACC void operator()(Acc2D const& acc,
                                   uint32_t maxNumOfDoublets,
                                   CACell<TrackerTraits>* cells,
                                   uint32_t* nCells,
@@ -34,6 +34,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
     }
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::caPixelDoublets
 
 #endif  // RecoTracker_PixelSeeding_plugins_alpaka_CAPixelDoublets_h

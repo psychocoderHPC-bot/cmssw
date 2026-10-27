@@ -13,7 +13,7 @@
 #include <tuple>
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/devices.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/AllocatorConfig.h"
@@ -78,7 +78,7 @@ namespace cms::alpakatools {
    * Common use case #2: pinned host memory allocations
    *    - the "memory device" is the host device (e.g. system memory);
    *    - the "synchronisation device" is the accelerator device (e.g. a GPU) whose work queue will access the host;
-   *      memory (direct memory access from the accelerator, or scheduling `alpaka::memcpy`/`alpaka::memset`), and can
+   *      memory (direct memory access from the accelerator, or scheduling `aV2P::memcpy`/`aV2P::memset`), and can
    *      be different for each allocation;
    *    - the synchronisation `Device` _type_ could potentially be different, but memory pinning is currently tied to
    *      the accelerator's platform (CUDA, HIP, etc.), so the device type needs to be fixed to benefit from caching;
@@ -88,28 +88,28 @@ namespace cms::alpakatools {
   template <typename TDev, typename TQueue>
   class CachingAllocator {
   public:
-#ifdef ALPAKA_ACC_GPU_CUDA_ENABLED
+#ifdef AV2P_ACC_GPU_CUDA_ENABLED
     friend class alpaka_cuda_async::AlpakaService;
 #endif
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef AV2P_ACC_GPU_HIP_ENABLED
     friend class alpaka_rocm_async::AlpakaService;
 #endif
-#ifdef ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+#ifdef AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
     friend class alpaka_serial_sync::AlpakaService;
 #endif
-#ifdef ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLED
+#ifdef AV2P_ACC_CPU_B_TBB_T_SEQ_ENABLED
     friend class alpaka_tbb_async::AlpakaService;
 #endif
 
     using Device = TDev;                 // the "memory device", where the memory will be allocated
     using Queue = TQueue;                // the queue used to submit the memory operations
-    using Event = alpaka::Event<Queue>;  // the events used to synchronise the operations
-    using Buffer = alpaka::Buf<Device, std::byte, alpaka::DimInt<1u>, size_t>;
+    using Event = aV2P::Event<Queue>;  // the events used to synchronise the operations
+    using Buffer = aV2P::Buf<Device, std::byte, aV2P::DimInt<1u>, size_t>;
 
     // The "memory device" type can either be the same as the "synchronisation device" type, or be the host CPU.
-    static_assert(alpaka::concepts::Device<Device>, "TDev should be an alpaka Device type.");
-    static_assert(alpaka::concepts::Queue<Queue>, "TQueue should be an alpaka Queue type.");
-    static_assert(std::is_same_v<Device, alpaka::Dev<Queue>> or std::is_same_v<Device, alpaka::DevCpu>,
+    static_assert(aV2P::concepts::Device<Device>, "TDev should be an alpaka Device type.");
+    static_assert(aV2P::concepts::Queue<Queue>, "TQueue should be an alpaka Queue type.");
+    static_assert(std::is_same_v<Device, aV2P::Dev<Queue>> or std::is_same_v<Device, aV2P::DevCpu>,
                   "The \"memory device\" type can either be the same as the \"synchronisation device\" type, or be the "
                   "host CPU.");
 
@@ -186,10 +186,10 @@ namespace cms::alpakatools {
     // corresponding event is reached.
     void immediateOrAsyncMemset(Queue queue, Buffer buffer, uint8_t value) {
       // host-only
-      if (std::is_same_v<Device, alpaka::DevCpu> and not reuseSameQueueAllocations_) {
-        std::memset(buffer.data(), value, alpaka::getExtentProduct(buffer) * sizeof(alpaka::Elem<Buffer>));
+      if (std::is_same_v<Device, aV2P::DevCpu> and not reuseSameQueueAllocations_) {
+        std::memset(buffer.data(), value, aV2P::getExtentProduct(buffer) * sizeof(aV2P::Elem<Buffer>));
       } else {
-        alpaka::memset(queue, buffer, value);
+        aV2P::memset(queue, buffer, value);
       }
     }
 
@@ -248,17 +248,17 @@ namespace cms::alpakatools {
         try {
           // fill memory blocks with a pattern before caching them
           if (fillCaches_) {
-            alpaka::memset(*block.queue, *block.buffer, fillCacheValue_);
+            aV2P::memset(*block.queue, *block.buffer, fillCacheValue_);
           } else if (fillDeallocations_) {
-            alpaka::memset(*block.queue, *block.buffer, fillDeallocationValue_);
+            aV2P::memset(*block.queue, *block.buffer, fillDeallocationValue_);
           }
           // record in the block a marker associated to the work queue
-          alpaka::enqueue(*(block.queue), *(block.event));
+          aV2P::enqueue(*(block.queue), *(block.event));
         } catch (std::exception& e) {
           if (debug_) {
             std::ostringstream out;
             out << "CachingAllocator::free() caught an alpaka error: " << e.what() << "\n";
-            out << "\t" << deviceType_ << " " << alpaka::getName(device_) << " freed " << block.bytes << " bytes at "
+            out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " freed " << block.bytes << " bytes at "
                 << ptr << " from associated queue " << block.queue->m_spQueueImpl.get() << ", event "
                 << block.event->m_spEventImpl.get() << " .\n\t\t " << cachedBlocks_.size()
                 << " available blocks cached (" << cachedBytes_.free << " bytes), " << liveBlocks_.size()
@@ -274,7 +274,7 @@ namespace cms::alpakatools {
 
         if (debug_) {
           std::ostringstream out;
-          out << "\t" << deviceType_ << " " << alpaka::getName(device_) << " returned " << block.bytes << " bytes at "
+          out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " returned " << block.bytes << " bytes at "
               << ptr << " from associated queue " << block.queue->m_spQueueImpl.get() << " , event "
               << block.event->m_spEventImpl.get() << " .\n\t\t " << cachedBlocks_.size() << " available blocks cached ("
               << cachedBytes_.free << " bytes), " << liveBlocks_.size() << " live blocks (" << cachedBytes_.live
@@ -291,13 +291,13 @@ namespace cms::alpakatools {
         try {
           // fill memory blocks with a pattern before freeing them
           if (fillDeallocations_) {
-            alpaka::memset(*block.queue, *block.buffer, fillDeallocationValue_);
+            aV2P::memset(*block.queue, *block.buffer, fillDeallocationValue_);
           }
         } catch (std::exception& e) {
           if (debug_) {
             std::ostringstream out;
             out << "CachingAllocator::free() caught an alpaka error: " << e.what() << "\n";
-            out << "\t" << deviceType_ << " " << alpaka::getName(device_) << " freed " << block.bytes << " bytes at "
+            out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " freed " << block.bytes << " bytes at "
                 << ptr << " from associated queue " << block.queue->m_spQueueImpl.get() << ", event "
                 << block.event->m_spEventImpl.get() << " .\n\t\t " << cachedBlocks_.size()
                 << " available blocks cached (" << cachedBytes_.free << " bytes), " << liveBlocks_.size()
@@ -309,7 +309,7 @@ namespace cms::alpakatools {
         // if the buffer is not recached, it is automatically freed when block goes out of scope
         if (debug_) {
           std::ostringstream out;
-          out << "\t" << deviceType_ << " " << alpaka::getName(device_) << " freed " << block.bytes << " bytes at "
+          out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " freed " << block.bytes << " bytes at "
               << ptr << " from associated queue " << block.queue->m_spQueueImpl.get() << ", event "
               << block.event->m_spEventImpl.get() << " .\n\t\t " << cachedBlocks_.size() << " available blocks cached ("
               << cachedBytes_.free << " bytes), " << liveBlocks_.size() << " live blocks (" << cachedBytes_.live
@@ -329,14 +329,14 @@ namespace cms::alpakatools {
       unsigned int bin = 0;
 
       // the "synchronisation device" for this block
-      auto device() { return alpaka::getDev(*queue); }
+      auto device() { return aV2P::getDev(*queue); }
     };
 
   private:
     // return the maximum amount of memory that should be cached on this device
     size_t cacheSize(size_t maxCachedBytes, double maxCachedFraction) const {
       // note that getMemBytes() returns 0 if the platform does not support querying the device memory
-      size_t totalMemory = alpaka::getMemBytes(device_);
+      size_t totalMemory = aV2P::getMemBytes(device_);
       size_t memoryFraction = static_cast<size_t>(maxCachedFraction * totalMemory);
       size_t size = std::numeric_limits<size_t>::max();
       if (maxCachedBytes > 0 and maxCachedBytes < size) {
@@ -375,7 +375,7 @@ namespace cms::alpakatools {
       const auto [begin, end] = cachedBlocks_.equal_range(block.bin);
       for (auto iBlock = begin; iBlock != end; ++iBlock) {
         if ((reuseSameQueueAllocations_ and (*block.queue == *(iBlock->second.queue))) or
-            alpaka::isComplete(*(iBlock->second.event))) {
+            aV2P::isComplete(*(iBlock->second.event))) {
           // associate the cached buffer to the new queue and update the requested size
           auto queue = std::move(*(block.queue));
           auto requested = block.requested;
@@ -385,7 +385,7 @@ namespace cms::alpakatools {
           block.requested = requested;
 
           // if the new queue is on different device than the old event, create a new event
-          if (block.device() != alpaka::getDev(*(block.event))) {
+          if (block.device() != aV2P::getDev(*(block.event))) {
             block.event = Event{block.device()};
           }
 
@@ -400,7 +400,7 @@ namespace cms::alpakatools {
 
           if (debug_) {
             std::ostringstream out;
-            out << "\t" << deviceType_ << " " << alpaka::getName(device_) << " reused cached block at "
+            out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " reused cached block at "
                 << block.buffer->data() << " (" << block.bytes << " bytes) for queue "
                 << block.queue->m_spQueueImpl.get() << ", event " << block.event->m_spEventImpl.get()
                 << " (previously associated with queue " << iBlock->second.queue->m_spQueueImpl.get() << " , event "
@@ -418,16 +418,16 @@ namespace cms::alpakatools {
     }
 
     Buffer allocateBuffer(size_t bytes, Queue const& queue) {
-      if constexpr (std::is_same_v<Device, alpaka::Dev<Queue>>) {
+      if constexpr (std::is_same_v<Device, aV2P::Dev<Queue>>) {
         // allocate device memory
-        return alpaka::allocBuf<std::byte, size_t>(device_, bytes);
-      } else if constexpr (std::is_same_v<Device, alpaka::DevCpu>) {
+        return aV2P::allocBuf<std::byte, size_t>(device_, bytes);
+      } else if constexpr (std::is_same_v<Device, aV2P::DevCpu>) {
         // allocate pinned host memory accessible by the queue's platform
-        using Platform = alpaka::Platform<alpaka::Dev<Queue>>;
-        return alpaka::allocMappedBuf<std::byte, size_t>(device_, platform<Platform>(), bytes);
+        using Platform = aV2P::Platform<aV2P::Dev<Queue>>;
+        return aV2P::allocMappedBuf<std::byte, size_t>(device_, platform<Platform>(), bytes);
       } else {
         // unsupported combination
-        static_assert(std::is_same_v<Device, alpaka::Dev<Queue>> or std::is_same_v<Device, alpaka::DevCpu>,
+        static_assert(std::is_same_v<Device, aV2P::Dev<Queue>> or std::is_same_v<Device, aV2P::DevCpu>,
                       "The \"memory device\" type can either be the same as the \"synchronisation device\" type, or be "
                       "the host CPU.");
       }
@@ -440,7 +440,7 @@ namespace cms::alpakatools {
         // the allocation attempt failed: free all cached blocks on the device and retry
         if (debug_) {
           std::ostringstream out;
-          out << "\t" << deviceType_ << " " << alpaka::getName(device_) << " failed to allocate " << block.bytes
+          out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " failed to allocate " << block.bytes
               << " bytes for queue " << block.queue->m_spQueueImpl.get()
               << ", retrying after freeing cached allocations" << std::endl;
           std::cout << out.str() << std::endl;
@@ -465,7 +465,7 @@ namespace cms::alpakatools {
 
       if (debug_) {
         std::ostringstream out;
-        out << "\t" << deviceType_ << " " << alpaka::getName(device_) << " allocated new block at "
+        out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " allocated new block at "
             << block.buffer->data() << " (" << block.bytes << " bytes associated with queue "
             << block.queue->m_spQueueImpl.get() << ", event " << block.event->m_spEventImpl.get() << "." << std::endl;
         std::cout << out.str() << std::endl;
@@ -481,7 +481,7 @@ namespace cms::alpakatools {
 
         if (debug_) {
           std::ostringstream out;
-          out << "\t" << deviceType_ << " " << alpaka::getName(device_) << " freed " << iBlock->second.bytes
+          out << "\t" << deviceType_ << " " << aV2P::getName(device_) << " freed " << iBlock->second.bytes
               << " bytes.\n\t\t  " << (cachedBlocks_.size() - 1) << " available blocks cached (" << cachedBytes_.free
               << " bytes), " << liveBlocks_.size() << " live blocks (" << cachedBytes_.live << " bytes) outstanding."
               << std::endl;
@@ -497,7 +497,7 @@ namespace cms::alpakatools {
     // TODO replace with a tbb::concurrent_map ?
     using BusyBlocks = std::map<void*, BlockDescriptor>;  // ordered by the address of the allocated memory
 
-    inline static const std::string_view deviceType_ = alpaka::core::demangled<Device>;
+    inline static const std::string_view deviceType_ = aV2P::core::demangled<Device>;
 
     mutable std::mutex mutex_;
     Device device_;  // the device where the memory is allocated

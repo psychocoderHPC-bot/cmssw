@@ -15,7 +15,7 @@
 #include "HeterogeneousCore/TrivialSerialisation/interface/Common.h"
 #include "HeterogeneousCore/TrivialSerialisation/interface/alpaka/WriterBase.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
+namespace AV2P_ACCELERATOR_NAMESPACE::ngt {
 
   // Writer for device products.
   // T is the inner product type (e.g. PortableDeviceCollection<...>)
@@ -79,6 +79,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
     T data_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ngt
 
 #endif  // HeterogeneousCore_TrivialSerialisation_interface_alpaka_Writer_h

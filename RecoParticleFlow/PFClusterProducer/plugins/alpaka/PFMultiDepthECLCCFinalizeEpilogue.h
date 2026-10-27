@@ -28,7 +28,7 @@
  * - Remapping of cluster indices to component indices.
  */
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace ::cms::alpakatools;
   using namespace ::cms::alpakaintrinsics;
@@ -55,7 +55,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   template <unsigned int max_w_items = 32, bool is_cooperative = true>
   class ECLCCFinalizeEpilogueKernel {
   public:
-    ALPAKA_FN_ACC void operator()(
+    AV2P_FN_ACC void operator()(
         Acc1D const& acc,
         reco::PFClusterDeviceCollection::View outPFCluster,
         reco::PFRecHitFractionDeviceCollection::View outPFRecHitFracs,
@@ -70,13 +70,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       const unsigned int nVertices = pfClusteringCCLabels.size();
 
-      const unsigned int blockDim = alpaka::getWorkDiv<alpaka::Block, alpaka::Threads>(acc)[0u];
+      const unsigned int blockDim = aV2P::getWorkDiv<aV2P::Block, aV2P::Threads>(acc)[0u];
 
-      auto& cc_energy_seed(alpaka::declareSharedVar<uint64_t[max_w_items * w_extent], __COUNTER__>(acc));
+      auto& cc_energy_seed(aV2P::declareSharedVar<uint64_t[max_w_items * w_extent], __COUNTER__>(acc));
 
       //block-local number of components
-      unsigned int& nComponents = alpaka::declareSharedVar<uint32_t, __COUNTER__>(acc);
-      unsigned int& blockRHFShift = alpaka::declareSharedVar<uint32_t, __COUNTER__>(acc);
+      unsigned int& nComponents = aV2P::declareSharedVar<uint32_t, __COUNTER__>(acc);
+      unsigned int& blockRHFShift = aV2P::declareSharedVar<uint32_t, __COUNTER__>(acc);
 
       // Warning: This algorithm relies on thread-private variables (vertex_idx, rep_idx)
       // For correctness on non-GPU architectures, the launch parameters
@@ -94,7 +94,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           cc_energy_seed[idx.local] = 0;
           vertex_idx = idx.global;
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         const unsigned int rep_idx = vertex_idx < nVertices ? pfClusteringCCLabels[vertex_idx].mdpf_topoId() : 0;
 
@@ -109,7 +109,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         unsigned int vertex_seed = vertex_idx < nVertices ? pfCluster[vertex_idx].seedRHIdx() : 0;
 
         for (auto idx : ::cms::alpakatools::uniform_group_elements(acc, group, nVertices)) {
-          const warp::warp_mask_t active_lanes_mask = alpaka::warp::activemask(acc);
+          const warp::warp_mask_t active_lanes_mask = aV2P::warp::activemask(acc);
 
           const unsigned int rep_group_idx = rep_idx / blockDim;
           const unsigned int shift =
@@ -141,7 +141,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           //                       also includes lanes for later swap operation
           // - swap_lanes_mask   : lanes that currently hold state and must be preserved to be swapped out to some free lanes.
           if constexpr (is_cooperative) {
-            const unsigned int eff_w_extent = alpaka::popcount(acc, active_lanes_mask);
+            const unsigned int eff_w_extent = aV2P::popcount(acc, active_lanes_mask);
 
             unsigned int src_rhf_offset = rhf_begin;
             unsigned int rhf_size = rhf_end - rhf_begin;
@@ -194,7 +194,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 // Available cooperative subgroup capacity: free lanes minus those reserved to preserve state (swap lanes).
                 // Note: the name 'subgroup' is used here because it does not take into account iterative (master) lane itself.
                 const unsigned int free_subgroup_size =
-                    static_cast<std::uint32_t>(alpaka::popcount(acc, free_lanes_mask)) - swap_lanes_num;
+                    static_cast<std::uint32_t>(aV2P::popcount(acc, free_lanes_mask)) - swap_lanes_num;
 
                 if (is_single_work_lane) {
                   if (is_master_lane) {
@@ -204,7 +204,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                   }
                   iter_lane_idx += 1;
                   update_params = iter_lane_idx < eff_w_extent &&
-                                  (static_cast<std::uint32_t>(alpaka::popcount(acc, free_lanes_mask)) > swap_lanes_num);
+                                  (static_cast<std::uint32_t>(aV2P::popcount(acc, free_lanes_mask)) > swap_lanes_num);
                   continue;
                 }
 
@@ -213,7 +213,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 const unsigned int iter_rhf_size =
                     warp::shfl_mask(acc, active_lanes_mask, proc_rhf_size, iter_lane_idx, w_extent);
 
-                const unsigned int coop_subgroup_size = alpaka::math::min(acc, iter_rhf_size, free_subgroup_size);
+                const unsigned int coop_subgroup_size = aV2P::math::min(acc, iter_rhf_size, free_subgroup_size);
 
                 // Check which lane can cooperate in the work:
                 // -- it must be vacant (corresponding bit in 'free_lanes_mask' must be set)
@@ -253,7 +253,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                   rhf_size = iter_rhf_size - coop_subgroup_size;
                 }
                 update_params = (iter_lane_idx < eff_w_extent) &&
-                                (static_cast<std::uint32_t>(alpaka::popcount(acc, free_lanes_mask)) > swap_lanes_num);
+                                (static_cast<std::uint32_t>(aV2P::popcount(acc, free_lanes_mask)) > swap_lanes_num);
               }
               // Now we need to swap cached values to vacant lanes:
               if (is_work_lane(free_lanes_mask | swap_lanes_mask, lane_idx)) {
@@ -307,14 +307,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
         const bool is_block_local_represantative = (group * blockDim <= rep_idx) && (rep_idx < (group + 1) * blockDim);
 
-        auto compFn = [] ALPAKA_FN_ACC(const float a, const float b) -> float { return a > b ? a : b; };
+        auto compFn = [] AV2P_FN_ACC(const float a, const float b) -> float { return a > b ? a : b; };
 
         for (auto idx : ::cms::alpakatools::uniform_group_elements(acc, group, nVertices)) {
           if (is_block_local_represantative == false) {
             continue;
           }
 
-          const warp::warp_mask_t rep_mask = alpaka::warp::activemask(acc);
+          const warp::warp_mask_t rep_mask = aV2P::warp::activemask(acc);
 
           const unsigned int lane_idx = idx.local % w_extent;
 
@@ -330,11 +330,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           if (max_energy == energy) {
             uint32_t e_uint = std::bit_cast<unsigned int>(max_energy);
             uint64_t x = (static_cast<uint64_t>(e_uint) << 32) | static_cast<uint64_t>(vertex_seed);
-            alpaka::atomicMax(acc, &cc_energy_seed[rep_cc_idx], x);
+            aV2P::atomicMax(acc, &cc_energy_seed[rep_cc_idx], x);
           }
         }
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         for (auto idx : ::cms::alpakatools::uniform_group_elements(acc, group, nVertices)) {
           // Note that representatives are always block-local
@@ -343,7 +343,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           if (is_block_local_represantative == false) {
             const unsigned int lane_idx = idx.local % w_extent;
 
-            const warp::warp_mask_t active_lane_mask = alpaka::warp::activemask(acc);
+            const warp::warp_mask_t active_lane_mask = aV2P::warp::activemask(acc);
 
             const warp::warp_mask_t subcomponent_mask = warp::match_any_mask(acc, active_lane_mask, rep_idx);
 
@@ -360,7 +360,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           }
           // Energies are assumed non-negative; bit-cast uint ordering matches float ordering for atomicMax.
           if (energy_seed != 0) {
-            alpaka::atomicMax(acc, &args[global_topo_idx].ccEnergySeed(), energy_seed);
+            aV2P::atomicMax(acc, &args[global_topo_idx].ccEnergySeed(), energy_seed);
           }
         }
       }
@@ -369,7 +369,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   class ECLCCLoadSeedsKernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   reco::PFClusterDeviceCollection::View outPFCluster,
                                   reco::PFMultiDepthECLCCEpilogueArgsDeviceCollection::View args) const {
       const unsigned int nComponents = outPFCluster.nSeeds();
@@ -382,6 +382,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
     }
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

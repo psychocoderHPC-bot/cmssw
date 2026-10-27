@@ -6,13 +6,13 @@
 #include "FWCore/Utilities/interface/EDPutToken.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::device {
+namespace AV2P_ACCELERATOR_NAMESPACE::device {
   class Event;
 
   /**
    * The device::EDPutToken is similar to edm::EDPutTokenT, but is
    * intended for Event data products in the device memory space
-   * defined by the backend (i.e. ALPAKA_ACCELERATOR_NAMESPACE). It
+   * defined by the backend (i.e. AV2P_ACCELERATOR_NAMESPACE). It
    * can be used only to put data into a device::Event
    */
   template <typename TProduct>
@@ -40,6 +40,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::device {
     edm::EDPutTokenT<ProductType> token_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::device
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::device
 
 #endif

@@ -6,7 +6,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "DeclsForKernels.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::raw {
 
   void unpackRaw(Queue& queue,
                  InputDataHost const& inputHost,
@@ -16,6 +16,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
                  uint32_t const nfedsWithData,
                  uint32_t const nbytesTotal);
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::raw
 
 #endif  // EventFilter_EcalRawToDigi_plugins_alpaka_UnpackPortable_h

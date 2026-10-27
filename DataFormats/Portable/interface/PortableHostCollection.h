@@ -10,7 +10,7 @@
 #include <type_traits>
 #include <utility>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Common/interface/Uninitialized.h"
 #include "DataFormats/Portable/interface/PortableCollectionCommon.h"
@@ -43,19 +43,19 @@ public:
             Layout::computeDataSize(portablecollection::size_cast(size)))},
         layout_{buffer_->data(), portablecollection::size_cast(size)},
         view_{layout_} {
-    // Alpaka set to a default alignment of 128 bytes defining ALPAKA_DEFAULT_HOST_MEMORY_ALIGNMENT=128
+    // Alpaka set to a default alignment of 128 bytes defining AV2P_DEFAULT_HOST_MEMORY_ALIGNMENT=128
     assert(reinterpret_cast<uintptr_t>(buffer_->data()) % Layout::alignment == 0);
   }
 
   template <typename TQueue, std::integral Int>
-    requires(alpaka::concepts::Queue<TQueue> && (!requires { Layout::blocksNumber; }))
+    requires(aV2P::concepts::Queue<TQueue> && (!requires { Layout::blocksNumber; }))
   PortableHostCollection(TQueue const& queue, const Int size)
       // allocate pinned host memory associated to the given work queue, accessible by the queue's device
       : buffer_{cms::alpakatools::make_host_buffer<std::byte[]>(
             queue, Layout::computeDataSize(portablecollection::size_cast(size)))},
         layout_{buffer_->data(), portablecollection::size_cast(size)},
         view_{layout_} {
-    // Alpaka set to a default alignment of 128 bytes defining ALPAKA_DEFAULT_HOST_MEMORY_ALIGNMENT=128
+    // Alpaka set to a default alignment of 128 bytes defining AV2P_DEFAULT_HOST_MEMORY_ALIGNMENT=128
     assert(reinterpret_cast<uintptr_t>(buffer_->data()) % Layout::alignment == 0);
   }
 
@@ -81,7 +81,7 @@ public:
 
   // constructor for a SoABlocks-layout, taking per-block sizes as variadic integral arguments
   template <typename TQueue, std::integral... Ints>
-    requires(alpaka::concepts::Queue<TQueue>)
+    requires(aV2P::concepts::Queue<TQueue>)
   explicit PortableHostCollection(TQueue const& queue, const Ints... sizes)
     requires requires { Layout::blocksNumber; } && (sizeof...(Ints) == static_cast<std::size_t>(Layout::blocksNumber))
       // allocate pinned host memory associated to the given work queue, accessible by the queue's device
@@ -95,20 +95,20 @@ public:
       : buffer_{cms::alpakatools::make_host_buffer<std::byte[]>(Layout::computeDataSize(sizes))},
         layout_{buffer_->data(), sizes},
         view_{layout_} {
-    // Alpaka set to a default alignment of 128 bytes defining ALPAKA_DEFAULT_HOST_MEMORY_ALIGNMENT=128
+    // Alpaka set to a default alignment of 128 bytes defining AV2P_DEFAULT_HOST_MEMORY_ALIGNMENT=128
     assert(reinterpret_cast<uintptr_t>(buffer_->data()) % Layout::alignment == 0);
   }
 
   // constructor for a SoABlocks-layout, taking per-block sizes as a fixed-size array
   template <typename TQueue, std::size_t N>
-    requires(alpaka::concepts::Queue<TQueue>)
+    requires(aV2P::concepts::Queue<TQueue>)
   explicit PortableHostCollection(TQueue const& queue, std::array<int32_t, N> const& sizes)
     requires requires { Layout::blocksNumber; } && (N == static_cast<std::size_t>(Layout::blocksNumber))
       // allocate pinned host memory associated to the given work queue, accessible by the queue's device
       : buffer_{cms::alpakatools::make_host_buffer<std::byte[]>(queue, Layout::computeDataSize(sizes))},
         layout_{buffer_->data(), sizes},
         view_{layout_} {
-    // Alpaka set to a default alignment of 128 bytes defining ALPAKA_DEFAULT_HOST_MEMORY_ALIGNMENT=128
+    // Alpaka set to a default alignment of 128 bytes defining AV2P_DEFAULT_HOST_MEMORY_ALIGNMENT=128
     assert(reinterpret_cast<uintptr_t>(buffer_->data()) % Layout::alignment == 0);
   }
 
@@ -141,13 +141,13 @@ public:
 
   // erases the data in the Buffer by writing zeros (bytes containing '\0') to it
   void zeroInitialise() {
-    std::memset(std::data(*buffer_), 0x00, alpaka::getExtentProduct(*buffer_) * sizeof(std::byte));
+    std::memset(std::data(*buffer_), 0x00, aV2P::getExtentProduct(*buffer_) * sizeof(std::byte));
   }
 
   template <typename TQueue>
-    requires(alpaka::concepts::Queue<TQueue>)
+    requires(aV2P::concepts::Queue<TQueue>)
   void zeroInitialise(TQueue&& queue) {
-    alpaka::memset(std::forward<TQueue>(queue), *buffer_, 0x00);
+    aV2P::memset(std::forward<TQueue>(queue), *buffer_, 0x00);
   }
 
   // part of the ROOT read streamer
@@ -199,7 +199,7 @@ namespace ngt {
     static Properties properties(value_type const& object) { return object->metadata().size(); }
 
     template <typename TQueue>
-      requires(alpaka::concepts::Queue<TQueue>)
+      requires(aV2P::concepts::Queue<TQueue>)
     static void initialize(TQueue& queue, value_type& object, Properties const& size) {
       // Replace the default-constructed empty object with one where the buffer
       // has been allocated in pinned host memory.
@@ -215,14 +215,14 @@ namespace ngt {
     static std::vector<std::span<std::byte>> regions(value_type& object) {
       // The whole PortableHostCollection is stored in a single contiguous memory region.
       std::byte* address = reinterpret_cast<std::byte*>(object.buffer().data());
-      size_t size = alpaka::getExtentProduct(object.buffer());
+      size_t size = aV2P::getExtentProduct(object.buffer());
       return {{address, size}};
     }
 
     static std::vector<std::span<const std::byte>> regions(value_type const& object) {
       // The whole PortableHostCollection is stored in a single contiguous memory region.
       const std::byte* address = reinterpret_cast<const std::byte*>(object.buffer().data());
-      size_t size = alpaka::getExtentProduct(object.buffer());
+      size_t size = aV2P::getExtentProduct(object.buffer());
       return {{address, size}};
     }
   };

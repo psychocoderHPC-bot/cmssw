@@ -4,7 +4,7 @@
 
 #include <format>
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE::lst;
+using namespace AV2P_ACCELERATOR_NAMESPACE::lst;
 
 #include "Math/Vector3D.h"
 #include "Math/VectorUtil.h"
@@ -26,7 +26,7 @@ void LST::run(Queue& queue,
   event.addPixelSegmentToEventStart();
   event.createMiniDoublets();
   if (verbose) {
-    alpaka::wait(queue);  // event calls are asynchronous: wait before printing
+    aV2P::wait(queue);  // event calls are asynchronous: wait before printing
     printf("# of Mini-doublets produced: %d\n", event.getNumberOfMiniDoublets());
     printf("# of Mini-doublets produced barrel layer 1: %d\n", event.getNumberOfMiniDoubletsByLayerBarrel(0));
     printf("# of Mini-doublets produced barrel layer 2: %d\n", event.getNumberOfMiniDoubletsByLayerBarrel(1));
@@ -43,7 +43,7 @@ void LST::run(Queue& queue,
 
   event.createSegmentsWithModuleMap();
   if (verbose) {
-    alpaka::wait(queue);  // event calls are asynchronous: wait before printing
+    aV2P::wait(queue);  // event calls are asynchronous: wait before printing
     printf("# of Segments produced: %d\n", event.getNumberOfSegments());
     printf("# of Segments produced layer 1-2:  %d\n", event.getNumberOfSegmentsByLayerBarrel(0));
     printf("# of Segments produced layer 2-3:  %d\n", event.getNumberOfSegmentsByLayerBarrel(1));
@@ -59,7 +59,7 @@ void LST::run(Queue& queue,
 
   event.createTriplets();
   if (verbose) {
-    alpaka::wait(queue);  // event calls are asynchronous: wait before printing
+    aV2P::wait(queue);  // event calls are asynchronous: wait before printing
     printf("# of T3s produced: %d\n", event.getNumberOfTriplets());
     printf("# of T3s produced layer 1-2-3: %d\n", event.getNumberOfTripletsByLayerBarrel(0));
     printf("# of T3s produced layer 2-3-4: %d\n", event.getNumberOfTripletsByLayerBarrel(1));
@@ -77,7 +77,7 @@ void LST::run(Queue& queue,
 
   event.createQuintuplets();
   if (verbose) {
-    alpaka::wait(queue);  // event calls are asynchronous: wait before printing
+    aV2P::wait(queue);  // event calls are asynchronous: wait before printing
     printf("# of Quintuplets produced: %d\n", event.getNumberOfQuintuplets());
     printf("# of Quintuplets produced layer 1-2-3-4-5-6: %d\n", event.getNumberOfQuintupletsByLayerBarrel(0));
     printf("# of Quintuplets produced layer 2: %d\n", event.getNumberOfQuintupletsByLayerBarrel(1));
@@ -98,19 +98,19 @@ void LST::run(Queue& queue,
 
   event.createPixelQuintuplets();
   if (verbose) {
-    alpaka::wait(queue);  // event calls are asynchronous: wait before printing
+    aV2P::wait(queue);  // event calls are asynchronous: wait before printing
     printf("# of Pixel Quintuplets produced: %d\n", event.getNumberOfPixelQuintuplets());
   }
 
   event.createPixelTriplets();
   if (verbose) {
-    alpaka::wait(queue);  // event calls are asynchronous: wait before printing
+    aV2P::wait(queue);  // event calls are asynchronous: wait before printing
     printf("# of Pixel T3s produced: %d\n", event.getNumberOfPixelTriplets());
   }
 
   event.createQuadruplets();
   if (verbose) {
-    alpaka::wait(queue);  // event calls are asynchronous: wait before printing
+    aV2P::wait(queue);  // event calls are asynchronous: wait before printing
     printf("# of Quadruplets produced: %d\n", event.getNumberOfQuadruplets());
     printf("# of Quadruplets produced layer 1-2-3-4: %d\n", event.getNumberOfQuadrupletsByLayerBarrel(0));
     printf("# of Quadruplets produced layer 2: %d\n", event.getNumberOfQuadrupletsByLayerBarrel(1));
@@ -127,7 +127,7 @@ void LST::run(Queue& queue,
 
   event.createTrackCandidates(no_pls_dupclean, tc_pls_triplets);
   if (verbose) {
-    alpaka::wait(queue);  // event calls are asynchronous: wait before printing
+    aV2P::wait(queue);  // event calls are asynchronous: wait before printing
     printf("# of TrackCandidates produced: %d\n", event.getNumberOfTrackCandidates());
     printf("        # of Pixel TrackCandidates produced: %d\n", event.getNumberOfPixelTrackCandidates());
     printf("        # of pT5 TrackCandidates produced: %d\n", event.getNumberOfPT5TrackCandidates());

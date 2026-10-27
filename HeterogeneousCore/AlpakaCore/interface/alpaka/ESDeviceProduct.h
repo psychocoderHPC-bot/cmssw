@@ -7,7 +7,7 @@
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * The sole purpose of this wrapper class is to segregate the
    * EventSetup products in the device memory from the host memory
@@ -21,7 +21,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   public:
     virtual ~ESDeviceProduct() {}
 
-    T const& get(Device const& dev) const { return *cache_[alpaka::getNativeHandle(dev)]; }
+    T const& get(Device const& dev) const { return *cache_[aV2P::getNativeHandle(dev)]; }
 
   protected:
     explicit ESDeviceProduct(size_t ndevices) : cache_(ndevices, nullptr) {}
@@ -49,7 +49,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       explicit ESDeviceProductWithStorage(size_t ndevices) : Base(ndevices), data_(ndevices) {}
 
       void insert(Device const& dev, TStorage data) {
-        auto const idev = alpaka::getNativeHandle(dev);
+        auto const idev = aV2P::getNativeHandle(dev);
         data_[idev] = std::move(data);
         this->setCache(idev, &*data_[idev]);
       }
@@ -58,6 +58,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       std::vector<TStorage> data_;
     };
   }  // namespace detail
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

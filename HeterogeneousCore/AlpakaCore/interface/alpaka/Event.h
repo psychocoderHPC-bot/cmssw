@@ -11,11 +11,11 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/EDPutToken.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::device {
+namespace AV2P_ACCELERATOR_NAMESPACE::device {
   /**
    * The device::Event mimics edm::Event, and provides access to
    * EDProducts in the host memory space, and in the device memory
-   * space defined by the backend (i.e. ALPAKA_ACCELERATOR_NAMESPACE).
+   * space defined by the backend (i.e. AV2P_ACCELERATOR_NAMESPACE).
    * The device::Event also gives access to the Queue object the
    * EDModule code should use to queue all the device operations.
    *
@@ -161,6 +161,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::device {
     // additional protection is needed.
     mutable bool queueUsed_ = false;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::device
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::device
 
 #endif  // HeterogeneousCore_AlpakaCore_interface_alpaka_Event_h

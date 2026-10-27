@@ -3,7 +3,7 @@
 
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaCore/interface/CopyToDeviceCache.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/devices.h"
@@ -72,7 +72,7 @@ namespace cms::alpakatools {
    * queue or device argument.
    */
   template <typename TDevice, typename THostObject>
-    requires alpaka::concepts::Device<TDevice>
+    requires aV2P::concepts::Device<TDevice>
   class MoveToDeviceCache {
   public:
     using Device = TDevice;
@@ -85,11 +85,11 @@ namespace cms::alpakatools {
 
     MoveToDeviceCache(HostObject&& srcData) : data_(std::move(srcData)) {}
 
-    DeviceObject const& get(Device const& dev) const { return data_.get(alpaka::getNativeHandle(dev)); }
+    DeviceObject const& get(Device const& dev) const { return data_.get(aV2P::getNativeHandle(dev)); }
 
     template <typename TQueue>
     DeviceObject const& get(TQueue const& queue) const {
-      return get(alpaka::getDev(queue));
+      return get(aV2P::getDev(queue));
     }
 
   private:

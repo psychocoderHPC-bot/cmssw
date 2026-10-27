@@ -8,9 +8,9 @@
 
 #include <cstdlib>
 #include <numeric>
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
+namespace AV2P_ACCELERATOR_NAMESPACE::lst {
   class LSTEvent;
 
   class LST {
@@ -35,6 +35,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     std::unique_ptr<TrackCandidatesBaseDeviceCollection> trackCandidatesBaseDC_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::lst
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::lst
 
 #endif

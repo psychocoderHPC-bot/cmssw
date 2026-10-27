@@ -38,8 +38,8 @@ EXPECTED='`portabletest::TestHostCollection` resolves to `PortableHostCollection
   with type info `22PortableHostCollectionIN12portabletest13TestSoALayoutILm128ELb0EEEE`'
 compare "${CMD}" "${EXPECTED}"
 
-# Run edmTypeInfo ALPAKA_ACCELERATOR_NAMESPACE::portabletest::TestDeviceCollection
-CMD="edmTypeInfo ALPAKA_ACCELERATOR_NAMESPACE::portabletest::TestDeviceCollection"
+# Run edmTypeInfo AV2P_ACCELERATOR_NAMESPACE::portabletest::TestDeviceCollection
+CMD="edmTypeInfo AV2P_ACCELERATOR_NAMESPACE::portabletest::TestDeviceCollection"
 EXPECTED='`alpaka_serial_sync::portabletest::TestDeviceCollection` does not resolve to any type known to ROOT'
 EXPECTED+='
 

@@ -4,7 +4,7 @@
 #include "write_lst_ntuple.h"
 #include <tuple>
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE::lst;
+using namespace AV2P_ACCELERATOR_NAMESPACE::lst;
 
 //________________________________________________________________________________________________________________________________
 void createOutputBranches() {

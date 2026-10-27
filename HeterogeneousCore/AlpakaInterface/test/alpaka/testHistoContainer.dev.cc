@@ -7,7 +7,7 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Utilities/interface/stringize.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
@@ -16,9 +16,9 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/HistoContainer.h"
 
 using namespace cms::alpakatools;
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
-static constexpr auto s_tag = "[" ALPAKA_TYPE_ALIAS_NAME(alpakaTestHistoContainer) "]";
+static constexpr auto s_tag = "[" AV2P_TYPE_ALIAS_NAME(alpakaTestHistoContainer) "]";
 
 template <typename T, typename Hist, typename VERIFY, typename INCR>
 void checkContents(Hist* h,
@@ -41,12 +41,12 @@ void checkContents(Hist* h,
 #ifndef NDEBUG
       [[maybe_unused]] auto bk = h->bin(v[k]);
 #endif
-      ALPAKA_ASSERT_ACC(bk == i);
-      ALPAKA_ASSERT_ACC(k < offsets[j + 1]);
+      AV2P_ASSERT_ACC(bk == i);
+      AV2P_ASSERT_ACC(k < offsets[j + 1]);
       auto kl = h->bin(v[k] - window);
       auto kh = h->bin(v[k] + window);
-      ALPAKA_ASSERT_ACC(kl != i);
-      ALPAKA_ASSERT_ACC(kh != i);
+      AV2P_ASSERT_ACC(kl != i);
+      AV2P_ASSERT_ACC(kh != i);
       // std::cout << kl << ' ' << kh << std::endl;
 
       auto me = v[k];
@@ -84,10 +84,10 @@ void checkContents(Hist* h,
         std::cout << "what? " << j << ' ' << i << ' ' << int(me) << '/' << (int)T(me - window) << '/'
                   << (int)T(me + window) << ": " << kl << '/' << kh << ' ' << khh << ' ' << tot << '/' << nm
                   << std::endl;
-      ALPAKA_ASSERT_ACC(!l);
+      AV2P_ASSERT_ACC(!l);
     }
   }
-  std::string_view demangled = alpaka::core::demangled<Hist>;
+  std::string_view demangled = aV2P::core::demangled<Hist>;
   std::cout << "Check contents OK with " << demangled << '\n';
 }
 
@@ -99,7 +99,7 @@ int go(const DevHost& host, const Device& device, Queue& queue) {
   constexpr unsigned int N = 12000;
   auto v = make_host_buffer<T[]>(queue, N);
   auto v_d = make_device_buffer<T[]>(queue, N);
-  alpaka::memcpy(queue, v_d, v);
+  aV2P::memcpy(queue, v_d, v);
 
   constexpr uint32_t nParts = 10;
   constexpr uint32_t partSize = N / nParts;
@@ -134,7 +134,7 @@ int go(const DevHost& host, const Device& device, Queue& queue) {
     offsets[0] = 0;
     for (uint32_t j = 1; j < nParts + 1; ++j) {
       offsets[j] = offsets[j - 1] + partSize - 3 * j;
-      ALPAKA_ASSERT_ACC(offsets[j] <= N);
+      AV2P_ASSERT_ACC(offsets[j] <= N);
     }
 
     if (it == 1) {  // special cases...
@@ -151,7 +151,7 @@ int go(const DevHost& host, const Device& device, Queue& queue) {
       offsets[10] = 3297 + offsets[9];
     }
 
-    alpaka::memcpy(queue, offsets_d, offsets);
+    aV2P::memcpy(queue, offsets_d, offsets);
 
     for (long long j = 0; j < N; j++)
       v[j] = rgen(eng);
@@ -165,13 +165,13 @@ int go(const DevHost& host, const Device& device, Queue& queue) {
     // {
     //   std::cout << "values>" << v[i] << std::endl;
     // }
-    alpaka::memcpy(queue, v_d, v);
+    aV2P::memcpy(queue, v_d, v);
 
-    alpaka::memset(queue, h_d, 0);
-    alpaka::memset(queue, hr_d, 0);
-    alpaka::memset(queue, hd_d, 0);
+    aV2P::memset(queue, h_d, 0);
+    aV2P::memset(queue, hr_d, 0);
+    aV2P::memset(queue, hd_d, 0);
 
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
     std::cout << "Calling fillManyFromVector - " << h->size() << std::endl;
     fillManyFromVector<Acc1D>(h_d.data(), nParts, v_d.data(), offsets_d.data(), offsets[10], 256, queue);
@@ -185,16 +185,16 @@ int go(const DevHost& host, const Device& device, Queue& queue) {
     hrv_d.contentStorage = hd_d.data();
     fillManyFromVector<Acc1D>(hr_d.data(), hrv_d, nParts, v_d.data(), offsets_d.data(), offsets[10], 256, queue);
 
-    alpaka::memcpy(queue, h, h_d);
+    aV2P::memcpy(queue, h, h_d);
     // For the runtime sized version:
     // We need the histogram for non external data (here, the offsets)
     // .. and external data storage (here, the contents)
     // .. and plug the data storage address into the histo container
-    alpaka::memcpy(queue, hr, hr_d);
-    alpaka::memcpy(queue, hd, hd_d);
+    aV2P::memcpy(queue, hr, hr_d);
+    aV2P::memcpy(queue, hd, hd_d);
 
     // std::cout << "Calling fillManyFromVector - " <<  h->size() << std::endl;
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
     // We cannot update the contents address of the histo container before the copy from device happened
     typename HistR::View hrv;
@@ -211,14 +211,14 @@ int go(const DevHost& host, const Device& device, Queue& queue) {
     //   std::cout << offsets[i] <<" - "<< h->size() << std::endl;
     // }
 
-    ALPAKA_ASSERT_ACC(0 == h->off[0]);
-    ALPAKA_ASSERT_ACC(offsets[10] == h->size());
-    ALPAKA_ASSERT_ACC(0 == hr->off[0]);
-    ALPAKA_ASSERT_ACC(offsets[10] == hr->size());
+    AV2P_ASSERT_ACC(0 == h->off[0]);
+    AV2P_ASSERT_ACC(offsets[10] == h->size());
+    AV2P_ASSERT_ACC(0 == hr->off[0]);
+    AV2P_ASSERT_ACC(offsets[10] == hr->size());
 
     auto verify = [&](uint32_t i, uint32_t k, uint32_t t1, uint32_t t2) {
-      ALPAKA_ASSERT_ACC(t1 < N);
-      ALPAKA_ASSERT_ACC(t2 < N);
+      AV2P_ASSERT_ACC(t1 < N);
+      AV2P_ASSERT_ACC(t2 < N);
       if (T(v[t1] - v[t2]) <= 0)
         std::cout << "for " << i << ':' << v[k] << " failed " << v[t1] << ' ' << v[t2] << std::endl;
     };
@@ -234,20 +234,20 @@ int go(const DevHost& host, const Device& device, Queue& queue) {
   return 0;
 }
 
-TEST_CASE("Standard checks of " ALPAKA_TYPE_ALIAS_NAME(alpakaTestHistoContainer), s_tag) {
+TEST_CASE("Standard checks of " AV2P_TYPE_ALIAS_NAME(alpakaTestHistoContainer), s_tag) {
   SECTION("HistoContainerKernel") {
     auto const& host = cms::alpakatools::host();
 
     // get the list of devices on the current platform
     auto const& devices = cms::alpakatools::devices<Platform>();
     if (devices.empty()) {
-      FAIL("No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+      FAIL("No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
            "the test will be skipped.\n");
     }
 
     // run the test on each device
     for (auto const& device : devices) {
-      std::cout << "Test Histo Container on " << alpaka::getName(device) << '\n';
+      std::cout << "Test Histo Container on " << aV2P::getName(device) << '\n';
       auto queue = Queue(device);
 
       REQUIRE(go<int16_t>(host, device, queue) == 0);

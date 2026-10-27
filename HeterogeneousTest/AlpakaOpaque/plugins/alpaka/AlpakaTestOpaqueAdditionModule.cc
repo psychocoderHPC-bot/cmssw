@@ -14,7 +14,7 @@
 #include "HeterogeneousTest/AlpakaOpaque/interface/alpaka/DeviceAdditionOpaque.h"
 #include "HeterogeneousCore/AlpakaServices/interface/alpaka/AlpakaService.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class AlpakaTestOpaqueAdditionModule : public edm::global::EDAnalyzer<> {
   public:
@@ -48,9 +48,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                edm::Event const& event,
                                                edm::EventSetup const& setup) const {
     // require a valid Alpaka backend for running
-    edm::Service<ALPAKA_TYPE_ALIAS(AlpakaService)> service;
+    edm::Service<AV2P_TYPE_ALIAS(AlpakaService)> service;
     if (not service or not service->enabled()) {
-      std::cout << "The " << ALPAKA_TYPE_ALIAS_NAME(AlpakaService)
+      std::cout << "The " << AV2P_TYPE_ALIAS_NAME(AlpakaService)
                 << " is not available or disabled, the test will be skipped.\n";
       return;
     }
@@ -88,7 +88,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     std::cout << "All tests passed.\n";
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(AlpakaTestOpaqueAdditionModule);
+DEFINE_FWK_AV2P_MODULE(AlpakaTestOpaqueAdditionModule);

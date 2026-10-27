@@ -1,7 +1,7 @@
 #ifndef HeterogeneousCore_AlpakaInterface_interface_ScopedContextFwd_h
 #define HeterogeneousCore_AlpakaInterface_interface_ScopedContextFwd_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 // Forward declaration of the alpaka framework Context classes
 //
@@ -11,23 +11,23 @@
 namespace cms::alpakatools {
 
   namespace impl {
-    template <typename TQueue, typename = std::enable_if_t<alpaka::concepts::Queue<TQueue>>>
+    template <typename TQueue, typename = std::enable_if_t<aV2P::concepts::Queue<TQueue>>>
     class ScopedContextBase;
 
-    template <typename TQueue, typename = std::enable_if_t<alpaka::concepts::Queue<TQueue>>>
+    template <typename TQueue, typename = std::enable_if_t<aV2P::concepts::Queue<TQueue>>>
     class ScopedContextGetterBase;
   }  // namespace impl
 
-  template <typename TQueue, typename = std::enable_if_t<alpaka::concepts::Queue<TQueue>>>
+  template <typename TQueue, typename = std::enable_if_t<aV2P::concepts::Queue<TQueue>>>
   class ScopedContextAcquire;
 
-  template <typename TQueue, typename = std::enable_if_t<alpaka::concepts::Queue<TQueue>>>
+  template <typename TQueue, typename = std::enable_if_t<aV2P::concepts::Queue<TQueue>>>
   class ScopedContextProduce;
 
-  template <typename TQueue, typename = std::enable_if_t<alpaka::concepts::Queue<TQueue>>>
+  template <typename TQueue, typename = std::enable_if_t<aV2P::concepts::Queue<TQueue>>>
   class ScopedContextTask;
 
-  template <typename TQueue, typename = std::enable_if_t<alpaka::concepts::Queue<TQueue>>>
+  template <typename TQueue, typename = std::enable_if_t<aV2P::concepts::Queue<TQueue>>>
   class ScopedContextAnalyze;
 
 }  // namespace cms::alpakatools

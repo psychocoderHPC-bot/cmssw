@@ -36,7 +36,7 @@
 
 #include "HeterogeneousCore/AlpakaInterface/interface/host.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
+namespace AV2P_ACCELERATOR_NAMESPACE::lst {
 
   class LSTEvent {
   private:
@@ -129,7 +129,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     }
     void initSync();        // synchronizes, for standalone usage
     void resetEventSync();  // synchronizes, for standalone usage
-    void wait() const { alpaka::wait(queue_); }
+    void wait() const { aV2P::wait(queue_); }
 
     void addInputToEvent(LSTInputDeviceCollection const* lstInputDC);
     // Calls the appropriate hit function, then increments the counter
@@ -188,7 +188,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
     double getMemoryAllocatedMB() const { return memoryAllocatedMB_; }
 
-    // sync adds alpaka::wait at the end of filling a buffer during lazy fill
+    // sync adds aV2P::wait at the end of filling a buffer during lazy fill
     // (has no effect on repeated calls)
     // set to false may allow faster operation with concurrent calls of get*
     // HANDLE WITH CARE
@@ -223,5 +223,5 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     typename TSoA::ConstView getModules(bool sync = true);
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::lst
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::lst
 #endif

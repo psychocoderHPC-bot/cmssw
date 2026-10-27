@@ -7,8 +7,8 @@
 
 namespace lst {
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE std::tuple<float, float, float> computeRadiusFromThreeAnchorHits(
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE std::tuple<float, float, float> computeRadiusFromThreeAnchorHits(
       TAcc const& acc, float x1, float y1, float x2, float y2, float x3, float y3) {
     float radius = 0.f;
 
@@ -36,7 +36,7 @@ namespace lst {
       radius = -1.f;
     } else
       radius =
-          alpaka::math::sqrt(acc, regressionCenterX * regressionCenterX + regressionCenterY * regressionCenterY - c);
+          aV2P::math::sqrt(acc, regressionCenterX * regressionCenterX + regressionCenterY * regressionCenterY - c);
 
     return std::make_tuple(radius, regressionCenterX, regressionCenterY);
   }

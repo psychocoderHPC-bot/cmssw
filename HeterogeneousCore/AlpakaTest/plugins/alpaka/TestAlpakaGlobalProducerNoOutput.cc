@@ -8,7 +8,7 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/ESGetToken.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * This EDProducer only consumes a device EDProduct, and is intended
    * only for testing purposes. Do not use it as an example.
@@ -32,7 +32,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   private:
     const device::EDGetToken<portabletest::TestDeviceCollection> getToken_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(TestAlpakaGlobalProducerNoOutput);
+DEFINE_FWK_AV2P_MODULE(TestAlpakaGlobalProducerNoOutput);

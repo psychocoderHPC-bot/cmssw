@@ -14,7 +14,7 @@
 #include "PhysicsTools/PyTorchAlpaka/interface/alpaka/AlpakaModel.h"
 #include "PhysicsTools/PyTorchAlpakaTest/interface/Environment.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
+namespace AV2P_ACCELERATOR_NAMESPACE::torchtest {
   struct BatchIO {
     cms::torch::alpakatools::TensorCollection<Queue> inputs;
     cms::torch::alpakatools::TensorCollection<Queue> outputs;
@@ -88,6 +88,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
     const ::torchtest::Environment environment_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::torchtest
 
-DEFINE_FWK_ALPAKA_MODULE(torchtest::TinyResNetMiniBatch);
+DEFINE_FWK_AV2P_MODULE(torchtest::TinyResNetMiniBatch);

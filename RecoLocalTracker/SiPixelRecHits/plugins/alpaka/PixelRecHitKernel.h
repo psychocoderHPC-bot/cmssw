@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/BeamSpot/interface/BeamSpotPOD.h"
 #include "DataFormats/SiPixelClusterSoA/interface/alpaka/SiPixelClustersSoACollection.h"
@@ -16,10 +16,10 @@
 #include "Geometry/CommonTopologies/interface/SimplePixelTopology.h"
 #include "RecoLocalTracker/SiPixelRecHits/interface/pixelCPEforDevice.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   namespace pixelgpudetails {
     using namespace cms::alpakatools;
-    using namespace ALPAKA_ACCELERATOR_NAMESPACE::reco;
+    using namespace AV2P_ACCELERATOR_NAMESPACE::reco;
     template <typename TrackerTraits>
     class PixelRecHitKernel {
     public:
@@ -40,6 +40,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                        Queue queue) const;
     };
   }  // namespace pixelgpudetails
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // RecoLocalTracker_SiPixelRecHits_PixelRecHitKernel_h

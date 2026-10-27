@@ -11,7 +11,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/host.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   class HcalSiPMCharacteristicsESProducer : public ESProducer {
   public:
     HcalSiPMCharacteristicsESProducer(edm::ParameterSet const& iConfig) : ESProducer(iConfig) {
@@ -59,6 +59,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   private:
     edm::ESGetToken<HcalSiPMCharacteristics, HcalSiPMCharacteristicsRcd> sipmCharacteristicsToken_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(HcalSiPMCharacteristicsESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(HcalSiPMCharacteristicsESProducer);

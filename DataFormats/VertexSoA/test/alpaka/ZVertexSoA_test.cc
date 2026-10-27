@@ -16,7 +16,7 @@
 #include <cstdlib>
 #include <unistd.h>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/VertexSoA/interface/ZVertexHost.h"
 #include "DataFormats/VertexSoA/interface/alpaka/ZVertexSoACollection.h"
@@ -28,8 +28,8 @@
 
 #include "ZVertexSoA_test.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
-using namespace ALPAKA_ACCELERATOR_NAMESPACE::reco;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE::reco;
 
 // Run 3 values, used for testing
 constexpr uint32_t maxTracks = 32 * 1024;
@@ -39,7 +39,7 @@ int main() {
   // Get the list of devices on the current platform
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }
@@ -57,12 +57,12 @@ int main() {
 
       // If the device is actually the host, use the collection as-is.
       // Otherwise, copy the data from the device to the host.
-#ifdef ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+#ifdef AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
       ZVertexHost zvertex_h = std::move(zvertex_d);
 #else
       ZVertexHost zvertex_h = cms::alpakatools::CopyToHost<ZVertexSoACollection>::copyAsync(queue, zvertex_d);
 #endif
-      alpaka::wait(queue);
+      aV2P::wait(queue);
       std::cout << zvertex_h.view().zvertex().metadata().size() << std::endl;
 
       // Print results

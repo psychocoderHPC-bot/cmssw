@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <Eigen/Core>
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 #include "DataFormats/GeometryVector/interface/GlobalVector.h"
@@ -15,13 +15,13 @@
 
 using namespace edm;
 using namespace std;
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 using namespace portableParabolicMagneticField;
 using Vector3f = Eigen::Matrix<float, 3, 1>;
 
 struct TrackerMagneticFieldKernel {
   template <typename T>
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, T const* __restrict__ in, T* __restrict__ out, size_t size) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, T const* __restrict__ in, T* __restrict__ out, size_t size) const {
     for (auto index : cms::alpakatools::uniform_elements(acc, size)) {
       out[index](0) = 0;
       out[index](1) = 0;
@@ -34,7 +34,7 @@ int main() {
   // get the list of devices on the current platform
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }
@@ -90,18 +90,18 @@ int main() {
     auto field_dev = cms::alpakatools::make_device_buffer<Vector3f[]>(queue, size);
 
     // copy the input data to the device; the size is known from the buffer objects
-    alpaka::memcpy(queue, points_dev, points_host);
+    aV2P::memcpy(queue, points_dev, points_host);
     // fill the output buffer with zeros; the size is known from the buffer objects
-    alpaka::memset(queue, field_dev, 0.);
+    aV2P::memset(queue, field_dev, 0.);
 
     auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(1, size);
-    alpaka::exec<Acc1D>(queue, workDiv, TrackerMagneticFieldKernel{}, points_dev.data(), field_dev.data(), size);
+    aV2P::exec<Acc1D>(queue, workDiv, TrackerMagneticFieldKernel{}, points_dev.data(), field_dev.data(), size);
 
     // copy the results from the device to the host
-    alpaka::memcpy(queue, field_host, field_dev);
+    aV2P::memcpy(queue, field_host, field_dev);
 
     // wait for the kernel and the potential copy to complete
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
     // check the results
     for (uint i = 0; i < points.size(); i++) {

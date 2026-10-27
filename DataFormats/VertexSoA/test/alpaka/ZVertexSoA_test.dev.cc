@@ -1,4 +1,4 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/VertexSoA/interface/ZVertexDevice.h"
 #include "DataFormats/VertexSoA/interface/ZVertexHost.h"
@@ -6,11 +6,11 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::testZVertexSoAT {
+namespace AV2P_ACCELERATOR_NAMESPACE::testZVertexSoAT {
 
   class TestFillKernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, ::reco::ZVertexBlocksView view) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, ::reco::ZVertexBlocksView view) const {
       ::reco::ZVertexSoAView zvertex_view = view.zvertex();
       ::reco::ZVertexTracksSoAView ztracks_view = view.zvertexTracks();
 
@@ -34,24 +34,24 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::testZVertexSoAT {
 
   class TestVerifyKernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, ::reco::ZVertexBlocksView view) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, ::reco::ZVertexBlocksView view) const {
       ::reco::ZVertexSoAView zvertex_view = view.zvertex();
       ::reco::ZVertexTracksSoAView ztracks_view = view.zvertexTracks();
 
       if (cms::alpakatools::once_per_grid(acc)) {
-        ALPAKA_ASSERT_ACC(zvertex_view.nvFinal() == 420);
+        AV2P_ASSERT_ACC(zvertex_view.nvFinal() == 420);
       }
 
       for (int32_t j : cms::alpakatools::uniform_elements(acc, zvertex_view.nvFinal())) {
-        ALPAKA_ASSERT(zvertex_view[j].zv() - (float)j < 0.0001);
-        ALPAKA_ASSERT(zvertex_view[j].wv() - (float)j < 0.0001);
-        ALPAKA_ASSERT(zvertex_view[j].chi2() - (float)j < 0.0001);
-        ALPAKA_ASSERT(zvertex_view[j].ptv2() - (float)j < 0.0001);
-        ALPAKA_ASSERT(zvertex_view[j].sortInd() == uint32_t(j));
+        AV2P_ASSERT(zvertex_view[j].zv() - (float)j < 0.0001);
+        AV2P_ASSERT(zvertex_view[j].wv() - (float)j < 0.0001);
+        AV2P_ASSERT(zvertex_view[j].chi2() - (float)j < 0.0001);
+        AV2P_ASSERT(zvertex_view[j].ptv2() - (float)j < 0.0001);
+        AV2P_ASSERT(zvertex_view[j].sortInd() == uint32_t(j));
       }
       for (int32_t j : cms::alpakatools::uniform_elements(acc, ztracks_view.metadata().size())) {
-        ALPAKA_ASSERT(ztracks_view[j].idv() == j);
-        ALPAKA_ASSERT(ztracks_view[j].ndof() == j);
+        AV2P_ASSERT(ztracks_view[j].idv() == j);
+        AV2P_ASSERT(ztracks_view[j].ndof() == j);
       }
     }
   };
@@ -60,8 +60,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::testZVertexSoAT {
     uint32_t items = 64;
     uint32_t groups = cms::alpakatools::divide_up_by(view.zvertex().metadata().size(), items);
     auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(groups, items);
-    alpaka::exec<Acc1D>(queue, workDiv, TestFillKernel{}, view);
-    alpaka::exec<Acc1D>(queue, workDiv, TestVerifyKernel{}, view);
+    aV2P::exec<Acc1D>(queue, workDiv, TestFillKernel{}, view);
+    aV2P::exec<Acc1D>(queue, workDiv, TestVerifyKernel{}, view);
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::testZVertexSoAT
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::testZVertexSoAT

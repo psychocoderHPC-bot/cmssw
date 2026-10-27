@@ -44,15 +44,15 @@ namespace sistrip {
   using StripClustersAuxHost = PortableHostCollection<StripClustersAuxSoA>;
 }  // namespace sistrip
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip {
+namespace AV2P_ACCELERATOR_NAMESPACE::sistrip {
   using namespace ::sistrip;
   using StripClustersAuxDevice = PortableCollection<StripClustersAuxSoA>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::sistrip
 
 ASSERT_DEVICE_MATCHES_HOST_COLLECTION(sistrip::StripClustersAuxDevice, sistrip::StripClustersAuxHost);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip {
+namespace AV2P_ACCELERATOR_NAMESPACE::sistrip {
   struct FEDChMetadata {
     uint32_t detId;
     uint16_t fedId;
@@ -108,9 +108,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip {
     uint32_t channelNb_;
     std::vector<uint32_t> offset4FedId_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::sistrip
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip {
+namespace AV2P_ACCELERATOR_NAMESPACE::sistrip {
   class SiStripRawToClusterAlgo {
   public:
     SiStripRawToClusterAlgo(const edm::ParameterSet& clustPar);
@@ -149,6 +149,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip {
                    SiStripMappingDevice* mapping_d);
     void dumpClusters(Queue& queue, SiStripClusterDevice* clusters_d, SiStripDigiDevice* digis_d, bool fullDump = false);
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::sistrip
 
 #endif  // RecoLocalTracker_SiStripClusterizer_plugins_alpaka_SiStripRawToClusterAlgo_h

@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/SiPixelClusterSoA/interface/ClusteringConstants.h"
 #include "FWCore/Utilities/interface/DeviceGlobal.h"
@@ -19,7 +19,7 @@
 
 //#define GPU_DEBUG
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
+namespace AV2P_ACCELERATOR_NAMESPACE::pixelClustering {
 
 #ifdef GPU_DEBUG
   DEVICE_GLOBAL uint32_t gMaxHit = 0;
@@ -46,24 +46,24 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
     constexpr uint32_t rowSize = pixelSizeX / valuesPerWord;            // 160 / 32 = 5 words per row
 
     // 1-bit versions for new 2-buffer scheme
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE constexpr uint32_t getIndex(uint16_t x, uint16_t y) {
+    AV2P_FN_ACC AV2P_FN_INLINE constexpr uint32_t getIndex(uint16_t x, uint16_t y) {
       return (pixelSizeX * y + x) / valuesPerWord;
     }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE constexpr uint32_t getShift(uint16_t x, uint16_t y) {
+    AV2P_FN_ACC AV2P_FN_INLINE constexpr uint32_t getShift(uint16_t x, uint16_t y) {
       return (x % valuesPerWord) * bits;
     }
 
     // Record a pixel using the 2-buffer scheme (image + temp, 1-bit each).
     // Returns: 0 if pixel was empty (now found), 1 if pixel was already found (duplicate).
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE int promote(
+    AV2P_FN_ACC AV2P_FN_INLINE int promote(
         Acc1D const& acc, uint32_t* image, uint32_t* temp, const uint16_t x, const uint16_t y) {
       uint32_t index = getIndex(x, y);
       uint32_t shift = getShift(x, y);
       uint32_t bit = mask << shift;
 
       // Try to set the image bit (marks pixel as found)
-      uint32_t old_image = alpaka::atomicOr(acc, &image[index], bit, alpaka::hierarchy::Threads{});
+      uint32_t old_image = aV2P::atomicOr(acc, &image[index], bit, aV2P::hierarchy::Threads{});
 
       if ((old_image & bit) == 0) {
         // Image bit was 0, now set to 1 -> pixel was empty, now found
@@ -71,14 +71,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
       } else {
         // Image bit was already 1 -> pixel was already found, mark as duplicate
         // Set the temp bit to mark as duplicate
-        alpaka::atomicOr(acc, &temp[index], bit, alpaka::hierarchy::Threads{});
+        aV2P::atomicOr(acc, &temp[index], bit, aV2P::hierarchy::Threads{});
         return 1;
       }
     }
 
     // Check if a pixel is duplicate using the new 2-buffer scheme.
     // Duplicate = image bit set AND temp bit set.
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool isDuplicate(uint32_t const* __restrict__ image,
+    AV2P_FN_ACC AV2P_FN_INLINE bool isDuplicate(uint32_t const* __restrict__ image,
                                                     uint32_t const* __restrict__ temp,
                                                     uint16_t x,
                                                     uint16_t y) {
@@ -87,7 +87,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
       return ((image[index] >> shift) & mask) && ((temp[index] >> shift) & mask);
     }
 
-    ALPAKA_FN_ACC
+    AV2P_FN_ACC
     inline bool isMorphingModule(uint32_t moduleId, const uint32_t* morphingModules, uint32_t nMorphingModules) {
       // Binary search for moduleId in sorted morphingModules
       int left = 0, right = static_cast<int>(nMorphingModules) - 1;
@@ -107,7 +107,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
 
   template <typename TrackerTraits>
   struct CountModules {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   SiPixelDigisSoAView digi_view,
                                   SiPixelClustersSoAView clus_view,
                                   const unsigned int numElements) const {
@@ -130,11 +130,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
           --j;
         if (j < 0 or digi_view[j].moduleId() != digi_view[i].moduleId()) {
           // Found a module boundary: count the number of modules in  clus_view[0].moduleStart()
-          auto loc = alpaka::atomicInc(acc,
+          auto loc = aV2P::atomicInc(acc,
                                        &clus_view[0].moduleStart(),
                                        static_cast<uint32_t>(::pixelClustering::maxNumModules),
-                                       alpaka::hierarchy::Blocks{});
-          ALPAKA_ASSERT_ACC(loc < TrackerTraits::numberOfModules);
+                                       aV2P::hierarchy::Blocks{});
+          AV2P_ASSERT_ACC(loc < TrackerTraits::numberOfModules);
 #ifdef GPU_DEBUG
           printf("> New module (no. %d) found at digi %d \n", loc, i);
 #endif
@@ -156,7 +156,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
         64);
     static_assert(maxElementsPerBlockMorph >= maxElementsPerBlock);
 
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   SiPixelDigisSoAView digi_view,
                                   SiPixelDigisSoAView fakes_view,
                                   bool enableDigiMorphing,
@@ -167,22 +167,22 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
                                   const unsigned int numElements) const {
       static_assert(TrackerTraits::numberOfModules < ::pixelClustering::maxNumModules);
 
-      auto& lastPixel = alpaka::declareSharedVar<unsigned int, __COUNTER__>(acc);
-      auto& fakePixels = alpaka::declareSharedVar<unsigned int, __COUNTER__>(acc);
+      auto& lastPixel = aV2P::declareSharedVar<unsigned int, __COUNTER__>(acc);
+      auto& fakePixels = aV2P::declareSharedVar<unsigned int, __COUNTER__>(acc);
 #ifdef GPU_DEBUG
-      auto& goodPixels = alpaka::declareSharedVar<uint32_t, __COUNTER__>(acc);
+      auto& goodPixels = aV2P::declareSharedVar<uint32_t, __COUNTER__>(acc);
 #endif
 
       const uint32_t lastModule = clus_view[0].moduleStart();
       for (uint32_t module : cms::alpakatools::independent_groups(acc, lastModule)) {
-        auto block = alpaka::getIdx<alpaka::Grid, alpaka::Blocks>(acc)[0u];
+        auto block = aV2P::getIdx<aV2P::Grid, aV2P::Blocks>(acc)[0u];
 
         auto firstPixel = clus_view[1 + module].moduleStart();
         uint32_t thisModuleId = digi_view[firstPixel].moduleId();
         uint32_t rawModuleId = digi_view[firstPixel].rawIdArr();
         bool applyDigiMorphing =
             enableDigiMorphing && pixelStatus::isMorphingModule(rawModuleId, morphingModules, nMorphingModules);
-        ALPAKA_ASSERT_ACC(thisModuleId < TrackerTraits::numberOfModules);
+        AV2P_ASSERT_ACC(thisModuleId < TrackerTraits::numberOfModules);
 
 #ifdef GPU_DEBUG
         if (thisModuleId % 100 == 1)
@@ -202,7 +202,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
 #ifdef GPU_DEBUG
         goodPixels = 0;
 #endif
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         for (uint32_t i : cms::alpakatools::independent_group_elements(acc, firstPixel, numElements)) {
           auto id = digi_view[i].moduleId();
@@ -213,7 +213,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
           if (id != thisModuleId)
             break;
           // valid pixel of this module: extend the range to just past it, ignoring any trailing holes
-          alpaka::atomicMax(acc, &lastPixel, i + 1, alpaka::hierarchy::Threads{});
+          aV2P::atomicMax(acc, &lastPixel, i + 1, aV2P::hierarchy::Threads{});
         }
 
         // clear the fake pixels
@@ -221,7 +221,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
           // Assume no more than `maxFakesInModule` fake (recovered) pixels per module.
           // The fake pixels for the `module`-th module are stored in `fakes_view[...]` starting at index `firstFake`,
           // equal to `maxFakesInModule * module`.
-          ALPAKA_ASSERT_ACC(static_cast<unsigned int>(fakes_view.metadata().size()) >= firstFake + maxFakesInModule);
+          AV2P_ASSERT_ACC(static_cast<unsigned int>(fakes_view.metadata().size()) >= firstFake + maxFakesInModule);
           for (uint32_t i :
                cms::alpakatools::independent_group_elements(acc, firstFake, firstFake + maxFakesInModule)) {
             // The cluster id of the fake pixels do not need to be unique across modules, as they are transient and only
@@ -246,15 +246,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
                                              TrackerTraits::clusterBits,
                                              uint16_t>;
         constexpr int warpSize = cms::alpakatools::warpSize;
-        auto& hist = alpaka::declareSharedVar<Hist, __COUNTER__>(acc);
-        auto& ws = alpaka::declareSharedVar<typename Hist::Counter[warpSize], __COUNTER__>(acc);
+        auto& hist = aV2P::declareSharedVar<Hist, __COUNTER__>(acc);
+        auto& ws = aV2P::declareSharedVar<typename Hist::Counter[warpSize], __COUNTER__>(acc);
         for (uint32_t j : cms::alpakatools::independent_group_elements(acc, Hist::totbins())) {
           hist.off[j] = 0;
           hist.content[j] = 0;
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
-        ALPAKA_ASSERT_ACC((lastPixel == numElements) or
+        AV2P_ASSERT_ACC((lastPixel == numElements) or
                           ((lastPixel < numElements) and (digi_view[lastPixel].moduleId() != thisModuleId)));
         // Limit the number of pixels to to maxPixInModule.
         // FIXME if this happens frequently (and not only in simulation with low threshold) one will need to implement something cleverer.
@@ -274,8 +274,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
             lastPixel = TrackerTraits::maxPixInModule + firstPixel;
           }
         }
-        alpaka::syncBlockThreads(acc);
-        ALPAKA_ASSERT_ACC(lastPixel - firstPixel <= TrackerTraits::maxPixInModule);
+        aV2P::syncBlockThreads(acc);
+        AV2P_ASSERT_ACC(lastPixel - firstPixel <= TrackerTraits::maxPixInModule);
 
         // remove duplicate pixels
         constexpr bool isPhase2 = std::is_base_of<pixelTopology::Phase2, TrackerTraits>::value;
@@ -283,15 +283,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
           // New 2-buffer scheme: 1-bit per pixel (32 pixels per 32-bit word)
           // image: 0=empty, 1=found/duplicate
           // temp:  0=empty/found, 1=fake/duplicate
-          auto& image = alpaka::declareSharedVar<uint32_t[pixelStatus::size], __COUNTER__>(acc);
-          auto& temp = alpaka::declareSharedVar<uint32_t[pixelStatus::size], __COUNTER__>(acc);
+          auto& image = aV2P::declareSharedVar<uint32_t[pixelStatus::size], __COUNTER__>(acc);
+          auto& temp = aV2P::declareSharedVar<uint32_t[pixelStatus::size], __COUNTER__>(acc);
 
           if (lastPixel > 1) {
             for (uint32_t i : cms::alpakatools::independent_group_elements(acc, pixelStatus::size)) {
               image[i] = 0;
               temp[i] = 0;
             }
-            alpaka::syncBlockThreads(acc);
+            aV2P::syncBlockThreads(acc);
 
             for (uint32_t i : cms::alpakatools::independent_group_elements(acc, firstPixel, lastPixel)) {
               // skip invalid pixels
@@ -299,7 +299,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
                 continue;
               pixelStatus::promote(acc, image, temp, digi_view[i].xx(), digi_view[i].yy());
             }
-            alpaka::syncBlockThreads(acc);
+            aV2P::syncBlockThreads(acc);
 
             for (uint32_t i : cms::alpakatools::independent_group_elements(acc, firstPixel, lastPixel)) {
               // skip invalid pixels
@@ -315,7 +315,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
                 digi_view[i].rawIdArr() = 0;
               }
             }
-            alpaka::syncBlockThreads(acc);
+            aV2P::syncBlockThreads(acc);
 
             // apply the digi morphing recovery algorithm
             if (applyDigiMorphing) {
@@ -330,7 +330,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
                 image[i] &= ~duplicates;
                 temp[i] &= ~duplicates;
               }
-              alpaka::syncBlockThreads(acc);
+              aV2P::syncBlockThreads(acc);
 
               // use the image buffer as a 1-bit-per-pixel image, with 32 pixels packed in each 32-bit word
               // ......  ...............................................................  .....
@@ -383,7 +383,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
                 // write fake pixels to temp buffer
                 temp[i] |= fake;
               }
-              alpaka::syncBlockThreads(acc);
+              aV2P::syncBlockThreads(acc);
 
               // second step: erode, and create new fake pixels for the remaining ones
               // Read from image | temp to check non-empty neighbors (image=1 OR temp=1)
@@ -407,10 +407,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
                     if (edge != 0 and (above & mask) != 0 and (below & mask) != 0 and ((value >> bits) & mask) != 0) {
                       // Create a fake pixel, up to maxFakesInModule pixels per module.
                       unsigned int index =
-                          alpaka::atomicInc(acc, &fakePixels, 0xffffffff, alpaka::hierarchy::Threads{});
+                          aV2P::atomicInc(acc, &fakePixels, 0xffffffff, aV2P::hierarchy::Threads{});
                       if (index < maxFakesInModule) {
                         auto fake = fakes_view[firstFake + index];
-                        ALPAKA_ASSERT_ACC(fake.clus() == static_cast<int32_t>(numElements + firstFake + index));
+                        AV2P_ASSERT_ACC(fake.clus() == static_cast<int32_t>(numElements + firstFake + index));
                         fake.xx() = x;
                         fake.yy() = y;
                         fake.moduleId() = thisModuleId;
@@ -433,10 +433,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
                         ((below >> shift) & mask) != 0 and ((value >> (shift + bits)) & mask) != 0) {
                       // Create a fake pixel, up to maxFakesInModule pixels per module.
                       unsigned int index =
-                          alpaka::atomicInc(acc, &fakePixels, 0xffffffff, alpaka::hierarchy::Threads{});
+                          aV2P::atomicInc(acc, &fakePixels, 0xffffffff, aV2P::hierarchy::Threads{});
                       if (index < maxFakesInModule) {
                         auto fake = fakes_view[firstFake + index];
-                        ALPAKA_ASSERT_ACC(fake.clus() == static_cast<int32_t>(numElements + firstFake + index));
+                        AV2P_ASSERT_ACC(fake.clus() == static_cast<int32_t>(numElements + firstFake + index));
                         fake.xx() = x + j;
                         fake.yy() = y;
                         fake.moduleId() = thisModuleId;
@@ -461,10 +461,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
                         ((below >> shift) & mask) != 0 and edge != 0) {
                       // Create a fake pixel, up to maxFakesInModule pixels per module.
                       unsigned int index =
-                          alpaka::atomicInc(acc, &fakePixels, 0xffffffff, alpaka::hierarchy::Threads{});
+                          aV2P::atomicInc(acc, &fakePixels, 0xffffffff, aV2P::hierarchy::Threads{});
                       if (index < maxFakesInModule) {
                         auto fake = fakes_view[firstFake + index];
-                        ALPAKA_ASSERT_ACC(fake.clus() == static_cast<int32_t>(numElements + firstFake + index));
+                        AV2P_ASSERT_ACC(fake.clus() == static_cast<int32_t>(numElements + firstFake + index));
                         fake.xx() = x + valuesPerWord - 1;
                         fake.yy() = y;
                         fake.moduleId() = thisModuleId;
@@ -478,14 +478,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
                   }
                 }
               }
-              alpaka::syncBlockThreads(acc);
+              aV2P::syncBlockThreads(acc);
 
               // Clamp fakePixels to maxFakesInModule
               if (cms::alpakatools::once_per_block(acc)) {
                 if (fakePixels > maxFakesInModule)
                   fakePixels = maxFakesInModule;
               }
-              alpaka::syncBlockThreads(acc);
+              aV2P::syncBlockThreads(acc);
 
             }  // if (applyDigiMorphing)
           }  // if (lastPixel > 1)
@@ -497,7 +497,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
           if (digi_view[i].moduleId() != ::pixelClustering::invalidModuleId) {
             hist.count(acc, digi_view[i].yy());
 #ifdef GPU_DEBUG
-            alpaka::atomicAdd(acc, &goodPixels, 1u, alpaka::hierarchy::Threads{});
+            aV2P::atomicAdd(acc, &goodPixels, 1u, aV2P::hierarchy::Threads{});
 #endif
           }
         }
@@ -509,12 +509,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
         for (uint32_t i : cms::alpakatools::independent_group_elements(acc, warpSize)) {
           ws[i] = 0;  // used by prefix scan...
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
         hist.finalize(acc, ws);
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
 #ifdef GPU_DEBUG
-        ALPAKA_ASSERT_ACC(hist.size() == goodPixels + fakePixels);
+        AV2P_ASSERT_ACC(hist.size() == goodPixels + fakePixels);
         if (thisModuleId % 100 == 1) {
           if (cms::alpakatools::once_per_block(acc)) {
             printf(
@@ -542,32 +542,32 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
 
 #ifdef GPU_DEBUG
         // look for anomalous high occupancy
-        auto& n40 = alpaka::declareSharedVar<uint32_t, __COUNTER__>(acc);
-        auto& n60 = alpaka::declareSharedVar<uint32_t, __COUNTER__>(acc);
+        auto& n40 = aV2P::declareSharedVar<uint32_t, __COUNTER__>(acc);
+        auto& n60 = aV2P::declareSharedVar<uint32_t, __COUNTER__>(acc);
         if (cms::alpakatools::once_per_block(acc)) {
           n40 = 0;
           n60 = 0;
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
         for (uint32_t j : cms::alpakatools::independent_group_elements(acc, Hist::nbins())) {
           if (hist.size(j) > 60)
-            alpaka::atomicAdd(acc, &n60, 1u, alpaka::hierarchy::Threads{});
+            aV2P::atomicAdd(acc, &n60, 1u, aV2P::hierarchy::Threads{});
           if (hist.size(j) > 40)
-            alpaka::atomicAdd(acc, &n40, 1u, alpaka::hierarchy::Threads{});
+            aV2P::atomicAdd(acc, &n40, 1u, aV2P::hierarchy::Threads{});
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
         if (cms::alpakatools::once_per_block(acc)) {
           if (n60 > 0)
             printf("columns with more than 60 px %d in %d\n", n60, thisModuleId);
           else if (n40 > 0)
             printf("columns with more than 40 px %d in %d\n", n40, thisModuleId);
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 #endif
 
-        [[maybe_unused]] const uint32_t blockDimension = alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[0u];
+        [[maybe_unused]] const uint32_t blockDimension = aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[0u];
         // assume that we can cover the whole module with up to maxIterClustering blockDimension-wide iterations
-        ALPAKA_ASSERT_ACC((hist.size() / blockDimension) < TrackerTraits::maxIterClustering);
+        AV2P_ASSERT_ACC((hist.size() / blockDimension) < TrackerTraits::maxIterClustering);
 
         // number of elements per thread
         const uint32_t maxElements = cms::alpakatools::requires_single_thread_per_block_v<Acc1D>
@@ -575,14 +575,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
                                          : 1;
 
 #ifdef GPU_DEBUG
-        const auto nElementsPerThread = alpaka::getWorkDiv<alpaka::Thread, alpaka::Elems>(acc)[0u];
+        const auto nElementsPerThread = aV2P::getWorkDiv<aV2P::Thread, aV2P::Elems>(acc)[0u];
         if (nElementsPerThread > maxElements)
           printf("This is WRONG: nElementsPerThread > maxElements : %d > %d\n", nElementsPerThread, maxElements);
         else if (thisModuleId % 500 == 1)
           printf("This is OK: nElementsPerThread <= maxElements : %d <= %d\n", nElementsPerThread, maxElements);
 #endif
 
-        ALPAKA_ASSERT_ACC((alpaka::getWorkDiv<alpaka::Thread, alpaka::Elems>(acc)[0u] <= maxElements));
+        AV2P_ASSERT_ACC((aV2P::getWorkDiv<aV2P::Thread, aV2P::Elems>(acc)[0u] <= maxElements));
 
         const unsigned int maxIter = TrackerTraits::maxIterClustering * maxElements;
 
@@ -597,12 +597,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
           }
         }
 
-        alpaka::syncBlockThreads(acc);  // for hit filling!
+        aV2P::syncBlockThreads(acc);  // for hit filling!
 
         // fill the nearest neighbours
         uint32_t k = 0;
         for (uint32_t j : cms::alpakatools::independent_group_elements(acc, hist.size())) {
-          ALPAKA_ASSERT_ACC(k < maxIter);
+          AV2P_ASSERT_ACC(k < maxIter);
           auto p = hist.begin() + j;
           bool isFake = (*p >= TrackerTraits::maxPixInModule);
           uint32_t i;
@@ -612,8 +612,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
             // recovered "fake" pixel
             i = *p - TrackerTraits::maxPixInModule + firstFake;
             auto pixel = fakes_view[i];
-            ALPAKA_ASSERT_ACC(pixel.moduleId() != ::pixelClustering::invalidModuleId);
-            ALPAKA_ASSERT_ACC(pixel.moduleId() == thisModuleId);  // same module
+            AV2P_ASSERT_ACC(pixel.moduleId() != ::pixelClustering::invalidModuleId);
+            AV2P_ASSERT_ACC(pixel.moduleId() == thisModuleId);  // same module
             ix = pixel.xx();
             iy = pixel.yy();
             auto bin = Hist::bin(iy + 1);
@@ -622,15 +622,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
             // real pixel
             i = *p + firstPixel;
             auto pixel = digi_view[i];
-            ALPAKA_ASSERT_ACC(pixel.moduleId() != ::pixelClustering::invalidModuleId);
-            ALPAKA_ASSERT_ACC(pixel.moduleId() == thisModuleId);  // same module
+            AV2P_ASSERT_ACC(pixel.moduleId() != ::pixelClustering::invalidModuleId);
+            AV2P_ASSERT_ACC(pixel.moduleId() == thisModuleId);  // same module
             ix = pixel.xx();
             iy = pixel.yy();
             auto bin = Hist::bin(iy + 1);
             end = hist.end(bin);
           }
           ++p;
-          ALPAKA_ASSERT_ACC(0 == nnn[k]);
+          AV2P_ASSERT_ACC(0 == nnn[k]);
           for (; p < end; ++p) {
             bool otherIsFake = (*p >= TrackerTraits::maxPixInModule);
             uint32_t m;
@@ -646,12 +646,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
               mx = pixel.xx();
               my = pixel.yy();
             }
-            ALPAKA_ASSERT_ACC(m != i or otherIsFake != isFake);
-            ALPAKA_ASSERT_ACC(int(my) - int(iy) >= 0);
-            ALPAKA_ASSERT_ACC(int(my) - int(iy) <= 1);
+            AV2P_ASSERT_ACC(m != i or otherIsFake != isFake);
+            AV2P_ASSERT_ACC(int(my) - int(iy) >= 0);
+            AV2P_ASSERT_ACC(int(my) - int(iy) <= 1);
             if (std::abs(int(mx) - int(ix)) <= 1) {
               auto l = nnn[k]++;
-              ALPAKA_ASSERT_ACC(l < maxNeighbours);
+              AV2P_ASSERT_ACC(l < maxNeighbours);
               nn[k][l] = *p;
             }
           }
@@ -663,11 +663,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
         // after the loop, all the pixel in each cluster should have the id equeal to the lowest
         // pixel in the cluster ( clus[i] == i ).
         bool done = false;
-        while (alpaka::syncBlockThreadsPredicate<alpaka::BlockOr>(acc, not done)) {
+        while (aV2P::syncBlockThreadsPredicate<aV2P::BlockOr>(acc, not done)) {
           done = true;
           uint32_t k = 0;
           for (uint32_t j : cms::alpakatools::independent_group_elements(acc, hist.size())) {
-            ALPAKA_ASSERT_ACC(k < maxIter);
+            AV2P_ASSERT_ACC(k < maxIter);
             auto p = hist.begin() + j;
             bool isFake = (*p >= TrackerTraits::maxPixInModule);
             uint32_t i;
@@ -695,18 +695,18 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
                 m = l + firstPixel;
                 mclus = &digi_view[m].clus();
               }
-              ALPAKA_ASSERT_ACC(m != i or otherIsFake != isFake);
+              AV2P_ASSERT_ACC(m != i or otherIsFake != isFake);
               // the algorithm processes one module per block, so the atomic operation's scope is "Threads" (all threads in the current block)
-              auto old = alpaka::atomicMin(acc, mclus, *iclus, alpaka::hierarchy::Threads{});
+              auto old = aV2P::atomicMin(acc, mclus, *iclus, aV2P::hierarchy::Threads{});
               if (old != *iclus) {
                 // end the loop only if no changes were applied
                 done = false;
               }
-              alpaka::atomicMin(acc, iclus, old, alpaka::hierarchy::Threads{});
+              aV2P::atomicMin(acc, iclus, old, aV2P::hierarchy::Threads{});
             }  // neighbours loop
             ++k;
           }  // pixel loop
-          alpaka::syncBlockThreads(acc);
+          aV2P::syncBlockThreads(acc);
           for (uint32_t j : cms::alpakatools::independent_group_elements(acc, hist.size())) {
             auto p = hist.begin() + j;
             bool isFake = (*p >= TrackerTraits::maxPixInModule);
@@ -744,19 +744,19 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
 
         /*
         // check that all threads in the block have executed the same number of iterations
-        auto& n0 = alpaka::declareSharedVar<int, __COUNTER__>(acc);
+        auto& n0 = aV2P::declareSharedVar<int, __COUNTER__>(acc);
         if (cms::alpakatools::once_per_block(acc))
           n0 = nloops;
-        alpaka::syncBlockThreads(acc);
-        ALPAKA_ASSERT_ACC(alpaka::syncBlockThreadsPredicate<alpaka::BlockAnd>(acc, nloops == n0));
+        aV2P::syncBlockThreads(acc);
+        AV2P_ASSERT_ACC(aV2P::syncBlockThreadsPredicate<aV2P::BlockAnd>(acc, nloops == n0));
         if (thisModuleId % 100 == 1)
           if (cms::alpakatools::once_per_block(acc))
             printf("# loops %d\n", nloops);
         */
 
-        auto& foundClusters = alpaka::declareSharedVar<unsigned int, __COUNTER__>(acc);
+        auto& foundClusters = aV2P::declareSharedVar<unsigned int, __COUNTER__>(acc);
         foundClusters = 0;
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // find the number of different clusters, identified by a pixels with clus[i] == i;
         // mark these pixels with a negative id.
@@ -765,11 +765,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
           if (digi_view[i].moduleId() == ::pixelClustering::invalidModuleId)
             continue;
           if (digi_view[i].clus() == static_cast<int>(i)) {
-            auto old = alpaka::atomicInc(acc, &foundClusters, 0xffffffff, alpaka::hierarchy::Threads{});
+            auto old = aV2P::atomicInc(acc, &foundClusters, 0xffffffff, aV2P::hierarchy::Threads{});
             digi_view[i].clus() = -(old + 1);
           }
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // propagate the negative id to all the pixels in the cluster.
         for (uint32_t i : cms::alpakatools::independent_group_elements(acc, firstPixel, lastPixel)) {
@@ -781,7 +781,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
             digi_view[i].clus() = digi_view[digi_view[i].clus()].clus();
           }
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // adjust the cluster id to be a positive value starting from 0
         for (uint32_t i : cms::alpakatools::independent_group_elements(acc, firstPixel, lastPixel)) {
@@ -792,7 +792,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
             digi_view[i].clus() = -digi_view[i].clus() - 1;
           }
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         if (cms::alpakatools::once_per_block(acc)) {
           clus_view[thisModuleId].clusInModule() = foundClusters;
@@ -811,6 +811,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering {
     }
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::pixelClustering
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::pixelClustering
 
 #endif  // plugin_SiPixelClusterizer_alpaka_PixelClustering.h

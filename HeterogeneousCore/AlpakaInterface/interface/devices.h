@@ -3,14 +3,14 @@
 
 #include <vector>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
 namespace cms::alpakatools {
 
   // returns the alpaka accelerator platform
-  template <typename TPlatform, typename = std::enable_if_t<alpaka::concepts::Platform<TPlatform>>>
+  template <typename TPlatform, typename = std::enable_if_t<aV2P::concepts::Platform<TPlatform>>>
   inline TPlatform const& platform() {
     // initialise the platform the first time that this function is called
     static const auto platform = TPlatform{};
@@ -18,10 +18,10 @@ namespace cms::alpakatools {
   }
 
   // return the alpaka accelerator devices for the given platform
-  template <typename TPlatform, typename = std::enable_if_t<alpaka::concepts::Platform<TPlatform>>>
-  inline std::vector<alpaka::Dev<TPlatform>> const& devices() {
+  template <typename TPlatform, typename = std::enable_if_t<aV2P::concepts::Platform<TPlatform>>>
+  inline std::vector<aV2P::Dev<TPlatform>> const& devices() {
     // enumerate all devices the first time that this function is called
-    static const auto devices = alpaka::getDevs(platform<TPlatform>());
+    static const auto devices = aV2P::getDevs(platform<TPlatform>());
     return devices;
   }
 

@@ -9,11 +9,11 @@
 #include "HeterogeneousCore/AlpakaMath/interface/deltaPhi.h"
 
 using namespace cms::alpakatools;
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 struct phiFuncsUnitTestsKernel {
-  template <alpaka::concepts::Acc TAcc, typename T>
-  ALPAKA_FN_ACC void operator()(TAcc const& acc, T* out) const {
+  template <aV2P::concepts::Acc TAcc, typename T>
+  AV2P_FN_ACC void operator()(TAcc const& acc, T* out) const {
     // Unit circle typical values
     out[0] = phi<TAcc, T>(acc, 1.0, 0.0);          // x = 1.0, y = 0.0 => phi = 0
     out[1] = phi<TAcc, T>(acc, 0.0, 1.0);          // x = 0.0, y = 1.0 => phi = pi/2
@@ -42,22 +42,22 @@ void testPhiFuncs(uint32_t size, std::vector<double> const& res) {
   // get the list of devices on the current platform
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    FAIL("No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    FAIL("No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.");
   }
 
   for (auto const& device : devices) {
-    std::cout << "...on " << alpaka::getName(device) << "\n";
+    std::cout << "...on " << aV2P::getName(device) << "\n";
     Queue queue(device);
 
     auto c_h = make_host_buffer<T[]>(queue, size);
-    alpaka::memset(queue, c_h, 0.);
+    aV2P::memset(queue, c_h, 0.);
     auto c_d = make_device_buffer<T[]>(queue, size);
-    alpaka::memset(queue, c_d, 0.);
+    aV2P::memset(queue, c_d, 0.);
 
-    alpaka::exec<Acc1D>(queue, WorkDiv1D{1u, 1u, 1u}, phiFuncsUnitTestsKernel(), c_d.data());
-    alpaka::memcpy(queue, c_h, c_d);
-    alpaka::wait(queue);
+    aV2P::exec<Acc1D>(queue, WorkDiv1D{1u, 1u, 1u}, phiFuncsUnitTestsKernel(), c_d.data());
+    aV2P::memcpy(queue, c_h, c_d);
+    aV2P::wait(queue);
 
     constexpr T eps = 1.e-5;
     for (size_t i = 0; i < size; ++i) {

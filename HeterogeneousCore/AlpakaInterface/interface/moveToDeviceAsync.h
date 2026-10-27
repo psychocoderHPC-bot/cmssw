@@ -3,7 +3,7 @@
 
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/CopyToDevice.h"
@@ -31,12 +31,12 @@ namespace cms::alpakatools {
    * would allow the source memory buffer to be used via another copy
    * during the asynchronous data copy to the device.
    */
-  template <typename TQueue, typename THostObject, typename = std::enable_if_t<alpaka::concepts::Queue<TQueue>>>
+  template <typename TQueue, typename THostObject, typename = std::enable_if_t<aV2P::concepts::Queue<TQueue>>>
   auto moveToDeviceAsync(TQueue& queue, THostObject hostObject) {
     static_assert(not(std::is_copy_constructible_v<THostObject> or std::is_copy_assignable_v<THostObject>),
                   "The data object to be moved to device must not be copyable.");
 
-    if constexpr (std::is_same_v<alpaka::Dev<TQueue>, alpaka_common::DevHost>) {
+    if constexpr (std::is_same_v<aV2P::Dev<TQueue>, alpaka_common::DevHost>) {
       return hostObject;
     } else {
       return CopyToDevice<THostObject>::copyAsync(queue, hostObject);

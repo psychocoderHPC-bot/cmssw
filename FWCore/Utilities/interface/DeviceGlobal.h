@@ -1,7 +1,7 @@
 #ifndef FWCore_Utilities_DeviceGlobal_h
 #define FWCore_Utilities_DeviceGlobal_h
 
-// FIXME alpaka provides ALPAKA_STATIC_ACC_MEM_GLOBAL to declare device global
+// FIXME alpaka provides AV2P_STATIC_ACC_MEM_GLOBAL to declare device global
 // variables, but it is currently not working as expected. Improve its behaviour
 // and syntax and migrate to that.
 

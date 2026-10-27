@@ -1,7 +1,7 @@
 #ifndef RecoLocalTracker_SiPixelRecHits_interface_PixelCPEFastParamsDevice_h
 #define RecoLocalTracker_SiPixelRecHits_interface_PixelCPEFastParamsDevice_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 #include "RecoLocalTracker/SiPixelRecHits/interface/pixelCPEforDevice.h"
@@ -32,7 +32,7 @@ public:
   ConstBuffer buffer() const { return buffer_; }
   ConstBuffer const_buffer() const { return buffer_; }
 
-  auto size() const { return alpaka::getExtentProduct(buffer_); }
+  auto size() const { return aV2P::getExtentProduct(buffer_); }
 
   pixelCPEforDevice::ParamsOnDeviceT<TrackerTraits> const* data() const { return buffer_.data(); }
 

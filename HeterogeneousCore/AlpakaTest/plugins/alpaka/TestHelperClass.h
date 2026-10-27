@@ -16,7 +16,7 @@
 #include "HeterogeneousCore/AlpakaTest/interface/ESTestData.h"
 #include "HeterogeneousCore/AlpakaTest/interface/alpaka/AlpakaESTestData.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   class TestHelperClass {
   public:
     TestHelperClass(edm::ParameterSet const& iConfig, edm::ConsumesCollector iC);
@@ -55,6 +55,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     std::optional<portabletest::TestHostCollection2> hostProductMulti2_;
     std::optional<portabletest::TestHostCollection3> hostProductMulti3_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

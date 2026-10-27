@@ -3,19 +3,19 @@
 #include "DataFormats/TICL/interface/AssociationMap.h"
 #include "DataFormats/TICL/interface/FillAssociator.h"
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 #include <ranges>
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 namespace {
   template <typename TKey, typename TMapped>
   struct TestKernel {
-    ALPAKA_FN_ACC void operator()(const Acc1D& acc, ticl::AssociationMapView<TKey, TMapped> map, bool* result) const {
-      for (auto idx : alpaka::uniformElements(acc, map.size() / 2)) {
+    AV2P_FN_ACC void operator()(const Acc1D& acc, ticl::AssociationMapView<TKey, TMapped> map, bool* result) const {
+      for (auto idx : aV2P::uniformElements(acc, map.size() / 2)) {
         *result &= (map[0][idx] % 2 != 0);
         *result &= (map[1][idx] % 2 == 0);
       }
@@ -45,24 +45,24 @@ TEST_CASE("Construct and fill an association map") {
         host_associations[i] = (i % 2 == 0);
       auto device_values = cms::alpakatools::make_device_buffer<uint32_t[]>(queue, nvalues);
       auto device_associations = cms::alpakatools::make_device_buffer<uint32_t[]>(queue, nvalues);
-      alpaka::memcpy(queue, device_values, host_values);
-      alpaka::memcpy(queue, device_associations, host_associations);
+      aV2P::memcpy(queue, device_values, host_values);
+      aV2P::memcpy(queue, device_associations, host_associations);
       ticl::associator::fill<Acc1D>(
           queue, map.view(), std::span<const uint32_t>{device_associations}, std::span<const uint32_t>{device_values});
       auto offsets = cms::alpakatools::make_host_buffer<uint32_t[]>(queue, map.view().offsets().keys_offsets().size());
       auto values = cms::alpakatools::make_host_buffer<uint32_t[]>(queue, nvalues);
-      alpaka::memcpy(queue, offsets, cms::alpakatools::make_device_view(queue, map.view().offsets().keys_offsets()));
-      alpaka::memcpy(queue, values, cms::alpakatools::make_device_view(queue, map.view().content().values()));
+      aV2P::memcpy(queue, offsets, cms::alpakatools::make_device_view(queue, map.view().offsets().keys_offsets()));
+      aV2P::memcpy(queue, values, cms::alpakatools::make_device_view(queue, map.view().content().values()));
 
       auto device_result = cms::alpakatools::make_device_buffer<bool>(queue);
-      alpaka::memset(queue, device_result, 1);
+      aV2P::memset(queue, device_result, 1);
       const auto blocksize = 1024u;
       const auto gridsize = cms::alpakatools::divide_up_by(nvalues, blocksize);
       auto work_division = cms::alpakatools::make_workdiv<Acc1D>(gridsize, blocksize);
-      alpaka::exec<Acc1D>(queue, work_division, TestKernel<uint32_t, uint32_t>{}, map.view(), device_result.data());
+      aV2P::exec<Acc1D>(queue, work_division, TestKernel<uint32_t, uint32_t>{}, map.view(), device_result.data());
       auto host_result = cms::alpakatools::make_host_buffer<bool>(queue);
-      alpaka::memcpy(queue, host_result, device_result);
-      alpaka::wait(queue);
+      aV2P::memcpy(queue, host_result, device_result);
+      aV2P::wait(queue);
 
       CHECK(*host_result);
 
@@ -87,13 +87,13 @@ TEST_CASE("Construct and fill an association map") {
         auto partial_offsets =
             cms::alpakatools::make_host_buffer<uint32_t[]>(queue, partial_map.view().offsets().keys_offsets().size());
         auto partial_values = cms::alpakatools::make_host_buffer<uint32_t[]>(queue, nvalues / 2);
-        alpaka::memcpy(queue,
+        aV2P::memcpy(queue,
                        partial_offsets,
                        cms::alpakatools::make_device_view(queue, partial_map.view().offsets().keys_offsets()));
-        alpaka::memcpy(queue,
+        aV2P::memcpy(queue,
                        partial_values,
                        cms::alpakatools::make_device_view(queue, partial_map.view().content().values(), nvalues / 2));
-        alpaka::wait(queue);
+        aV2P::wait(queue);
 
         CHECK(partial_offsets[0] == 0);
         CHECK(partial_offsets[1] == nvalues / 4);
@@ -110,12 +110,12 @@ TEST_CASE("Construct and fill an association map") {
         PortableCollection<Device, ticl::AssociationMap<>> new_map(queue, nkeys, nvalues);
         new_map.deepCopy(queue, map.const_view());
 
-        alpaka::memset(queue, offsets, 0x0);
-        alpaka::memset(queue, values, 0x0);
-        alpaka::memcpy(
+        aV2P::memset(queue, offsets, 0x0);
+        aV2P::memset(queue, values, 0x0);
+        aV2P::memcpy(
             queue, offsets, cms::alpakatools::make_device_view(queue, new_map.view().offsets().keys_offsets()));
-        alpaka::memcpy(queue, values, cms::alpakatools::make_device_view(queue, new_map.view().content().values()));
-        alpaka::wait(queue);
+        aV2P::memcpy(queue, values, cms::alpakatools::make_device_view(queue, new_map.view().content().values()));
+        aV2P::wait(queue);
 
         CHECK(offsets[0] == 0);
         CHECK(offsets[1] == 50);
@@ -144,26 +144,26 @@ TEST_CASE("Construct and fill an association map") {
         host_associations[i] = (i % 2 == 0);
       auto device_values = cms::alpakatools::make_device_buffer<int[]>(queue, nvalues);
       auto device_associations = cms::alpakatools::make_device_buffer<int[]>(queue, nvalues);
-      alpaka::memcpy(queue, device_values, host_values);
-      alpaka::memcpy(queue, device_associations, host_associations);
+      aV2P::memcpy(queue, device_values, host_values);
+      aV2P::memcpy(queue, device_associations, host_associations);
       ticl::associator::fill<Acc1D>(queue,
                                     map.view(),
                                     std::span<const int>{device_associations.data(), static_cast<std::size_t>(nvalues)},
                                     std::span<const int>{device_values.data(), static_cast<std::size_t>(nvalues)});
       auto offsets = cms::alpakatools::make_host_buffer<int[]>(queue, map.view().offsets().keys_offsets().size());
       auto values = cms::alpakatools::make_host_buffer<int[]>(queue, nvalues);
-      alpaka::memcpy(queue, offsets, cms::alpakatools::make_device_view(queue, map.view().offsets().keys_offsets()));
-      alpaka::memcpy(queue, values, cms::alpakatools::make_device_view(queue, map.view().content().values()));
+      aV2P::memcpy(queue, offsets, cms::alpakatools::make_device_view(queue, map.view().offsets().keys_offsets()));
+      aV2P::memcpy(queue, values, cms::alpakatools::make_device_view(queue, map.view().content().values()));
 
       auto device_result = cms::alpakatools::make_device_buffer<bool>(queue);
-      alpaka::memset(queue, device_result, 1);
+      aV2P::memset(queue, device_result, 1);
       const auto blocksize = 1024u;
       const auto gridsize = cms::alpakatools::divide_up_by(nvalues, blocksize);
       auto work_division = cms::alpakatools::make_workdiv<Acc1D>(gridsize, blocksize);
-      alpaka::exec<Acc1D>(queue, work_division, TestKernel<int, int>{}, map.view(), device_result.data());
+      aV2P::exec<Acc1D>(queue, work_division, TestKernel<int, int>{}, map.view(), device_result.data());
       auto host_result = cms::alpakatools::make_host_buffer<bool>(queue);
-      alpaka::memcpy(queue, host_result, device_result);
-      alpaka::wait(queue);
+      aV2P::memcpy(queue, host_result, device_result);
+      aV2P::wait(queue);
 
       CHECK(*host_result);
 
@@ -182,12 +182,12 @@ TEST_CASE("Construct and fill an association map") {
         PortableCollection<Device, ticl::AssociationMap<int, int>> new_map(queue, nkeys, nvalues);
         new_map.deepCopy(queue, map.const_view());
 
-        alpaka::memset(queue, offsets, 0x0);
-        alpaka::memset(queue, values, 0x0);
-        alpaka::memcpy(
+        aV2P::memset(queue, offsets, 0x0);
+        aV2P::memset(queue, values, 0x0);
+        aV2P::memcpy(
             queue, offsets, cms::alpakatools::make_device_view(queue, new_map.view().offsets().keys_offsets()));
-        alpaka::memcpy(queue, values, cms::alpakatools::make_device_view(queue, new_map.view().content().values()));
-        alpaka::wait(queue);
+        aV2P::memcpy(queue, values, cms::alpakatools::make_device_view(queue, new_map.view().content().values()));
+        aV2P::wait(queue);
 
         CHECK(offsets[0] == 0);
         CHECK(offsets[1] == 50);
@@ -230,10 +230,10 @@ TEST_CASE("Test different numbers of keys") {
       auto device_associations1 = cms::alpakatools::make_device_buffer<uint32_t[]>(queue, nvalues);
       auto device_associations2 = cms::alpakatools::make_device_buffer<uint32_t[]>(queue, nvalues);
       auto device_associations3 = cms::alpakatools::make_device_buffer<uint32_t[]>(queue, nvalues);
-      alpaka::memcpy(queue, device_values, host_values);
-      alpaka::memcpy(queue, device_associations1, host_associations1);
-      alpaka::memcpy(queue, device_associations2, host_associations2);
-      alpaka::memcpy(queue, device_associations3, host_associations3);
+      aV2P::memcpy(queue, device_values, host_values);
+      aV2P::memcpy(queue, device_associations1, host_associations1);
+      aV2P::memcpy(queue, device_associations2, host_associations2);
+      aV2P::memcpy(queue, device_associations3, host_associations3);
 
       PortableCollection<Device, ticl::AssociationMap<>> map1(queue, nkeys1, nvalues);
       PortableCollection<Device, ticl::AssociationMap<>> map2(queue, nkeys2, nvalues);
@@ -257,9 +257,9 @@ TEST_CASE("Test different numbers of keys") {
         auto offsets =
             cms::alpakatools::make_host_buffer<uint32_t[]>(queue, map.view().offsets().keys_offsets().size());
         auto values = cms::alpakatools::make_host_buffer<uint32_t[]>(queue, nvalues);
-        alpaka::memcpy(queue, offsets, cms::alpakatools::make_device_view(queue, map.view().offsets().keys_offsets()));
-        alpaka::memcpy(queue, values, cms::alpakatools::make_device_view(queue, map.view().content().values()));
-        alpaka::wait(queue);
+        aV2P::memcpy(queue, offsets, cms::alpakatools::make_device_view(queue, map.view().offsets().keys_offsets()));
+        aV2P::memcpy(queue, values, cms::alpakatools::make_device_view(queue, map.view().content().values()));
+        aV2P::wait(queue);
 
         const auto last_key = static_cast<uint32_t>(nkeys - 1);
         CHECK(offsets[0] == 0);

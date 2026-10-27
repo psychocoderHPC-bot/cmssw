@@ -1,7 +1,7 @@
 #ifndef RecoVertex_PixelVertexFinding_interface_PixelVertexWorkSpaceLayout_h
 #define RecoVertex_PixelVertexFinding_interface_PixelVertexWorkSpaceLayout_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/SoATemplate/interface/SoALayout.h"
 
@@ -23,7 +23,7 @@ namespace vertexFinder {
   using PixelVertexWorkSpaceSoAView = PixelVertexWSSoALayout<>::View;
   using PixelVertexWorkSpaceSoAConstView = PixelVertexWSSoALayout<>::ConstView;
 
-  ALPAKA_FN_HOST_ACC ALPAKA_FN_INLINE void init(PixelVertexWorkSpaceSoAView& workspace_view) {
+  AV2P_FN_HOST_ACC AV2P_FN_INLINE void init(PixelVertexWorkSpaceSoAView& workspace_view) {
     workspace_view.ntrks() = 0;
     workspace_view.nvIntermediate() = 0;
   }

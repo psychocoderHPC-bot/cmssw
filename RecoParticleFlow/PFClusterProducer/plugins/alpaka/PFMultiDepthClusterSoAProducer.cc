@@ -29,7 +29,7 @@
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   namespace {
     using PFMultiDepthClusterParamsCache =
@@ -130,10 +130,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     auto pfrhfrac_size_d =
         cms::alpakatools::make_device_view<const int>(event.queue(), pfClusters_.const_view().nRHFracs());
-    alpaka::memcpy(event.queue(), pfrhfrac_size_, pfrhfrac_size_d);
+    aV2P::memcpy(event.queue(), pfrhfrac_size_, pfrhfrac_size_d);
 
     auto pfcl_size_d = cms::alpakatools::make_device_view<const int>(event.queue(), pfClusters_.const_view().nSeeds());
-    alpaka::memcpy(event.queue(), pfcl_size_, pfcl_size_d);
+    aV2P::memcpy(event.queue(), pfcl_size_, pfcl_size_d);
   }
 
   void PFMultiDepthClusterSoAProducer::produce(device::Event& event, const device::EventSetup& eventSetup) {
@@ -172,7 +172,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     event.emplace(outputPFRHFractionsSoA_Token_, std::move(*outPFRHFractions));
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(PFMultiDepthClusterSoAProducer);
+DEFINE_FWK_AV2P_MODULE(PFMultiDepthClusterSoAProducer);

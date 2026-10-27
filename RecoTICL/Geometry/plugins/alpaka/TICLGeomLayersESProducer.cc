@@ -16,7 +16,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/host.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   // Per-layer table replacing RecHitTools::getPositionLayer, filled by
   // calling it: endcap and HFNose layer z at row |layer|, barrel first-cell
@@ -65,6 +65,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     edm::ESGetToken<CaloGeometry, CaloGeometryRecord> geomToken_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(TICLGeomLayersESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(TICLGeomLayersESProducer);

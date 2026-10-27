@@ -22,7 +22,7 @@
 #include "HcalMahiPulseOffsetsSoA.h"
 #include "Mahi.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   namespace {
     using HcalMahiPulseOffsetsCache =
         cms::alpakatools::MoveToDeviceCache<Device, PortableHostCollection<hcal::HcalMahiPulseOffsetsSoA>>;
@@ -180,7 +180,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     event.emplace(rechitsM0Token_, std::move(outputGPU_));
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(HBHERecHitProducerPortable);
+DEFINE_FWK_AV2P_MODULE(HBHERecHitProducerPortable);

@@ -7,7 +7,7 @@
 
 #include "TestHelperClass.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * This class demonstrates a stream EDProducer that
    * - uses a helper class (need to use edm::ConsumesCollector), that
@@ -70,7 +70,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     int const expectedInt_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(TestAlpakaStreamSynchronizingProducer);
+DEFINE_FWK_AV2P_MODULE(TestAlpakaStreamSynchronizingProducer);

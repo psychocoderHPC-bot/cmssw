@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <limits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/SiPixelClusterSoA/interface/ClusteringConstants.h"
 #include "DataFormats/SiPixelClusterSoA/interface/SiPixelClustersSoA.h"
@@ -18,8 +18,8 @@ namespace pixelClustering {
 
   template <typename TrackerTraits>
   struct ClusterChargeCut {
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC void operator()(TAcc const& acc,
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC void operator()(TAcc const& acc,
                                   SiPixelDigisSoAView digi_view,
                                   SiPixelClustersSoAView clus_view,
                                   // charge cut on cluster in electrons (for layer 1 and for other layers)
@@ -38,22 +38,22 @@ namespace pixelClustering {
                  digi_view[i].pdigi(),
                  digi_view[i].adc());
       }
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
 #endif
 
-      auto& charge = alpaka::declareSharedVar<int32_t[maxNumClustersPerModules], __COUNTER__>(acc);
-      auto& ok = alpaka::declareSharedVar<uint8_t[maxNumClustersPerModules], __COUNTER__>(acc);
-      auto& newclusId = alpaka::declareSharedVar<uint16_t[maxNumClustersPerModules], __COUNTER__>(acc);
+      auto& charge = aV2P::declareSharedVar<int32_t[maxNumClustersPerModules], __COUNTER__>(acc);
+      auto& ok = aV2P::declareSharedVar<uint8_t[maxNumClustersPerModules], __COUNTER__>(acc);
+      auto& newclusId = aV2P::declareSharedVar<uint16_t[maxNumClustersPerModules], __COUNTER__>(acc);
       // per-cluster minimum packed pixel coordinate (row << 16 | col): a physical, run-independent
       // key that is unique within the module (a pixel belongs to exactly one cluster), used to
       // renumber the clusters deterministically (see below)
-      auto& minPix = alpaka::declareSharedVar<uint32_t[maxNumClustersPerModules], __COUNTER__>(acc);
-      auto& nOk = alpaka::declareSharedVar<uint32_t, __COUNTER__>(acc);
+      auto& minPix = aV2P::declareSharedVar<uint32_t[maxNumClustersPerModules], __COUNTER__>(acc);
+      auto& nOk = aV2P::declareSharedVar<uint32_t, __COUNTER__>(acc);
 
       constexpr int startBPIX2 = TrackerTraits::layerStart[1];
 
-      ALPAKA_ASSERT_ACC(TrackerTraits::numberOfModules < maxNumModules);
-      ALPAKA_ASSERT_ACC(startBPIX2 < TrackerTraits::numberOfModules);
+      AV2P_ASSERT_ACC(TrackerTraits::numberOfModules < maxNumModules);
+      AV2P_ASSERT_ACC(startBPIX2 < TrackerTraits::numberOfModules);
 
       auto endModule = clus_view[0].moduleStart();
 
@@ -73,7 +73,7 @@ namespace pixelClustering {
           // reached the end of the module while skipping the invalid pixels, skip this module
           continue;
         }
-        ALPAKA_ASSERT_ACC(thisModuleId < TrackerTraits::numberOfModules);
+        AV2P_ASSERT_ACC(thisModuleId < TrackerTraits::numberOfModules);
 
         uint32_t nclus = clus_view[thisModuleId].clusInModule();
         if (nclus == 0)
@@ -102,7 +102,7 @@ namespace pixelClustering {
           clus_view[thisModuleId].clusInModule() = nclus;
         }
 
-        ALPAKA_ASSERT_ACC(clus_view[thisModuleId].clusInModule() <= maxNumClustersPerModules);
+        AV2P_ASSERT_ACC(clus_view[thisModuleId].clusInModule() <= maxNumClustersPerModules);
 
 #ifdef GPU_DEBUG
         if (thisModuleId % 100 == 1)
@@ -110,42 +110,42 @@ namespace pixelClustering {
             printf("start cluster charge cut for module %d in block %d\n", thisModuleId, module);
 #endif
 
-        ALPAKA_ASSERT_ACC(nclus <= maxNumClustersPerModules);
+        AV2P_ASSERT_ACC(nclus <= maxNumClustersPerModules);
         for (auto i : cms::alpakatools::independent_group_elements(acc, nclus)) {
           charge[i] = 0;
           minPix[i] = std::numeric_limits<uint32_t>::max();
         }
         if (cms::alpakatools::once_per_block(acc))
           nOk = 0;
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         for (auto i : cms::alpakatools::independent_group_elements(acc, firstPixel, numElements)) {
           if (digi_view[i].moduleId() == invalidModuleId)
             continue;  // not valid
           if (digi_view[i].moduleId() != thisModuleId)
             break;  // end of module
-          alpaka::atomicAdd(acc,
+          aV2P::atomicAdd(acc,
                             &charge[digi_view[i].clus()],
                             static_cast<int32_t>(digi_view[i].adc()),
-                            alpaka::hierarchy::Threads{});
-          alpaka::atomicMin(acc,
+                            aV2P::hierarchy::Threads{});
+          aV2P::atomicMin(acc,
                             &minPix[digi_view[i].clus()],
                             (uint32_t(digi_view[i].xx()) << 16) | digi_view[i].yy(),
-                            alpaka::hierarchy::Threads{});
+                            aV2P::hierarchy::Threads{});
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         auto chargeCut = clusterThresholds.getThresholdForLayerOnCondition(thisModuleId < startBPIX2);
 
         for (auto i : cms::alpakatools::independent_group_elements(acc, nclus)) {
           ok[i] = (charge[i] >= chargeCut) ? 1 : 0;
           if (ok[i])
-            alpaka::atomicAdd(acc, &nOk, 1u, alpaka::hierarchy::Threads{});
+            aV2P::atomicAdd(acc, &nOk, 1u, aV2P::hierarchy::Threads{});
 #ifdef GPU_DEBUG
           printf("Cutting pix %d in module %d ok? %d charge %d cut %d\n", i, thisModuleId, ok[i], charge[i], chargeCut);
 #endif
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // Renumber the surviving clusters by ascending minimum pixel coordinate.
         // The clusters are labelled by FindClus in atomic (run-dependent) order, and the cluster id
@@ -162,9 +162,9 @@ namespace pixelClustering {
           for (uint32_t j = 0; j < nclus; ++j)
             rank += (ok[j] && (minPix[j] < key)) ? 1 : 0;
           newclusId[i] = rank;
-          ALPAKA_ASSERT_ACC(rank < nOk);
+          AV2P_ASSERT_ACC(rank < nOk);
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         clus_view[thisModuleId].clusInModule() = nOk;
 
@@ -182,7 +182,7 @@ namespace pixelClustering {
         }
 
         // done
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 #ifdef GPU_DEBUG
         if (cms::alpakatools::once_per_grid(acc)) {
           printf("All digis AFTER cut: \n");

@@ -1,11 +1,11 @@
 #ifndef RecoTracker_LSTCore_src_alpaka_T4NeuralNetworkWeights_h
 #define RecoTracker_LSTCore_src_alpaka_T4NeuralNetworkWeights_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Utilities/interface/HostDeviceConstant.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::lst::dnn::t4dnn {
+namespace AV2P_ACCELERATOR_NAMESPACE::lst::dnn::t4dnn {
   HOST_DEVICE_CONSTANT float bias_layer1[32] = {
       1.9165122f,   0.65508199f, 0.50193718f,  -1.5048982f,   3.6587617f,  -7.0247306f, -2.1984458f,   1.2414815f,
       4.4803892f,   1.2548044f,  3.7305227f,   -0.99517161f,  -1.6615773f, 7.0391584f,  -0.052163794f, -2.3376645f,
@@ -326,6 +326,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst::dnn::t4dnn {
       {-0.31149381f, -0.12076034f, 0.25657195f},  {-0.28369406f, -0.27418453f, 0.45069879f},
       {0.18240106f, -0.49713585f, 0.073719814f},  {-0.25668842f, 0.40187344f, -0.32281148f},
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::lst::dnn::t4dnn
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::lst::dnn::t4dnn
 
 #endif

@@ -22,7 +22,7 @@
 #include "DeclsForKernels.h"
 #include "EcalRecHitBuilder.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   namespace {
     using EcalRecHitParametersCache =
         cms::alpakatools::MoveToDeviceCache<Device, PortableHostObject<EcalRecHitParameters>>;
@@ -191,11 +191,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // reset the size scalar of the SoA
     // memset takes an alpaka view that is created from the scalar in a view to the portable device collection
     auto recHitSizeViewEB = cms::alpakatools::make_device_view<uint32_t>(queue, recHitsDevEB->view().size());
-    alpaka::memset(queue, recHitSizeViewEB, 0);
+    aV2P::memset(queue, recHitSizeViewEB, 0);
 
     if (!isPhase2_) {
       auto recHitSizeViewEE = cms::alpakatools::make_device_view<uint32_t>(queue, recHitsDevEE->view().size());
-      alpaka::memset(queue, recHitSizeViewEE, 0);
+      aV2P::memset(queue, recHitSizeViewEE, 0);
     }
 
     // stop here if there are no uncalibrated rechits
@@ -229,7 +229,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     }
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(EcalRecHitProducerPortable);
+DEFINE_FWK_AV2P_MODULE(EcalRecHitProducerPortable);

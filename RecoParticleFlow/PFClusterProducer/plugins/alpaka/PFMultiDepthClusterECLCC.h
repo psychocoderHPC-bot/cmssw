@@ -69,11 +69,11 @@
  * - Final flattening phase (pointer jumping) to ensure correct labeling.
  */
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
+namespace AV2P_ACCELERATOR_NAMESPACE::eclcc {
 
   using namespace ::cms::alpakatools;
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void hook(
+  AV2P_FN_ACC AV2P_FN_INLINE void hook(
       Acc1D const& acc,
       reco::PFMultiDepthClusteringCCLabelsDeviceCollection::View pfClusteringCCLabels,
       const reco::PFMultiDepthClusteringEdgeVarsDeviceCollection::ConstView pfClusteringEdgeVars,
@@ -116,8 +116,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
         int low_rep = is_low ? rep_v : rep_neigh_v;
         int high_rep = !is_low ? rep_v : rep_neigh_v;
 
-        int tmp = alpaka::atomicCas(
-            acc, &pfClusteringCCLabels[high_rep].mdpf_topoId(), high_rep, low_rep, alpaka::hierarchy::Blocks{});
+        int tmp = aV2P::atomicCas(
+            acc, &pfClusteringCCLabels[high_rep].mdpf_topoId(), high_rep, low_rep, aV2P::hierarchy::Blocks{});
 
         if (tmp == high_rep)
           break;  // merge successful, exit.
@@ -133,7 +133,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
   // ECL-CC algorithm driver:
   class ECLCCInitKernel {
   public:
-    ALPAKA_FN_ACC void operator()(
+    AV2P_FN_ACC void operator()(
         Acc1D const& acc,
         reco::PFMultiDepthClusteringCCLabelsDeviceCollection::View pfClusteringCCLabels,
         const reco::PFMultiDepthClusteringEdgeVarsDeviceCollection::ConstView pfClusteringEdgeVars) const {
@@ -152,7 +152,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
         int m = v;
         int i = begin_v;
         while ((m == v) && (i < end_v)) {
-          m = alpaka::math::min(acc, m, pfClusteringEdgeVars[i].mdpf_adjacencyList());
+          m = aV2P::math::min(acc, m, pfClusteringEdgeVars[i].mdpf_adjacencyList());
           i++;
         }
         pfClusteringCCLabels[v].mdpf_topoId() = m;
@@ -163,7 +163,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
   class ECLCCLowDegreeComputeKernel {
   public:
     template <Idx default_mid_degree_threshold = 400>
-    ALPAKA_FN_ACC void operator()(
+    AV2P_FN_ACC void operator()(
         Acc1D const& acc,
         reco::PFMultiDepthClusteringCCLabelsDeviceCollection::View pfClusteringCCLabels,
         const reco::PFMultiDepthClusteringEdgeVarsDeviceCollection::ConstView pfClusteringEdgeVars) const {
@@ -186,8 +186,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
         if (deg_v > low_degree_threshold) {
           // Assign vertex to appropriate worklist based on degree
           int idx = (deg_v <= mid_degree_threshold)
-                        ? alpaka::atomicAdd(acc, &pfClusteringCCLabels.topL(), +1, alpaka::hierarchy::Blocks{})
-                        : alpaka::atomicAdd(acc, &pfClusteringCCLabels.topH(), -1, alpaka::hierarchy::Blocks{});
+                        ? aV2P::atomicAdd(acc, &pfClusteringCCLabels.topL(), +1, aV2P::hierarchy::Blocks{})
+                        : aV2P::atomicAdd(acc, &pfClusteringCCLabels.topH(), -1, aV2P::hierarchy::Blocks{});
           pfClusteringCCLabels[idx].workl() = v;
 
           continue;
@@ -200,7 +200,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
 
   class ECLCCMidDegreeComputeKernel {
   public:
-    ALPAKA_FN_ACC void operator()(
+    AV2P_FN_ACC void operator()(
         Acc1D const& acc,
         reco::PFMultiDepthClusteringCCLabelsDeviceCollection::View pfClusteringCCLabels,
         const reco::PFMultiDepthClusteringEdgeVarsDeviceCollection::ConstView pfClusteringEdgeVars) const {
@@ -209,7 +209,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
       constexpr unsigned int w_extent = get_warp_size<Acc1D>();
 
       for (auto idx : ::cms::alpakatools::uniform_elements(acc, ::cms::alpakatools::round_up_by(nClusters, w_extent))) {
-        const warp::warp_mask_t active_lanes_mask = alpaka::warp::ballot(acc, idx < nClusters);
+        const warp::warp_mask_t active_lanes_mask = aV2P::warp::ballot(acc, idx < nClusters);
         // Skip inactive lanes:
         if (idx >= nClusters)
           continue;
@@ -217,7 +217,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
         const auto lane_idx = idx % w_extent;
 
         const auto x =
-            lane_idx == 0 ? alpaka::atomicAdd(acc, &pfClusteringCCLabels.posL(), 1, alpaka::hierarchy::Blocks{}) : 0;
+            lane_idx == 0 ? aV2P::atomicAdd(acc, &pfClusteringCCLabels.posL(), 1, aV2P::hierarchy::Blocks{}) : 0;
 
         int i = warp::shfl_mask(acc, active_lanes_mask, x, 0, w_extent);
 
@@ -232,7 +232,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
           hook(acc, pfClusteringCCLabels, pfClusteringEdgeVars, v, begin_v, end_v, w_extent);
           // Assign the next vertex in the worklist
           const auto y =
-              lane_idx == 0 ? alpaka::atomicAdd(acc, &pfClusteringCCLabels.posL(), 1, alpaka::hierarchy::Blocks{}) : 0;
+              lane_idx == 0 ? aV2P::atomicAdd(acc, &pfClusteringCCLabels.posL(), 1, aV2P::hierarchy::Blocks{}) : 0;
 
           i = warp::shfl_mask(acc, active_lanes_mask, y, 0, w_extent);
         }
@@ -242,24 +242,24 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
 
   class ECLCCHighDegreeComputeKernel {
   public:
-    ALPAKA_FN_ACC void operator()(
+    AV2P_FN_ACC void operator()(
         Acc1D const& acc,
         reco::PFMultiDepthClusteringCCLabelsDeviceCollection::View pfClusteringCCLabels,
         const reco::PFMultiDepthClusteringEdgeVarsDeviceCollection::ConstView pfClusteringEdgeVars) const {
       const unsigned int nClusters = pfClusteringCCLabels.size();
 
-      auto const blockDim_x = alpaka::getWorkDiv<alpaka::Block, alpaka::Threads>(acc)[0];
+      auto const blockDim_x = aV2P::getWorkDiv<aV2P::Block, aV2P::Threads>(acc)[0];
 
-      int& v = alpaka::declareSharedVar<int, __COUNTER__>(acc);
+      int& v = aV2P::declareSharedVar<int, __COUNTER__>(acc);
 
       const int topH = pfClusteringCCLabels.topH();
 
       if (::cms::alpakatools::once_per_block(acc)) {
-        int i = alpaka::atomicAdd(acc, &pfClusteringCCLabels.posH() /*posH*/, -1, alpaka::hierarchy::Blocks{});
+        int i = aV2P::atomicAdd(acc, &pfClusteringCCLabels.posH() /*posH*/, -1, aV2P::hierarchy::Blocks{});
         v = (i > topH) ? pfClusteringCCLabels[i].workl() : -1;
       }
 
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
 
       for (auto group : ::cms::alpakatools::uniform_groups(acc)) {
         while (v >= 0) {
@@ -271,11 +271,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
           }
 
           if (::cms::alpakatools::once_per_block(acc)) {
-            int i = alpaka::atomicAdd(acc, &pfClusteringCCLabels.posH() /*posH*/, -1, alpaka::hierarchy::Blocks{});
+            int i = aV2P::atomicAdd(acc, &pfClusteringCCLabels.posH() /*posH*/, -1, aV2P::hierarchy::Blocks{});
             v = (i > topH) ? pfClusteringCCLabels[i].workl() : -1;
           }
 
-          alpaka::syncBlockThreads(acc);
+          aV2P::syncBlockThreads(acc);
         }
       }
     }
@@ -283,7 +283,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
 
   class ECLCCFlattenKernel {
   public:
-    ALPAKA_FN_ACC void operator()(
+    AV2P_FN_ACC void operator()(
         Acc1D const& acc, reco::PFMultiDepthClusteringCCLabelsDeviceCollection::View pfClusteringCCLabels) const {
       const unsigned int nClusters = pfClusteringCCLabels.size();
 
@@ -300,6 +300,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
       }
     }
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::eclcc
 
 #endif

@@ -25,7 +25,7 @@
 #include "RecoTracker/LSTCore/interface/LSTInputHostCollection.h"
 #include "RecoTracker/LSTCore/interface/LSTPrepareInput.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class LSTInputProducer : public global::EDProducer<> {
   public:
@@ -249,7 +249,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     iEvent.emplace(lstPixelSeedsPutToken_, std::move(see_seeds));
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(LSTInputProducer);
+DEFINE_FWK_AV2P_MODULE(LSTInputProducer);

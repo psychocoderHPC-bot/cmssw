@@ -22,7 +22,7 @@
 #include "CondFormats/HGCalObjects/interface/alpaka/HGCalMappingParameterDevice.h"
 #include "Geometry/HGCalMapping/interface/HGCalMappingTools.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
 
@@ -426,8 +426,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     return idmap;
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 // define this as a plug-in
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(HGCalMappingESSourceTester);
+DEFINE_FWK_AV2P_MODULE(HGCalMappingESSourceTester);

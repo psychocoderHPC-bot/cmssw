@@ -5,14 +5,14 @@
 #include <functional>
 #include <utility>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 // reimplementation of std algorithms able to work on device code
 
 namespace alpaka_std {
 
   template <typename RandomIt, typename T, typename Compare = std::less<T>>
-  ALPAKA_FN_HOST_ACC constexpr RandomIt lower_bound(RandomIt first, RandomIt last, const T &value, Compare comp = {}) {
+  AV2P_FN_HOST_ACC constexpr RandomIt lower_bound(RandomIt first, RandomIt last, const T &value, Compare comp = {}) {
     auto count = last - first;
 
     while (count > 0) {
@@ -30,7 +30,7 @@ namespace alpaka_std {
   }
 
   template <typename RandomIt, typename T, typename Compare = std::less<T>>
-  ALPAKA_FN_HOST_ACC constexpr RandomIt upper_bound(RandomIt first, RandomIt last, const T &value, Compare comp = {}) {
+  AV2P_FN_HOST_ACC constexpr RandomIt upper_bound(RandomIt first, RandomIt last, const T &value, Compare comp = {}) {
     auto count = last - first;
 
     while (count > 0) {

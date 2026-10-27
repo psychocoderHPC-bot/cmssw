@@ -20,7 +20,7 @@
 
 #include <memory>
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class SiPixelGainCalibrationForHLTSoAESProducer : public ESProducer {
   public:
@@ -124,5 +124,5 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     return product;
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(SiPixelGainCalibrationForHLTSoAESProducer);
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(SiPixelGainCalibrationForHLTSoAESProducer);

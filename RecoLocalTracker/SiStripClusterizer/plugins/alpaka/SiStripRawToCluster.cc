@@ -25,7 +25,7 @@
 
 #include "SiStripRawToClusterAlgo.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip {
+namespace AV2P_ACCELERATOR_NAMESPACE::sistrip {
   using namespace ::sistrip;
 
   class SiStripRawToCluster : public stream::SynchronizingEDProducer<> {
@@ -107,7 +107,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip {
 
     // Device conditions (cabling map)
     const auto& stripCablCond = iSetup.getData(stripCablCondGetToken_);
-    LogDebug("SiStripRawToCluster") << "#sizeB,stripCablCond_," << alpaka::getExtentProduct(stripCablCond.buffer());
+    LogDebug("SiStripRawToCluster") << "#sizeB,stripCablCond_," << aV2P::getExtentProduct(stripCablCond.buffer());
 
     // Get FED raw data collection
     const auto& rawCollection = iEvent.get(fedRawGetToken_);
@@ -122,7 +122,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip {
   void SiStripRawToCluster::produce(device::Event& iEvent, device::EventSetup const& iSetup) {
     // Device conditions (strip noise)
     const auto& stripDataCond = iSetup.getData(stripDataCondGetToken_);
-    LogDebug("SiStripRawToCluster") << "#sizeB,stripDataCond_," << alpaka::getExtentProduct(stripDataCond.buffer());
+    LogDebug("SiStripRawToCluster") << "#sizeB,stripDataCond_," << aV2P::getExtentProduct(stripDataCond.buffer());
 
     // Unpack the raw FED data into strip digi
     auto nStrips = algo_.unpackStrips(iEvent.queue(), stripDataCond.const_data());
@@ -274,7 +274,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip {
     return buffer;
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::sistrip
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(sistrip::SiStripRawToCluster);
+DEFINE_FWK_AV2P_MODULE(sistrip::SiStripRawToCluster);

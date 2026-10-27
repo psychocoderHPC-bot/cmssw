@@ -76,7 +76,7 @@
 
 // #define PIXEL_TRACK_HP_DEBUG
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   /// Input/output tensors associated to a single inference batch.
   struct BatchIO {
@@ -195,13 +195,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto d_selectedTrackHitOffsets = cms::alpakatools::make_device_buffer<int[]>(queue, maxPreselectedTracks_);
     auto d_preselectionOffsets = cms::alpakatools::make_device_buffer<int[]>(queue, maxNumberOfTracks_);
 
-    alpaka::memset(queue, d_nPreselectedTracks, 0);
-    alpaka::memset(queue, d_nSelectedTracks, 0);
-    alpaka::memset(queue, d_trackHitCounts, 0);
-    alpaka::memset(queue, d_selectedTrackHitOffsets, 0);
-    alpaka::memset(queue, d_preselectedTrackIndices, 0xFF);
-    alpaka::memset(queue, d_selectedTrackIndices, 0xFF);
-    alpaka::memset(queue, d_preselectionOffsets, 0);
+    aV2P::memset(queue, d_nPreselectedTracks, 0);
+    aV2P::memset(queue, d_nSelectedTracks, 0);
+    aV2P::memset(queue, d_trackHitCounts, 0);
+    aV2P::memset(queue, d_selectedTrackHitOffsets, 0);
+    aV2P::memset(queue, d_preselectedTrackIndices, 0xFF);
+    aV2P::memset(queue, d_selectedTrackIndices, 0xFF);
+    aV2P::memset(queue, d_preselectionOffsets, 0);
 
     //  - Features and scores containers
     PixelTrackFeaturesOnDevice trackFeatures(queue, maxPreselectedTracks_);
@@ -215,13 +215,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto nSelectedTracks = 0;
     // Helper to copy the number of kept tracks back to host (debug only)
     auto fetchNumPreselectedTracks = [&]() {
-      alpaka::memcpy(queue, h_nPreselectedTracks, d_nPreselectedTracks);
-      alpaka::wait(queue);
+      aV2P::memcpy(queue, h_nPreselectedTracks, d_nPreselectedTracks);
+      aV2P::wait(queue);
       return *h_nPreselectedTracks;
     };
     auto fetchNumSelectedTracks = [&]() {
-      alpaka::memcpy(queue, h_nSelectedTracks, d_nSelectedTracks);
-      alpaka::wait(queue);
+      aV2P::memcpy(queue, h_nSelectedTracks, d_nSelectedTracks);
+      aV2P::wait(queue);
       return *h_nSelectedTracks;
     };
 #endif
@@ -235,9 +235,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                          minNumberOfHits_,
                          minimumTrackQuality_,
                          tracks.tracks(),
-                         alpaka::getPtrNative(d_preselectedTrackIndices),
-                         alpaka::getPtrNative(d_preselectionOffsets),
-                         alpaka::getPtrNative(d_nPreselectedTracks));
+                         aV2P::getPtrNative(d_preselectedTrackIndices),
+                         aV2P::getPtrNative(d_preselectionOffsets),
+                         aV2P::getPtrNative(d_nPreselectedTracks));
 
 #ifdef PIXEL_TRACK_HP_DEBUG
     nPreselectedTracks = fetchNumPreselectedTracks();
@@ -247,10 +247,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     launchFeaturesExtractor(queue,
                             maxPreselectedTracks_,
                             tracks.tracks(),
-                            alpaka::getPtrNative(d_preselectedTrackIndices),
-                            alpaka::getPtrNative(d_nPreselectedTracks),
+                            aV2P::getPtrNative(d_preselectedTrackIndices),
+                            aV2P::getPtrNative(d_nPreselectedTracks),
                             trackFeatures.view(),
-                            alpaka::getPtrNative(d_trackHitCounts));
+                            aV2P::getPtrNative(d_trackHitCounts));
 
     // 3. DNN inference
     //  Prepare TensorCollection inputs and outputs for the model
@@ -296,12 +296,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                       maxPreselectedTracks_,
                       scoreThreshold_,
                       trackScoresOnDevice.view(),
-                      alpaka::getPtrNative(d_preselectedTrackIndices),
-                      alpaka::getPtrNative(d_nPreselectedTracks),
-                      alpaka::getPtrNative(d_trackHitCounts),
-                      alpaka::getPtrNative(d_selectedTrackIndices),
-                      alpaka::getPtrNative(d_nSelectedTracks),
-                      alpaka::getPtrNative(d_selectedTrackHitOffsets));
+                      aV2P::getPtrNative(d_preselectedTrackIndices),
+                      aV2P::getPtrNative(d_nPreselectedTracks),
+                      aV2P::getPtrNative(d_trackHitCounts),
+                      aV2P::getPtrNative(d_selectedTrackIndices),
+                      aV2P::getPtrNative(d_nSelectedTracks),
+                      aV2P::getPtrNative(d_selectedTrackHitOffsets));
 
 #ifdef PIXEL_TRACK_HP_DEBUG
     nSelectedTracks = fetchNumSelectedTracks();
@@ -313,9 +313,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                 avgHitsPerTrack_,
                                                 tracks.tracks(),
                                                 tracks.trackHits(),
-                                                alpaka::getPtrNative(d_selectedTrackIndices),
-                                                alpaka::getPtrNative(d_nSelectedTracks),
-                                                alpaka::getPtrNative(d_selectedTrackHitOffsets));
+                                                aV2P::getPtrNative(d_selectedTrackIndices),
+                                                aV2P::getPtrNative(d_nSelectedTracks),
+                                                aV2P::getPtrNative(d_selectedTrackHitOffsets));
     iEvent.emplace(tokenTrackOut_, std::move(tracks_out));
   }
 
@@ -332,7 +332,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     desc.add<int>("batchSize", 10);
     descriptions.addWithDefaultLabel(desc);
   }
-};  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+};  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(PixelTrackTorchHighPuritySelector);
+DEFINE_FWK_AV2P_MODULE(PixelTrackTorchHighPuritySelector);

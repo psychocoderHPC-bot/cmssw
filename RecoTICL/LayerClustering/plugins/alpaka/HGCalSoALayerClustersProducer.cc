@@ -17,7 +17,7 @@
 
 #include "HGCalLayerClustersSoAAlgoWrapper.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class HGCalSoALayerClustersProducer : public stream::SynchronizingEDProducer<> {
   public:
@@ -41,9 +41,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       //
       // Allocate output SoA for the clusters, one entry for each cluster
       auto device_numclusters = cms::alpakatools::make_device_view<const unsigned int>(
-          alpaka::getDev(iEvent.queue()), inputClusters_v.numberOfClustersScalar());
+          aV2P::getDev(iEvent.queue()), inputClusters_v.numberOfClustersScalar());
       auto host_numclusters = cms::alpakatools::make_host_view<unsigned int>(num_clusters_);
-      alpaka::memcpy(iEvent.queue(), host_numclusters, device_numclusters);
+      aV2P::memcpy(iEvent.queue(), host_numclusters, device_numclusters);
     }
 
     void produce(device::Event& iEvent, device::EventSetup const& iSetup) override {
@@ -94,7 +94,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     float positionDeltaRho2_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(HGCalSoALayerClustersProducer);
+DEFINE_FWK_AV2P_MODULE(HGCalSoALayerClustersProducer);

@@ -11,7 +11,7 @@
 #include "DeclsForKernels.h"
 #include "EcalMultifitParameters.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit {
 
   using InputProduct = EcalDigiDeviceCollection;
   using OutputProduct = EcalUncalibratedRecHitDeviceCollection;
@@ -25,6 +25,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
                      EcalMultifitParameters const* paramsDev,
                      ConfigurationParameters const& configParams);
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit
 
 #endif  // RecoLocalCalo_EcalRecProducers_plugins_alpaka_EcalUncalibRecHitMultiFitAlgoPortable_h

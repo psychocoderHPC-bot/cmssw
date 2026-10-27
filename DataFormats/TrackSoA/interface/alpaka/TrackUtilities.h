@@ -7,7 +7,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/TrackSoA/interface/TracksSoA.h"
 #include "Geometry/CommonTopologies/interface/SimplePixelTopology.h"
@@ -34,7 +34,7 @@ namespace pixelTrack {
     Region triplet;
     Region quadruplet;
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool isHP(const TrackSoAConstView &tracks, int nHits, int it) const {
+    AV2P_FN_ACC AV2P_FN_INLINE bool isHP(const TrackSoAConstView &tracks, int nHits, int it) const {
       // impose "region cuts" based on the fit results (phi, Tip, pt, cotan(theta)), Zip)
       // default cuts:
       //   - for triplets:    |Tip| < 0.3 cm, pT > 0.5 GeV, |Zip| < 12.0 cm
@@ -45,7 +45,7 @@ namespace pixelTrack {
              (std::abs(reco::zip(tracks, it)) < region.maxZip);
     }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool strictCut(const TrackSoAConstView &tracks,
+    AV2P_FN_ACC AV2P_FN_INLINE bool strictCut(const TrackSoAConstView &tracks,
                                                   [[maybe_unused]] int nHits,
                                                   int it) const {
       auto roughLog = [](float x) {
@@ -93,11 +93,11 @@ namespace pixelTrack {
     float maxTip;
     float maxZip;
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool isHP(const TrackSoAConstView &tracks, int nHits, int it) const {
+    AV2P_FN_ACC AV2P_FN_INLINE bool isHP(const TrackSoAConstView &tracks, int nHits, int it) const {
       return (std::abs(reco::tip(tracks, it)) < maxTip) and (tracks.pt(it) > minPt) and
              (std::abs(reco::zip(tracks, it)) < maxZip);
     }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool strictCut(const TrackSoAConstView &tracks, int nHits, int it) const {
+    AV2P_FN_ACC AV2P_FN_INLINE bool strictCut(const TrackSoAConstView &tracks, int nHits, int it) const {
       if (nHits <= 4) {
         return tracks.chi2(it) >= maxChi2TripletsOrQuadruplets;
       }

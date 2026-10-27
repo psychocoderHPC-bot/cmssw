@@ -6,7 +6,7 @@
 #include <functional>
 #include <vector>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/TrackSoA/interface/TracksDevice.h"
 #include "DataFormats/TrackSoA/interface/TracksHost.h"
@@ -21,7 +21,7 @@
 #include "CAPixelDoublets.h"
 #include "CAPixelDoubletsAlgos.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   namespace {
 
     using namespace caHitNtupletGenerator;
@@ -462,9 +462,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     // Don't bother if less than 2 this
     if (trackingHits.size() < 2) {
-      const auto device = alpaka::getDev(queue);
+      const auto device = aV2P::getDev(queue);
       auto ntracks_d = cms::alpakatools::make_device_view(device, tracks.nTracks());
-      alpaka::memset(queue, ntracks_d, 0);
+      aV2P::memset(queue, ntracks_d, 0);
       return trackCollection;
     }
     GPUKernels kernels(m_params, nHits, offsetBPIX2, nDoublets, nTracks, layers.metadata().size(), queue);
@@ -485,7 +485,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     }
     kernels.classifyTuples(trackingHits, tracks, queue);
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     std::cout << "finished building pixel tracks on GPU" << std::endl;
 #endif
 
@@ -496,4 +496,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   template class CAHitNtupletGenerator<pixelTopology::Phase2>;
   template class CAHitNtupletGenerator<pixelTopology::Phase2OT>;
   template class CAHitNtupletGenerator<pixelTopology::HIonPhase1>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

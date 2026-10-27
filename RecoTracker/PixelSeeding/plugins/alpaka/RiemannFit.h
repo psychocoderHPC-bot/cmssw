@@ -1,6 +1,6 @@
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/TrackSoA/interface/alpaka/TrackUtilities.h"
 #include "DataFormats/TrackingRecHitSoA/interface/TrackingRecHitsSoA.h"
@@ -16,14 +16,14 @@ using OutputSoAView = reco::TrackSoAView;
 using TupleMultiplicity = caStructures::GenericContainer;
 using Tuples = caStructures::SequentialContainer;
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
-  using namespace alpaka;
+namespace AV2P_ACCELERATOR_NAMESPACE {
+  using namespace aV2P;
   using namespace cms::alpakatools;
 
   template <int N, typename TrackerTraits>
   class Kernel_FastFit {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+    AV2P_FN_ACC void operator()(Acc1D const &acc,
                                   Tuples const *__restrict__ foundNtuplets,
                                   TupleMultiplicity const *__restrict__ tupleMultiplicity,
                                   uint32_t nHits,
@@ -35,16 +35,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                   uint32_t offset) const {
       constexpr uint32_t hitsInFit = N;
 
-      ALPAKA_ASSERT_ACC(hitsInFit <= nHits);
+      AV2P_ASSERT_ACC(hitsInFit <= nHits);
 
-      ALPAKA_ASSERT_ACC(pfast_fit);
-      ALPAKA_ASSERT_ACC(foundNtuplets);
-      ALPAKA_ASSERT_ACC(tupleMultiplicity);
+      AV2P_ASSERT_ACC(pfast_fit);
+      AV2P_ASSERT_ACC(foundNtuplets);
+      AV2P_ASSERT_ACC(tupleMultiplicity);
 
       // look in bin for this hit multiplicity
 
 #ifdef RIEMANN_DEBUG
-      const uint32_t threadIdx(alpaka::getIdx<alpaka::Grid, alpaka::Threads>(acc)[0u]);
+      const uint32_t threadIdx(aV2P::getIdx<aV2P::Grid, aV2P::Threads>(acc)[0u]);
       if (cms::alpakatools::once_per_grid(acc))
         printf("%d Ntuple of size %d for %d hits to fit\n", tupleMultiplicity->size(nHits), nHits, hitsInFit);
 #endif
@@ -57,9 +57,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
         // get it from the ntuple container (one to one to helix)
         auto tkid = *(tupleMultiplicity->begin(nHits) + tuple_idx);
-        ALPAKA_ASSERT_ACC(tkid < foundNtuplets->nOnes());
+        AV2P_ASSERT_ACC(tkid < foundNtuplets->nOnes());
 
-        ALPAKA_ASSERT_ACC(foundNtuplets->size(tkid) == nHits);
+        AV2P_ASSERT_ACC(foundNtuplets->size(tkid) == nHits);
 
         riemannFit::Map3xNd<N> hits(phits + local_idx);
         riemannFit::Map4d fast_fit(pfast_fit + local_idx);
@@ -78,10 +78,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
 #ifdef RIEMANN_DEBUG
         // any NaN value should cause the track to be rejected at a later stage
-        ALPAKA_ASSERT_ACC(not alpaka::math::isnan(acc, fast_fit(0)));
-        ALPAKA_ASSERT_ACC(not alpaka::math::isnan(acc, fast_fit(1)));
-        ALPAKA_ASSERT_ACC(not alpaka::math::isnan(acc, fast_fit(2)));
-        ALPAKA_ASSERT_ACC(not alpaka::math::isnan(acc, fast_fit(3)));
+        AV2P_ASSERT_ACC(not aV2P::math::isnan(acc, fast_fit(0)));
+        AV2P_ASSERT_ACC(not aV2P::math::isnan(acc, fast_fit(1)));
+        AV2P_ASSERT_ACC(not aV2P::math::isnan(acc, fast_fit(2)));
+        AV2P_ASSERT_ACC(not aV2P::math::isnan(acc, fast_fit(3)));
 #endif
       }
     }
@@ -90,7 +90,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   template <int N, typename TrackerTraits>
   class Kernel_CircleFit {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+    AV2P_FN_ACC void operator()(Acc1D const &acc,
                                   TupleMultiplicity const *__restrict__ tupleMultiplicity,
                                   uint32_t nHits,
                                   double bField,
@@ -99,8 +99,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                   double *__restrict__ pfast_fit_input,
                                   riemannFit::CircleFit *circle_fit,
                                   uint32_t offset) const {
-      ALPAKA_ASSERT_ACC(circle_fit);
-      ALPAKA_ASSERT_ACC(N <= nHits);
+      AV2P_ASSERT_ACC(circle_fit);
+      AV2P_ASSERT_ACC(N <= nHits);
 
       // same as above...
 
@@ -135,7 +135,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   template <int N, typename TrackerTraits>
   class Kernel_LineFit {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+    AV2P_FN_ACC void operator()(Acc1D const &acc,
                                   TupleMultiplicity const *__restrict__ tupleMultiplicity,
                                   uint32_t nHits,
                                   double bField,
@@ -145,8 +145,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                   double *__restrict__ pfast_fit_input,
                                   riemannFit::CircleFit *__restrict__ circle_fit,
                                   uint32_t offset) const {
-      ALPAKA_ASSERT_ACC(circle_fit);
-      ALPAKA_ASSERT_ACC(N <= nHits);
+      AV2P_ASSERT_ACC(circle_fit);
+      AV2P_ASSERT_ACC(N <= nHits);
 
       // same as above...
 
@@ -228,7 +228,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     for (uint32_t offset = 0; offset < maxNumberOfTuples; offset += maxNumberOfConcurrentFits_) {
       // triplets
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDivTriplets,
                           Kernel_FastFit<3, TrackerTraits>{},
                           tuples_,
@@ -241,7 +241,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           fast_fit_resultsDevice.data(),
                           offset);
 
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDivTriplets,
                           Kernel_CircleFit<3, TrackerTraits>{},
                           tupleMultiplicity_,
@@ -253,7 +253,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           circle_fit_resultsDevice_,
                           offset);
 
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDivTriplets,
                           Kernel_LineFit<3, TrackerTraits>{},
                           tupleMultiplicity_,
@@ -267,7 +267,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           offset);
 
       // quads
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDivQuadsPenta,
                           Kernel_FastFit<4, TrackerTraits>{},
                           tuples_,
@@ -280,7 +280,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           fast_fit_resultsDevice.data(),
                           offset);
 
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDivQuadsPenta,
                           Kernel_CircleFit<4, TrackerTraits>{},
                           tupleMultiplicity_,
@@ -292,7 +292,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           circle_fit_resultsDevice_,
                           offset);
 
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDivQuadsPenta,
                           Kernel_LineFit<4, TrackerTraits>{},
                           tupleMultiplicity_,
@@ -307,7 +307,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       if (fitNas4_) {
         // penta
-        alpaka::exec<Acc1D>(queue,
+        aV2P::exec<Acc1D>(queue,
                             workDivQuadsPenta,
                             Kernel_FastFit<4, TrackerTraits>{},
                             tuples_,
@@ -320,7 +320,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                             fast_fit_resultsDevice.data(),
                             offset);
 
-        alpaka::exec<Acc1D>(queue,
+        aV2P::exec<Acc1D>(queue,
                             workDivQuadsPenta,
                             Kernel_CircleFit<4, TrackerTraits>{},
                             tupleMultiplicity_,
@@ -332,7 +332,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                             circle_fit_resultsDevice_,
                             offset);
 
-        alpaka::exec<Acc1D>(queue,
+        aV2P::exec<Acc1D>(queue,
                             workDivQuadsPenta,
                             Kernel_LineFit<4, TrackerTraits>{},
                             tupleMultiplicity_,
@@ -346,7 +346,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                             offset);
       } else {
         // penta all 5
-        alpaka::exec<Acc1D>(queue,
+        aV2P::exec<Acc1D>(queue,
                             workDivQuadsPenta,
                             Kernel_FastFit<5, TrackerTraits>{},
                             tuples_,
@@ -359,7 +359,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                             fast_fit_resultsDevice.data(),
                             offset);
 
-        alpaka::exec<Acc1D>(queue,
+        aV2P::exec<Acc1D>(queue,
                             workDivQuadsPenta,
                             Kernel_CircleFit<5, TrackerTraits>{},
                             tupleMultiplicity_,
@@ -371,7 +371,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                             circle_fit_resultsDevice_,
                             offset);
 
-        alpaka::exec<Acc1D>(queue,
+        aV2P::exec<Acc1D>(queue,
                             workDivQuadsPenta,
                             Kernel_LineFit<5, TrackerTraits>{},
                             tupleMultiplicity_,
@@ -387,4 +387,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     }
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

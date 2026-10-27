@@ -15,8 +15,8 @@
 #include "Quintuplet.h"
 #include "PixelTriplet.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void addPixelQuintupletToMemory(ModulesConst modules,
+namespace AV2P_ACCELERATOR_NAMESPACE::lst {
+  AV2P_FN_ACC AV2P_FN_INLINE void addPixelQuintupletToMemory(ModulesConst modules,
                                                                  MiniDoubletsConst mds,
                                                                  SegmentsConst segments,
                                                                  QuintupletsConst quintuplets,
@@ -87,7 +87,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 #endif
   }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool passPT5RZChiSquaredCuts(ModulesConst modules,
+  AV2P_FN_ACC AV2P_FN_INLINE bool passPT5RZChiSquaredCuts(ModulesConst modules,
                                                               uint16_t lowerModuleIndex1,
                                                               uint16_t lowerModuleIndex2,
                                                               uint16_t lowerModuleIndex3,
@@ -170,7 +170,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     return true;
   }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool passPT5RPhiChiSquaredCuts(ModulesConst modules,
+  AV2P_FN_ACC AV2P_FN_INLINE bool passPT5RPhiChiSquaredCuts(ModulesConst modules,
                                                                 uint16_t lowerModuleIndex1,
                                                                 uint16_t lowerModuleIndex2,
                                                                 uint16_t lowerModuleIndex3,
@@ -255,8 +255,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     return true;
   }
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE float computePT5RPhiChiSquared(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE float computePT5RPhiChiSquared(TAcc const& acc,
                                                                 ModulesConst modules,
                                                                 uint16_t* lowerModuleIndices,
                                                                 float g,
@@ -278,7 +278,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     return chiSquared;
   }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE float computePT5RPhiChiSquaredInwards(
+  AV2P_FN_ACC AV2P_FN_INLINE float computePT5RPhiChiSquaredInwards(
       float g, float f, float r, float* xPix, float* yPix) {
     /*
     Using the computed regression center and radius, compute the chi squared for the pixels
@@ -293,7 +293,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     return chiSquared;
   }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool passPT5RPhiChiSquaredInwardsCuts(ModulesConst modules,
+  AV2P_FN_ACC AV2P_FN_INLINE bool passPT5RPhiChiSquaredInwardsCuts(ModulesConst modules,
                                                                        uint16_t lowerModuleIndex1,
                                                                        uint16_t lowerModuleIndex2,
                                                                        uint16_t lowerModuleIndex3,
@@ -378,8 +378,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     return true;
   }
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE float computePT5RZChiSquared(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE float computePT5RZChiSquared(TAcc const& acc,
                                                               ModulesConst modules,
                                                               const uint16_t* lowerModuleIndices,
                                                               const float* rtPix,
@@ -417,14 +417,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
       // calculation is detailed documented here https://indico.cern.ch/event/1185895/contributions/4982756/attachments/2526561/4345805/helix%20pT3%20summarize.pdf
       float diffr, diffz;
-      float p = alpaka::math::sqrt(acc, Px * Px + Py * Py + Pz * Pz);
+      float p = aV2P::math::sqrt(acc, Px * Px + Py * Py + Pz * Pz);
 
       float rou = a / p;
       if (moduleSubdet == Endcap) {
         float s = (zsi - z1) * p / Pz;
-        float x = x1 + Px / a * alpaka::math::sin(acc, rou * s) - Py / a * (1 - alpaka::math::cos(acc, rou * s));
-        float y = y1 + Py / a * alpaka::math::sin(acc, rou * s) + Px / a * (1 - alpaka::math::cos(acc, rou * s));
-        diffr = alpaka::math::abs(acc, rtsi - alpaka::math::sqrt(acc, x * x + y * y)) * 100;
+        float x = x1 + Px / a * aV2P::math::sin(acc, rou * s) - Py / a * (1 - aV2P::math::cos(acc, rou * s));
+        float y = y1 + Py / a * aV2P::math::sin(acc, rou * s) + Px / a * (1 - aV2P::math::cos(acc, rou * s));
+        diffr = aV2P::math::abs(acc, rtsi - aV2P::math::sqrt(acc, x * x + y * y)) * 100;
         residual = diffr;
       }
 
@@ -435,13 +435,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
         float A = paraB * paraB + paraC * paraC;
         float B = 2 * paraA * paraB;
         float C = paraA * paraA - paraC * paraC;
-        float sol1 = (-B + alpaka::math::sqrt(acc, B * B - 4 * A * C)) / (2 * A);
-        float sol2 = (-B - alpaka::math::sqrt(acc, B * B - 4 * A * C)) / (2 * A);
-        float solz1 = alpaka::math::asin(acc, sol1) / rou * Pz / p + z1;
-        float solz2 = alpaka::math::asin(acc, sol2) / rou * Pz / p + z1;
-        float diffz1 = alpaka::math::abs(acc, solz1 - zsi) * 100;
-        float diffz2 = alpaka::math::abs(acc, solz2 - zsi) * 100;
-        diffz = alpaka::math::min(acc, diffz1, diffz2);
+        float sol1 = (-B + aV2P::math::sqrt(acc, B * B - 4 * A * C)) / (2 * A);
+        float sol2 = (-B - aV2P::math::sqrt(acc, B * B - 4 * A * C)) / (2 * A);
+        float solz1 = aV2P::math::asin(acc, sol1) / rou * Pz / p + z1;
+        float solz2 = aV2P::math::asin(acc, sol2) / rou * Pz / p + z1;
+        float diffz1 = aV2P::math::abs(acc, solz1 - zsi) * 100;
+        float diffz2 = aV2P::math::abs(acc, solz2 - zsi) * 100;
+        diffz = aV2P::math::min(acc, diffz1, diffz2);
         residual = diffz;
       }
 
@@ -461,12 +461,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       RMSE += (residual * residual) / error2;
     }
 
-    RMSE = alpaka::math::sqrt(acc, 0.2f * RMSE);  // Divided by the degree of freedom 5.
+    RMSE = aV2P::math::sqrt(acc, 0.2f * RMSE);  // Divided by the degree of freedom 5.
     return RMSE;
   }
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool runPixelQuintupletDefaultAlgo(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool runPixelQuintupletDefaultAlgo(TAcc const& acc,
                                                                     ModulesConst modules,
                                                                     ObjectRangesConst ranges,
                                                                     MiniDoubletsConst mds,
@@ -633,7 +633,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   }
 
   struct CreatePixelQuintupletsFromMap {
-    ALPAKA_FN_ACC void operator()(Acc3D const& acc,
+    AV2P_FN_ACC void operator()(Acc3D const& acc,
                                   ModulesConst modules,
                                   ModulesPixelConst modulesPixel,
                                   MiniDoubletsConst mds,
@@ -700,15 +700,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
                                                          static_cast<unsigned int>(i_pLS),
                                                          ptCut);
             if (success) {
-              unsigned int totOccupancyPixelQuintuplets = alpaka::atomicAdd(
-                  acc, &pixelQuintuplets.totOccupancyPixelQuintuplets(), 1u, alpaka::hierarchy::Threads{});
+              unsigned int totOccupancyPixelQuintuplets = aV2P::atomicAdd(
+                  acc, &pixelQuintuplets.totOccupancyPixelQuintuplets(), 1u, aV2P::hierarchy::Threads{});
               if (totOccupancyPixelQuintuplets >= n_max_pixel_quintuplets) {
 #ifdef WARNINGS
                 printf("Pixel Quintuplet excess alert!\n");
 #endif
               } else {
                 unsigned int pixelQuintupletIndex =
-                    alpaka::atomicAdd(acc, &pixelQuintuplets.nPixelQuintuplets(), 1u, alpaka::hierarchy::Threads{});
+                    aV2P::atomicAdd(acc, &pixelQuintuplets.nPixelQuintuplets(), 1u, aV2P::hierarchy::Threads{});
                 float eta = __H2F(quintuplets.eta()[quintupletIndex]);
                 float phi = __H2F(quintuplets.phi()[quintupletIndex]);
 
@@ -742,5 +742,5 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       }  // end i_pLS
     }
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::lst
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::lst
 #endif

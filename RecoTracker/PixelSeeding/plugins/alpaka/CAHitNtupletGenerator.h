@@ -1,7 +1,7 @@
 #ifndef RecoTracker_PixelSeeding_plugins_alpaka_CAHitNtupletGenerator_h
 #define RecoTracker_PixelSeeding_plugins_alpaka_CAHitNtupletGenerator_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Common/interface/RefProdVector.h"
 #include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
@@ -25,7 +25,7 @@ namespace edm {
   class ParameterSetDescription;
 }  // namespace edm
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   template <typename TrackerTraits>
   class CAHitNtupletGenerator {
@@ -70,6 +70,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     Params m_params;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // RecoTracker_PixelSeeding_plugins_alpaka_CAHitNtupletGenerator_h

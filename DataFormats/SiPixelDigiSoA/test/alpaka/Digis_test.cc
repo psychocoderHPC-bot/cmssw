@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <unistd.h>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/SiPixelDigiSoA/interface/SiPixelDigisDevice.h"
 #include "DataFormats/SiPixelDigiSoA/interface/SiPixelDigisHost.h"
@@ -15,13 +15,13 @@
 
 #include "Digis_test.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 int main() {
   // Get the list of devices on the current platform
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }
@@ -42,8 +42,8 @@ int main() {
       SiPixelDigisHost digis_h(queue, digis_d.view().metadata().size());
 
       std::cout << digis_h.view().metadata().size() << std::endl;
-      alpaka::memcpy(queue, digis_h.buffer(), digis_d.const_buffer());
-      alpaka::wait(queue);
+      aV2P::memcpy(queue, digis_h.buffer(), digis_d.const_buffer());
+      aV2P::wait(queue);
     }
   }
 

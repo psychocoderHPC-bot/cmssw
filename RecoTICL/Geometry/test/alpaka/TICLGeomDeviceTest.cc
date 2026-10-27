@@ -20,7 +20,7 @@
 // Exercises the TICLGeom device collection: runs a kernel on the alpaka
 // backend that looks up every cell by its rawDetId with ticlgeom::indexOf
 // and counts mismatches. Proves the automatic host to device ES transfer.
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class TICLGeomDeviceTest : public stream::EDProducer<> {
   public:
@@ -48,7 +48,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             << nBad << " of " << n << " cells failed the device-side indexOf round trip";
       }
       edm::LogPrint("TICLGeomDeviceTest") << n << " cells verified on the device via indexOf and denseIdOf ("
-                                          << EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) << ")";
+                                          << EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) << ")";
     }
 
   private:
@@ -56,7 +56,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     device::ESGetToken<TICLGeomLookupDevice, CaloGeometryRecord> ticlGeomLookupToken_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(TICLGeomDeviceTest);
+DEFINE_FWK_AV2P_MODULE(TICLGeomDeviceTest);

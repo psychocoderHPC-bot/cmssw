@@ -1,7 +1,7 @@
 #ifndef HeterogeneousCore_AlpakaInterface_interface_getHostCachingAllocator_h
 #define HeterogeneousCore_AlpakaInterface_interface_getHostCachingAllocator_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Utilities/interface/thread_safety_macros.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/AllocatorConfig.h"
@@ -11,7 +11,7 @@
 
 namespace cms::alpakatools {
 
-  template <typename TQueue, typename = std::enable_if_t<alpaka::concepts::Queue<TQueue>>>
+  template <typename TQueue, typename = std::enable_if_t<aV2P::concepts::Queue<TQueue>>>
   inline CachingAllocator<alpaka_common::DevHost, TQueue>& getHostCachingAllocator(
       AllocatorConfig const& config = AllocatorConfig{}, bool debug = false) {
     // thread safe initialisation of the host allocator

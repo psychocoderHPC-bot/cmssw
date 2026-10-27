@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Portable/interface/alpaka/PortableCollection.h"
 #include "DataFormats/SiPixelDigiSoA/interface/SiPixelDigisDevice.h"
@@ -11,12 +11,12 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/CopyToHost.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using SiPixelDigisSoACollection =
-      std::conditional_t<std::is_same_v<Device, alpaka::DevCpu>, SiPixelDigisHost, SiPixelDigisDevice<Device>>;
+      std::conditional_t<std::is_same_v<Device, aV2P::DevCpu>, SiPixelDigisHost, SiPixelDigisDevice<Device>>;
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 namespace cms::alpakatools {
   template <typename TDevice>
@@ -24,7 +24,7 @@ namespace cms::alpakatools {
     template <typename TQueue>
     static auto copyAsync(TQueue &queue, SiPixelDigisDevice<TDevice> const &srcData) {
       SiPixelDigisHost dstData(queue, srcData.view().metadata().size() - 1);
-      alpaka::memcpy(queue, dstData.buffer(), srcData.buffer());
+      aV2P::memcpy(queue, dstData.buffer(), srcData.buffer());
       dstData.setNModules(srcData.nModules());
       return dstData;
     }

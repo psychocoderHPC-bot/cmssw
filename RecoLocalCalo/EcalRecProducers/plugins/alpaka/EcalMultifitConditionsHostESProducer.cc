@@ -37,7 +37,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/host.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   class EcalMultifitConditionsHostESProducer : public ESProducer {
   public:
     EcalMultifitConditionsHostESProducer(edm::ParameterSet const& iConfig) : ESProducer(iConfig) {
@@ -210,6 +210,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     edm::ESGetToken<EcalSampleMask, EcalSampleMaskRcd> sampleMaskToken_;
     edm::ESGetToken<EcalTimeOffsetConstant, EcalTimeOffsetConstantRcd> timeOffsetConstantToken_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(EcalMultifitConditionsHostESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(EcalMultifitConditionsHostESProducer);

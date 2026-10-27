@@ -1,4 +1,4 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 #include <Eigen/Core>
 #include <Eigen/Dense>
@@ -12,7 +12,7 @@
 #include "PhysicsTools/PyTorchAlpaka/interface/GetDevice.h"
 #include "PhysicsTools/PyTorchAlpaka/interface/SoAConversion.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
+namespace AV2P_ACCELERATOR_NAMESPACE::torchtest {
 
   class TestSOADataTypesAlpaka : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(TestSOADataTypesAlpaka);
@@ -60,8 +60,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
 
   class FillKernel {
   public:
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC void operator()(TAcc const& acc, SoACollectionView view) const {
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC void operator()(TAcc const& acc, SoACollectionView view) const {
       if (cms::alpakatools::once_per_grid(acc)) {
         view.type() = 4;
         view.someNumber() = 5;
@@ -90,44 +90,44 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
 
   class InputVerifyKernel {
   public:
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC void operator()(TAcc const& acc, SoACollectionView view) const {
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC void operator()(TAcc const& acc, SoACollectionView view) const {
       if (cms::alpakatools::once_per_grid(acc)) {
-        ALPAKA_ASSERT_ACC(view.type() == 4);
-        ALPAKA_ASSERT_ACC(view.someNumber() == 5);
+        AV2P_ASSERT_ACC(view.type() == 4);
+        AV2P_ASSERT_ACC(view.someNumber() == 5);
       }
 
       for (auto i : cms::alpakatools::uniform_elements(acc, view.metadata().size())) {
-        ALPAKA_ASSERT_ACC(view[i].a()(0) == 1 + i);
-        ALPAKA_ASSERT_ACC(view[i].a()(1) == 2 + i);
-        ALPAKA_ASSERT_ACC(view[i].a()(2) == 3 + i);
+        AV2P_ASSERT_ACC(view[i].a()(0) == 1 + i);
+        AV2P_ASSERT_ACC(view[i].a()(1) == 2 + i);
+        AV2P_ASSERT_ACC(view[i].a()(2) == 3 + i);
 
-        ALPAKA_ASSERT_ACC(view[i].b()(0) == 4 + i);
-        ALPAKA_ASSERT_ACC(view[i].b()(1) == 5 + i);
-        ALPAKA_ASSERT_ACC(view[i].b()(2) == 6 + i);
+        AV2P_ASSERT_ACC(view[i].b()(0) == 4 + i);
+        AV2P_ASSERT_ACC(view[i].b()(1) == 5 + i);
+        AV2P_ASSERT_ACC(view[i].b()(2) == 6 + i);
 
-        ALPAKA_ASSERT_ACC(view[i].c()(0, 0) == 4 + i);
-        ALPAKA_ASSERT_ACC(view[i].c()(0, 1) == 6 + i);
-        ALPAKA_ASSERT_ACC(view[i].c()(1, 0) == 8 + i);
-        ALPAKA_ASSERT_ACC(view[i].c()(1, 1) == 10 + i);
+        AV2P_ASSERT_ACC(view[i].c()(0, 0) == 4 + i);
+        AV2P_ASSERT_ACC(view[i].c()(0, 1) == 6 + i);
+        AV2P_ASSERT_ACC(view[i].c()(1, 0) == 8 + i);
+        AV2P_ASSERT_ACC(view[i].c()(1, 1) == 10 + i);
 
-        ALPAKA_ASSERT_ACC(view.x()[i] == 12 + i);
-        ALPAKA_ASSERT_ACC(view.y()[i] == 1 + 2.5 * i);
-        ALPAKA_ASSERT_ACC(view.z()[i] == 36 * i);
+        AV2P_ASSERT_ACC(view.x()[i] == 12 + i);
+        AV2P_ASSERT_ACC(view.y()[i] == 1 + 2.5 * i);
+        AV2P_ASSERT_ACC(view.z()[i] == 36 * i);
       }
     }
   };
 
   class TestOutputVerifyKernel {
   public:
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC void operator()(TAcc const& acc, SoACollectionView view) const {
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC void operator()(TAcc const& acc, SoACollectionView view) const {
       for (auto i : cms::alpakatools::uniform_elements(acc, view.metadata().size())) {
-        ALPAKA_ASSERT_ACC(view.x()[i] - view.v()[i] < tol);
-        ALPAKA_ASSERT_ACC(view.x()[i] - view.v()[i] > -tol);
+        AV2P_ASSERT_ACC(view.x()[i] - view.v()[i] < tol);
+        AV2P_ASSERT_ACC(view.x()[i] - view.v()[i] > -tol);
 
-        ALPAKA_ASSERT_ACC(view.y()[i] - view.w()[i] < tol);
-        ALPAKA_ASSERT_ACC(view.y()[i] - view.w()[i] > -tol);
+        AV2P_ASSERT_ACC(view.y()[i] - view.w()[i] < tol);
+        AV2P_ASSERT_ACC(view.y()[i] - view.w()[i] > -tol);
       }
     }
   };
@@ -136,15 +136,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
     size_t items = 64;
     auto groups = cms::alpakatools::divide_up_by(collection->metadata().size(), items);
     auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(groups, items);
-    ::alpaka::exec<Acc1D>(queue, workDiv, FillKernel{}, collection.view());
-    ::alpaka::exec<Acc1D>(queue, workDiv, InputVerifyKernel{}, collection.view());
+    ::aV2P::exec<Acc1D>(queue, workDiv, FillKernel{}, collection.view());
+    ::aV2P::exec<Acc1D>(queue, workDiv, InputVerifyKernel{}, collection.view());
   }
 
   void check_output(Queue& queue, SoACollection& collection) {
     size_t items = 64;
     auto groups = cms::alpakatools::divide_up_by(collection->metadata().size(), items);
     auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(groups, items);
-    ::alpaka::exec<Acc1D>(queue, workDiv, TestOutputVerifyKernel{}, collection.view());
+    ::aV2P::exec<Acc1D>(queue, workDiv, TestOutputVerifyKernel{}, collection.view());
   }
 
   void check(SoAHostCollectionView& view, std::vector<::torch::IValue>& tensors) {
@@ -192,8 +192,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
 
   void TestSOADataTypesAlpaka::testInterface() {
     Platform platform;
-    std::vector<Device> alpakaDevices = ::alpaka::getDevs(platform);
-    const auto& alpakaHost = ::alpaka::getDevByIdx(::alpaka_common::PlatformHost(), 0u);
+    std::vector<Device> alpakaDevices = ::aV2P::getDevs(platform);
+    const auto& alpakaHost = ::aV2P::getDevByIdx(::alpaka_common::PlatformHost(), 0u);
     CPPUNIT_ASSERT(alpakaDevices.size());
     const auto& alpakaDevice = alpakaDevices[0];
     Queue queue{alpakaDevice};
@@ -219,16 +219,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
     std::vector<::torch::IValue> tensors = cms::torch::alpakatools::detail::convertInput(input, torchDevice);
 
     SoAHostCollection hostCollection(queue, batch_size);
-    alpaka::memcpy(queue, hostCollection.buffer(), deviceCollection.buffer());
-    alpaka::wait(queue);
+    aV2P::memcpy(queue, hostCollection.buffer(), deviceCollection.buffer());
+    aV2P::wait(queue);
 
     check(hostCollection.view(), tensors);
   };
 
   void TestSOADataTypesAlpaka::testMultiOutput() {
     Platform platform;
-    std::vector<Device> alpakaDevices = ::alpaka::getDevs(platform);
-    const auto& alpakaHost = ::alpaka::getDevByIdx(::alpaka_common::PlatformHost(), 0u);
+    std::vector<Device> alpakaDevices = ::aV2P::getDevs(platform);
+    const auto& alpakaHost = ::aV2P::getDevByIdx(::alpaka_common::PlatformHost(), 0u);
     CPPUNIT_ASSERT(alpakaDevices.size());
     const auto& alpakaDevice = alpakaDevices[0];
     Queue queue{alpakaDevice};
@@ -259,7 +259,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
 
   void TestSOADataTypesAlpaka::testSingleElement() {
     Platform platform;
-    std::vector<Device> alpakaDevices = ::alpaka::getDevs(platform);
+    std::vector<Device> alpakaDevices = ::aV2P::getDevs(platform);
     CPPUNIT_ASSERT(alpakaDevices.size());
     const auto& alpakaDevice = alpakaDevices[0];
     Queue queue(alpakaDevice);
@@ -288,14 +288,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
 
     // Check if tensor list built correctly
     SoAHostCollection hostCollection(queue, batch_size);
-    ::alpaka::memcpy(queue, hostCollection.buffer(), deviceCollection.buffer());
-    ::alpaka::wait(queue);
+    ::aV2P::memcpy(queue, hostCollection.buffer(), deviceCollection.buffer());
+    ::aV2P::wait(queue);
     check(hostCollection.view(), tensors);
   };
 
   void TestSOADataTypesAlpaka::testNoElement() {
     Platform platform;
-    std::vector<Device> alpakaDevices = ::alpaka::getDevs(platform);
+    std::vector<Device> alpakaDevices = ::aV2P::getDevs(platform);
     CPPUNIT_ASSERT(alpakaDevices.size());
     const auto& alpakaDevice = alpakaDevices[0];
     Queue queue(alpakaDevice);
@@ -326,7 +326,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
   void TestSOADataTypesAlpaka::testEmptyMetadata() {
     // alpaka setup
     Platform platform;
-    std::vector<Device> alpakaDevices = ::alpaka::getDevs(platform);
+    std::vector<Device> alpakaDevices = ::aV2P::getDevs(platform);
     CPPUNIT_ASSERT(alpakaDevices.size());
     const auto& alpakaDevice = alpakaDevices[0];
     Queue queue(alpakaDevice);
@@ -346,4 +346,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
     CPPUNIT_ASSERT(tensors.size() == 0);
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::torchtest

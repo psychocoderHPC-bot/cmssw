@@ -1,7 +1,7 @@
 #ifndef RecoVertex_PixelVertexFinding_plugins_PixelVertexWorkSpaceSoAHostAlpaka_h
 #define RecoVertex_PixelVertexFinding_plugins_PixelVertexWorkSpaceSoAHostAlpaka_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Portable/interface/PortableHostCollection.h"
 #include "RecoVertex/PixelVertexFinding/interface/PixelVertexWorkSpaceLayout.h"

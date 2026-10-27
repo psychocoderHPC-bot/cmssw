@@ -14,7 +14,7 @@
 #include "Quintuplet.h"
 #include "TripletAccessors.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
+namespace AV2P_ACCELERATOR_NAMESPACE::lst {
 
   // Pre-loaded pixel segment data, invariant across triplets for a given pixel segment.
   // Hoisted to avoid redundant SoA loads through the pT3 function chain.
@@ -30,7 +30,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     uint8_t hitDetBits;
   };
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE PixelSeedData loadPixelSeedData(PixelSeedsConst pixelSeeds,
+  AV2P_FN_ACC AV2P_FN_INLINE PixelSeedData loadPixelSeedData(PixelSeedsConst pixelSeeds,
                                                                  PixelSegmentsConst pixelSegments,
                                                                  MiniDoubletsConst mds,
                                                                  SegmentsConst segments,
@@ -65,8 +65,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     return pixelData;
   }
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool runTripletDefaultAlgoPPBB(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool runTripletDefaultAlgoPPBB(TAcc const& acc,
                                                                 ModulesConst modules,
                                                                 MiniDoubletsConst mds,
                                                                 SegmentsConst segments,
@@ -77,8 +77,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
                                                                 unsigned int segmentMD0Index,
                                                                 unsigned int segmentMD1Index,
                                                                 const float ptCut);
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool runTripletDefaultAlgoPPEE(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool runTripletDefaultAlgoPPEE(TAcc const& acc,
                                                                 ModulesConst modules,
                                                                 MiniDoubletsConst mds,
                                                                 SegmentsConst segments,
@@ -90,7 +90,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
                                                                 unsigned int segmentMD1Index,
                                                                 const float ptCut);
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void addPixelTripletToMemory(ModulesConst modules,
+  AV2P_FN_ACC AV2P_FN_INLINE void addPixelTripletToMemory(ModulesConst modules,
                                                               MiniDoubletsConst mds,
                                                               SegmentsConst segments,
                                                               TripletsConst triplets,
@@ -170,8 +170,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 #endif
   }
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool runPixelTrackletDefaultAlgopT3(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool runPixelTrackletDefaultAlgopT3(TAcc const& acc,
                                                                      ModulesConst modules,
                                                                      MiniDoubletsConst mds,
                                                                      SegmentsConst segments,
@@ -214,7 +214,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     return false;
   }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool passPT3RZChiSquaredCuts(ModulesConst modules,
+  AV2P_FN_ACC AV2P_FN_INLINE bool passPT3RZChiSquaredCuts(ModulesConst modules,
                                                               uint16_t lowerModuleIndex1,
                                                               uint16_t lowerModuleIndex2,
                                                               uint16_t lowerModuleIndex3,
@@ -266,8 +266,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   }
 
   //TODO: merge this one and the pT5 function later into a single function
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE float computePT3RPhiChiSquared(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE float computePT3RPhiChiSquared(TAcc const& acc,
                                                                 ModulesConst modules,
                                                                 uint16_t* lowerModuleIndices,
                                                                 float g,
@@ -304,7 +304,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       else if (moduleSubdet == Barrel and moduleType == PS and moduleSide != Center) {
         delta1[i] = inv1;
         isFlat[i] = false;
-        delta2[i] = (inv2 * drdz / alpaka::math::sqrt(acc, 1 + drdz * drdz));
+        delta2[i] = (inv2 * drdz / aV2P::math::sqrt(acc, 1 + drdz * drdz));
       }
       //category 4 - endcap PS
       else if (moduleSubdet == Endcap and moduleType == PS) {
@@ -337,7 +337,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     return chiSquared;
   }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE float computePT3RPhiChiSquaredInwards(
+  AV2P_FN_ACC AV2P_FN_INLINE float computePT3RPhiChiSquaredInwards(
       float g, float f, float r, float* xPix, float* yPix) {
     float residual = (xPix[0] - g) * (xPix[0] - g) + (yPix[0] - f) * (yPix[0] - f) - r * r;
     float chiSquared = residual * residual;
@@ -348,7 +348,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     return chiSquared;
   }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool checkIntervalOverlappT3(float firstMin,
+  AV2P_FN_ACC AV2P_FN_INLINE bool checkIntervalOverlappT3(float firstMin,
                                                               float firstMax,
                                                               float secondMin,
                                                               float secondMax) {
@@ -356,8 +356,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   }
 
   /*bounds for high Pt taken from : http://uaf-10.t2.ucsd.edu/~bsathian/SDL/T5_efficiency/efficiencies/new_efficiencies/efficiencies_20210513_T5_recovering_high_Pt_efficiencies/highE_radius_matching/highE_bounds.txt */
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool passRadiusCriterionBBB(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool passRadiusCriterionBBB(TAcc const& acc,
                                                              float pixelRadius,
                                                              float pixelRadiusError,
                                                              float tripletRadius) {
@@ -370,18 +370,18 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     }
 
     float tripletRadiusInvMax = (1 + tripletInvRadiusErrorBound) / tripletRadius;
-    float tripletRadiusInvMin = alpaka::math::max(acc, (1 - tripletInvRadiusErrorBound) / tripletRadius, 0.0f);
+    float tripletRadiusInvMin = aV2P::math::max(acc, (1 - tripletInvRadiusErrorBound) / tripletRadius, 0.0f);
 
     float pixelRadiusInvMax =
-        alpaka::math::max(acc, (1 + pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius - pixelRadiusError));
+        aV2P::math::max(acc, (1 + pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius - pixelRadiusError));
     float pixelRadiusInvMin =
-        alpaka::math::min(acc, (1 - pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius + pixelRadiusError));
+        aV2P::math::min(acc, (1 - pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius + pixelRadiusError));
 
     return checkIntervalOverlappT3(tripletRadiusInvMin, tripletRadiusInvMax, pixelRadiusInvMin, pixelRadiusInvMax);
   }
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool passRadiusCriterionBBE(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool passRadiusCriterionBBE(TAcc const& acc,
                                                              float pixelRadius,
                                                              float pixelRadiusError,
                                                              float tripletRadius) {
@@ -394,18 +394,18 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     }
 
     float tripletRadiusInvMax = (1 + tripletInvRadiusErrorBound) / tripletRadius;
-    float tripletRadiusInvMin = alpaka::math::max(acc, (1 - tripletInvRadiusErrorBound) / tripletRadius, 0.0f);
+    float tripletRadiusInvMin = aV2P::math::max(acc, (1 - tripletInvRadiusErrorBound) / tripletRadius, 0.0f);
 
     float pixelRadiusInvMax =
-        alpaka::math::max(acc, (1 + pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius - pixelRadiusError));
+        aV2P::math::max(acc, (1 + pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius - pixelRadiusError));
     float pixelRadiusInvMin =
-        alpaka::math::min(acc, (1 - pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius + pixelRadiusError));
+        aV2P::math::min(acc, (1 - pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius + pixelRadiusError));
 
     return checkIntervalOverlappT3(tripletRadiusInvMin, tripletRadiusInvMax, pixelRadiusInvMin, pixelRadiusInvMax);
   }
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool passRadiusCriterionBEE(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool passRadiusCriterionBEE(TAcc const& acc,
                                                              float pixelRadius,
                                                              float pixelRadiusError,
                                                              float tripletRadius) {
@@ -419,19 +419,19 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     }
 
     float tripletRadiusInvMax = (1 + tripletInvRadiusErrorBound) / tripletRadius;
-    float tripletRadiusInvMin = alpaka::math::max(acc, (1 - tripletInvRadiusErrorBound) / tripletRadius, 0.0f);
+    float tripletRadiusInvMin = aV2P::math::max(acc, (1 - tripletInvRadiusErrorBound) / tripletRadius, 0.0f);
 
     float pixelRadiusInvMax =
-        alpaka::math::max(acc, (1 + pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius - pixelRadiusError));
+        aV2P::math::max(acc, (1 + pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius - pixelRadiusError));
     float pixelRadiusInvMin =
-        alpaka::math::min(acc, (1 - pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius + pixelRadiusError));
-    pixelRadiusInvMin = alpaka::math::max(acc, pixelRadiusInvMin, 0.0f);
+        aV2P::math::min(acc, (1 - pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius + pixelRadiusError));
+    pixelRadiusInvMin = aV2P::math::max(acc, pixelRadiusInvMin, 0.0f);
 
     return checkIntervalOverlappT3(tripletRadiusInvMin, tripletRadiusInvMax, pixelRadiusInvMin, pixelRadiusInvMax);
   }
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool passRadiusCriterionEEE(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool passRadiusCriterionEEE(TAcc const& acc,
                                                              float pixelRadius,
                                                              float pixelRadiusError,
                                                              float tripletRadius) {
@@ -445,19 +445,19 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     }
 
     float tripletRadiusInvMax = (1 + tripletInvRadiusErrorBound) / tripletRadius;
-    float tripletRadiusInvMin = alpaka::math::max(acc, (1 - tripletInvRadiusErrorBound) / tripletRadius, 0.0f);
+    float tripletRadiusInvMin = aV2P::math::max(acc, (1 - tripletInvRadiusErrorBound) / tripletRadius, 0.0f);
 
     float pixelRadiusInvMax =
-        alpaka::math::max(acc, (1 + pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius - pixelRadiusError));
+        aV2P::math::max(acc, (1 + pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius - pixelRadiusError));
     float pixelRadiusInvMin =
-        alpaka::math::min(acc, (1 - pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius + pixelRadiusError));
-    pixelRadiusInvMin = alpaka::math::max(acc, 0.0f, pixelRadiusInvMin);
+        aV2P::math::min(acc, (1 - pixelInvRadiusErrorBound) / pixelRadius, 1.f / (pixelRadius + pixelRadiusError));
+    pixelRadiusInvMin = aV2P::math::max(acc, 0.0f, pixelRadiusInvMin);
 
     return checkIntervalOverlappT3(tripletRadiusInvMin, tripletRadiusInvMax, pixelRadiusInvMin, pixelRadiusInvMax);
   }
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool passRadiusCriterion(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool passRadiusCriterion(TAcc const& acc,
                                                           ModulesConst modules,
                                                           float pixelRadius,
                                                           float pixelRadiusError,
@@ -476,8 +476,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     }
   }
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE float computePT3RZChiSquared(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE float computePT3RZChiSquared(TAcc const& acc,
                                                               ModulesConst modules,
                                                               const uint16_t* lowerModuleIndices,
                                                               const float* rtPix,
@@ -517,14 +517,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       // calculation is detailed documented here https://indico.cern.ch/event/1185895/contributions/4982756/attachments/2526561/4345805/helix%20pT3%20summarize.pdf
       float diffr = 0.f;
       float diffz = 0.f;
-      float p = alpaka::math::sqrt(acc, Px * Px + Py * Py + Pz * Pz);
+      float p = aV2P::math::sqrt(acc, Px * Px + Py * Py + Pz * Pz);
 
       float rou = a / p;
       if (moduleSubdet == Endcap) {
         float s = (zsi - z1) * p / Pz;
-        float x = x1 + Px / a * alpaka::math::sin(acc, rou * s) - Py / a * (1 - alpaka::math::cos(acc, rou * s));
-        float y = y1 + Py / a * alpaka::math::sin(acc, rou * s) + Px / a * (1 - alpaka::math::cos(acc, rou * s));
-        diffr = alpaka::math::abs(acc, rtsi - alpaka::math::sqrt(acc, x * x + y * y)) * 100;
+        float x = x1 + Px / a * aV2P::math::sin(acc, rou * s) - Py / a * (1 - aV2P::math::cos(acc, rou * s));
+        float y = y1 + Py / a * aV2P::math::sin(acc, rou * s) + Px / a * (1 - aV2P::math::cos(acc, rou * s));
+        diffr = aV2P::math::abs(acc, rtsi - aV2P::math::sqrt(acc, x * x + y * y)) * 100;
       }
 
       if (moduleSubdet == Barrel) {
@@ -534,13 +534,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
         float A = paraB * paraB + paraC * paraC;
         float B = 2 * paraA * paraB;
         float C = paraA * paraA - paraC * paraC;
-        float sol1 = (-B + alpaka::math::sqrt(acc, B * B - 4 * A * C)) / (2 * A);
-        float sol2 = (-B - alpaka::math::sqrt(acc, B * B - 4 * A * C)) / (2 * A);
-        float solz1 = alpaka::math::asin(acc, sol1) / rou * Pz / p + z1;
-        float solz2 = alpaka::math::asin(acc, sol2) / rou * Pz / p + z1;
-        float diffz1 = alpaka::math::abs(acc, solz1 - zsi) * 100;
-        float diffz2 = alpaka::math::abs(acc, solz2 - zsi) * 100;
-        diffz = alpaka::math::min(acc, diffz1, diffz2);
+        float sol1 = (-B + aV2P::math::sqrt(acc, B * B - 4 * A * C)) / (2 * A);
+        float sol2 = (-B - aV2P::math::sqrt(acc, B * B - 4 * A * C)) / (2 * A);
+        float solz1 = aV2P::math::asin(acc, sol1) / rou * Pz / p + z1;
+        float solz2 = aV2P::math::asin(acc, sol2) / rou * Pz / p + z1;
+        float diffz1 = aV2P::math::abs(acc, solz1 - zsi) * 100;
+        float diffz2 = aV2P::math::abs(acc, solz2 - zsi) * 100;
+        diffz = aV2P::math::min(acc, diffz1, diffz2);
       }
 
       residual = moduleSubdet == Barrel ? diffz : diffr;
@@ -561,13 +561,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       RMSE += (residual * residual) / error2;
     }
 
-    RMSE = alpaka::math::sqrt(acc, 0.2f * RMSE);  // Divided by the degree of freedom 5.
+    RMSE = aV2P::math::sqrt(acc, 0.2f * RMSE);  // Divided by the degree of freedom 5.
 
     return RMSE;
   }
 
-  template <typename WP = dnn::pt3dnn::pT3WP, alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool runPixelTripletDefaultAlgo(TAcc const& acc,
+  template <typename WP = dnn::pt3dnn::pT3WP, aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool runPixelTripletDefaultAlgo(TAcc const& acc,
                                                                  ModulesConst modules,
                                                                  MiniDoubletsConst mds,
                                                                  SegmentsConst segments,
@@ -708,7 +708,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   }
 
   struct CreatePixelTripletsFromMap {
-    ALPAKA_FN_ACC void operator()(Acc3D const& acc,
+    AV2P_FN_ACC void operator()(Acc3D const& acc,
                                   ModulesConst modules,
                                   ModulesPixelConst modulesPixel,
                                   ObjectRangesConst ranges,
@@ -812,14 +812,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
                                       .mdIndices()[triplets.segmentIndices()[outerTripletIndex][0]][layer2_adjustment]];
               float score = rPhiChiSquared + rPhiChiSquaredInwards;
               unsigned int totOccupancyPixelTriplets =
-                  alpaka::atomicAdd(acc, &pixelTriplets.totOccupancyPixelTriplets(), 1u, alpaka::hierarchy::Threads{});
+                  aV2P::atomicAdd(acc, &pixelTriplets.totOccupancyPixelTriplets(), 1u, aV2P::hierarchy::Threads{});
               if (totOccupancyPixelTriplets >= n_max_pixel_triplets) {
 #ifdef WARNINGS
                 printf("Pixel Triplet excess alert!\n");
 #endif
               } else {
                 unsigned int pixelTripletIndex =
-                    alpaka::atomicAdd(acc, &pixelTriplets.nPixelTriplets(), 1u, alpaka::hierarchy::Threads{});
+                    aV2P::atomicAdd(acc, &pixelTriplets.nPixelTriplets(), 1u, aV2P::hierarchy::Threads{});
                 addPixelTripletToMemory(modules,
                                         mds,
                                         segments,
@@ -851,8 +851,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     }
   };
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool runTripletDefaultAlgoPPBB(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool runTripletDefaultAlgoPPBB(TAcc const& acc,
                                                                 ModulesConst modules,
                                                                 MiniDoubletsConst mds,
                                                                 SegmentsConst segments,
@@ -892,22 +892,22 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     float pz = pixelData.pz;
     float ptErr = pixelData.ptErr;
     float etaErr = pixelData.etaErr;
-    ptSLo = alpaka::math::max(acc, ptCut, ptSLo - 10.0f * alpaka::math::max(acc, ptErr, 0.005f * ptSLo));
-    ptSLo = alpaka::math::min(acc, 10.0f, ptSLo);
+    ptSLo = aV2P::math::max(acc, ptCut, ptSLo - 10.0f * aV2P::math::max(acc, ptErr, 0.005f * ptSLo));
+    ptSLo = aV2P::math::min(acc, 10.0f, ptSLo);
     float alpha1GeV_OutLo =
-        alpaka::math::asin(acc, alpaka::math::min(acc, rt_OutLo * k2Rinv1GeVf / ptCut, kSinAlphaMax));
+        aV2P::math::asin(acc, aV2P::math::min(acc, rt_OutLo * k2Rinv1GeVf / ptCut, kSinAlphaMax));
     // Outer segment beginning rt divided by inner segment beginning rt;
     const float rtRelDiff = rt_OutLo / rt_InOut - 1.f;
 
     // The track can bend in r-z plane slightly
-    const float dzDrtScale = alpaka::math::tan(acc, alpha1GeV_OutLo) / alpha1GeV_OutLo;
+    const float dzDrtScale = aV2P::math::tan(acc, alpha1GeV_OutLo) / alpha1GeV_OutLo;
     // adjust for fwd and bwd to keep zHi > zLo
     const float dzDrtScaleHi = z_InUp * rtRelDiff < 0.f ? 1.f : dzDrtScale;
     const float dzDrtScaleLo = z_InUp * rtRelDiff > 0.f ? 1.f : dzDrtScale;
     const float zpitch_InLo = 0.05f;
     bool isPLSinOT =
         pixelData.hitDetBits &
-        (1 << (alpaka::math::min(acc, static_cast<unsigned int>(pixelData.nHits), kMaxPLSHitBitsInHitsSoA) - 1));
+        (1 << (aV2P::math::min(acc, static_cast<unsigned int>(pixelData.nHits), kMaxPLSHitBitsInHitsSoA) - 1));
     bool isPS_OutLo = (modules.moduleType()[segmentInnerModuleIndex] == PS);
     bool isTilted_OutLo = (modules.sides()[segmentInnerModuleIndex] != Center);
     // same layer pLS is P-size, 50 um otherwise
@@ -915,9 +915,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     const float zpitch_OutLo = (isPS_OutLo ? kPixelPSZpitch : kStrip2SZpitch);  // could reduce using dzdrt for tilted
     const float zGeom = zpitch_InLo + zpitch_OutLo;
     const float rGeom = zpitch_InOut + zpitch_OutLo;  // could reduce using dzdrt for tilted
-    const float dLum = alpaka::math::copysign(acc, kDeltaZLum, rtRelDiff);
+    const float dLum = aV2P::math::copysign(acc, kDeltaZLum, rtRelDiff);
     // could reduce dR uncertrainty using dzdrt
-    const float dRtRelZ = isTilted_OutLo ? alpaka::math::abs(acc, rGeom / rt_InOut * z_InUp) : 0.f;
+    const float dRtRelZ = isTilted_OutLo ? aV2P::math::abs(acc, rGeom / rt_InOut * z_InUp) : 0.f;
     // dzDrtScale correction is only on outer end
     zHi = z_InUp + dRtRelZ + (z_InUp + dLum) * rtRelDiff * dzDrtScaleHi + (zpitch_InOut + zpitch_OutLo);
     zLo = z_InUp - dRtRelZ + (z_InUp - dLum) * rtRelDiff * dzDrtScaleLo - (zpitch_InOut + zpitch_OutLo);
@@ -927,10 +927,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     const float cosh2Eta = 1.f + (pz * pz) / (ptIn * ptIn);
 
     const float drt_OutLo_InUp = (rt_OutLo - rt_InUp);
-    const float drt_OutLo_InUp_abs = alpaka::math::abs(acc, drt_OutLo_InUp);
+    const float drt_OutLo_InUp_abs = aV2P::math::abs(acc, drt_OutLo_InUp);
     const float drt_OutLo_InUp_2 = drt_OutLo_InUp * drt_OutLo_InUp;
 
-    const float r3_InUp = alpaka::math::sqrt(acc, z_InUp * z_InUp + rt_InUp * rt_InUp);
+    const float r3_InUp = aV2P::math::sqrt(acc, z_InUp * z_InUp + rt_InUp * rt_InUp);
 
     float drt_InSeg = rt_InOut - rt_InLo;
 
@@ -943,7 +943,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     dzErr += isTilted_OutLo ? rGeom * rGeom * dzDrIn * dzDrIn : 0.f;      // radius err
     dzErr += muls2 * drt_OutLo_InUp_2 / 3.f * cosh2Eta;                   // multiple scattering
     dzErr += zGeom * zGeom;                                               // z err
-    dzErr = alpaka::math::sqrt(acc, dzErr);
+    dzErr = aV2P::math::sqrt(acc, dzErr);
 
     const float dzMean =
         dzDrIn * drt_OutLo_InUp *
@@ -955,7 +955,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       return false;
 
     const float pvOffset = 0.1f / rt_OutLo;
-    dPhiCut = alpha1GeV_OutLo + alpaka::math::sqrt(acc, muls2 + pvOffset * pvOffset);
+    dPhiCut = alpha1GeV_OutLo + aV2P::math::sqrt(acc, muls2 + pvOffset * pvOffset);
 
     //no dphipos cut
     float midPointX = 0.5f * (x_InLo + x_OutLo);
@@ -965,7 +965,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     float diffY = y_OutLo - y_InLo;
 
     dPhi = cms::alpakatools::deltaPhi(acc, midPointX, midPointY, diffX, diffY);
-    if (alpaka::math::abs(acc, dPhi) > dPhiCut)
+    if (aV2P::math::abs(acc, dPhi) > dPhiCut)
       return false;
 
     //lots of array accesses below this...
@@ -984,7 +984,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
     float tl_axis_x = x_OutUp - x_InUp;
     float tl_axis_y = y_OutUp - y_InUp;
-    float drt_tl_axis = alpaka::math::sqrt(acc, tl_axis_x * tl_axis_x + tl_axis_y * tl_axis_y);
+    float drt_tl_axis = aV2P::math::sqrt(acc, tl_axis_x * tl_axis_x + tl_axis_y * tl_axis_y);
     if (drt_tl_axis < 0.2f)  // avoid very uncertain math. Sub-optimal: could change a ref point
       return true;
 
@@ -997,10 +997,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     betaIn = -cms::alpakatools::deltaPhi(acc, px, py, tl_axis_x, tl_axis_y);
     betaOut = -alpha_OutUp + cms::alpakatools::deltaPhi(acc, x_OutUp, y_OutUp, tl_axis_x, tl_axis_y);
     const float drt_tli =
-        alpaka::math::sqrt(acc, (x_OutLo - x_InUp) * (x_OutLo - x_InUp) + (y_OutLo - y_InUp) * (y_OutLo - y_InUp));
-    if (drt_tli < 0.1f && alpaka::math::abs(acc, betaOut) < 1e-3f) {
+        aV2P::math::sqrt(acc, (x_OutLo - x_InUp) * (x_OutLo - x_InUp) + (y_OutLo - y_InUp) * (y_OutLo - y_InUp));
+    if (drt_tli < 0.1f && aV2P::math::abs(acc, betaOut) < 1e-3f) {
       // 3-point degeneracy: fix the sign of betaOut
-      betaOut = alpaka::math::copysign(acc, betaOut, betaIn);
+      betaOut = aV2P::math::copysign(acc, betaOut, betaIn);
     }
     float betaOutRHmin = betaOut;
     float betaOutRHmax = betaOut;
@@ -1037,7 +1037,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     //beta computation
     //innerOuterAnchor - innerInnerAnchor
     const float rt_InSeg =
-        alpaka::math::sqrt(acc, (x_InUp - x_InLo) * (x_InUp - x_InLo) + (y_InUp - y_InLo) * (y_InUp - y_InLo));
+        aV2P::math::sqrt(acc, (x_InUp - x_InLo) * (x_InUp - x_InLo) + (y_InUp - y_InLo) * (y_InUp - y_InLo));
 
     //no betaIn cut for the pixels
     pt_beta = ptIn;
@@ -1045,50 +1045,50 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     int lIn = 0;
     int lOut = isEC_lastLayer ? 11 : 5;
     float sdOut_dr =
-        alpaka::math::sqrt(acc, (x_OutUp - x_OutLo) * (x_OutUp - x_OutLo) + (y_OutUp - y_OutLo) * (y_OutUp - y_OutLo));
+        aV2P::math::sqrt(acc, (x_OutUp - x_OutLo) * (x_OutUp - x_OutLo) + (y_OutUp - y_OutLo) * (y_OutUp - y_OutLo));
     float sdOut_d = rt_OutUp - rt_OutLo;
     bool useBetaInSign = drt_tl_axis < sdOut_dr && drt_tli < sdOut_dr;  // pLS ends inside the LS
 
     runDeltaBetaIterations(acc, betaIn, betaOut, pt_beta, rt_InSeg, sdOut_dr, drt_tl_axis, lIn, useBetaInSign);
     // wrap around pi (do for all)
-    if (alpaka::math::abs(acc, betaIn) > kPi / 2.f || alpaka::math::abs(acc, betaOut) > kPi / 2.f) {
+    if (aV2P::math::abs(acc, betaIn) > kPi / 2.f || aV2P::math::abs(acc, betaOut) > kPi / 2.f) {
       betaIn = cms::alpakatools::reducePhiRange(acc, kPi - betaIn);
       betaOut = cms::alpakatools::reducePhiRange(acc, kPi - betaOut);
       betaOutRHmin = cms::alpakatools::reducePhiRange(acc, kPi - betaOutRHmin);
       betaOutRHmax = cms::alpakatools::reducePhiRange(acc, kPi - betaOutRHmax);
     }
 
-    const float betaOutMMSF = (alpaka::math::abs(acc, betaOutRHmin + betaOutRHmax) > 0)
-                                  ? (2.f * betaOut / alpaka::math::abs(acc, betaOutRHmin + betaOutRHmax))
+    const float betaOutMMSF = (aV2P::math::abs(acc, betaOutRHmin + betaOutRHmax) > 0)
+                                  ? (2.f * betaOut / aV2P::math::abs(acc, betaOutRHmin + betaOutRHmax))
                                   : 0.;
     betaOutRHmin *= betaOutMMSF;
     betaOutRHmax *= betaOutMMSF;
 
     float pt_beta_trunc =
-        alpaka::math::min(acc, alpaka::math::abs(acc, pt_beta), kPt_betaMax);  // truncated to kPt_betaMax
+        aV2P::math::min(acc, aV2P::math::abs(acc, pt_beta), kPt_betaMax);  // truncated to kPt_betaMax
     const float dBetaMuls2 = thetaMuls2 * 16.f / (pt_beta_trunc * pt_beta_trunc);
     const float alphaInAbsReg =
-        alpaka::math::max(acc,
-                          alpaka::math::abs(acc, alpha_InLo),
-                          alpaka::math::asin(acc, alpaka::math::min(acc, rt_InUp * k2Rinv1GeVf / 3.0f, kSinAlphaMax)));
+        aV2P::math::max(acc,
+                          aV2P::math::abs(acc, alpha_InLo),
+                          aV2P::math::asin(acc, aV2P::math::min(acc, rt_InUp * k2Rinv1GeVf / 3.0f, kSinAlphaMax)));
     const float alphaOutAbsReg =
-        alpaka::math::max(acc,
-                          alpaka::math::abs(acc, alpha_OutLo),
-                          alpaka::math::asin(acc, alpaka::math::min(acc, rt_OutLo * k2Rinv1GeVf / 3.0f, kSinAlphaMax)));
-    const float dBetaInLum = lIn < 11 ? 0.0f : alpaka::math::abs(acc, alphaInAbsReg * kDeltaZLum / z_InUp);
-    const float dBetaOutLum = lOut < 11 ? 0.0f : alpaka::math::abs(acc, alphaOutAbsReg * kDeltaZLum / z_OutLo);
+        aV2P::math::max(acc,
+                          aV2P::math::abs(acc, alpha_OutLo),
+                          aV2P::math::asin(acc, aV2P::math::min(acc, rt_OutLo * k2Rinv1GeVf / 3.0f, kSinAlphaMax)));
+    const float dBetaInLum = lIn < 11 ? 0.0f : aV2P::math::abs(acc, alphaInAbsReg * kDeltaZLum / z_InUp);
+    const float dBetaOutLum = lOut < 11 ? 0.0f : aV2P::math::abs(acc, alphaOutAbsReg * kDeltaZLum / z_OutLo);
     const float dBetaLum2 = (dBetaInLum + dBetaOutLum) * (dBetaInLum + dBetaOutLum);
 
-    const float sinDPhi = alpaka::math::sin(acc, dPhi);
+    const float sinDPhi = aV2P::math::sin(acc, dPhi);
     const float dBetaRIn2 = 0;  // TODO-RH
 
     float dBetaROut = 0;
     if (isEC_lastLayer) {
       dBetaROut =
-          (alpaka::math::sqrt(acc,
+          (aV2P::math::sqrt(acc,
                               mds.anchorHighEdgeX()[segmentMD1Index] * mds.anchorHighEdgeX()[segmentMD1Index] +
                                   mds.anchorHighEdgeY()[segmentMD1Index] * mds.anchorHighEdgeY()[segmentMD1Index]) -
-           alpaka::math::sqrt(acc,
+           aV2P::math::sqrt(acc,
                               mds.anchorLowEdgeX()[segmentMD1Index] * mds.anchorLowEdgeX()[segmentMD1Index] +
                                   mds.anchorLowEdgeY()[segmentMD1Index] * mds.anchorLowEdgeY()[segmentMD1Index])) *
           sinDPhi / drt_tl_axis;
@@ -1097,21 +1097,21 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     const float dBetaROut2 = dBetaROut * dBetaROut;
 
     //FIXME: need faster version
-    betaOutCut = alpaka::math::asin(acc, alpaka::math::min(acc, drt_tl_axis * k2Rinv1GeVf / ptCut, kSinAlphaMax)) +
-                 (0.02f / sdOut_d) + alpaka::math::sqrt(acc, dBetaLum2 + dBetaMuls2);
+    betaOutCut = aV2P::math::asin(acc, aV2P::math::min(acc, drt_tl_axis * k2Rinv1GeVf / ptCut, kSinAlphaMax)) +
+                 (0.02f / sdOut_d) + aV2P::math::sqrt(acc, dBetaLum2 + dBetaMuls2);
 
     //Cut #6: The real beta cut
-    if (alpaka::math::abs(acc, betaOut) >= betaOutCut)
+    if (aV2P::math::abs(acc, betaOut) >= betaOutCut)
       return false;
-    const float dBetaRes = 0.02f / alpaka::math::min(acc, alpaka::math::min(acc, sdOut_d, drt_InSeg), drt_tl_axis);
+    const float dBetaRes = 0.02f / aV2P::math::min(acc, aV2P::math::min(acc, sdOut_d, drt_InSeg), drt_tl_axis);
     const float dBetaCut2 = (dBetaRes * dBetaRes * 2.0f + dBetaMuls2 + dBetaLum2 + dBetaRIn2 + dBetaROut2 +
                              0.25f * (betaOutRHmin - betaOutRHmax) * (betaOutRHmin - betaOutRHmax));
     float dBeta = betaIn - betaOut;
     return dBeta * dBeta <= dBetaCut2;
   }
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool runTripletDefaultAlgoPPEE(TAcc const& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool runTripletDefaultAlgoPPEE(TAcc const& acc,
                                                                 ModulesConst modules,
                                                                 MiniDoubletsConst mds,
                                                                 SegmentsConst segments,
@@ -1155,25 +1155,25 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     float ptErr = pixelData.ptErr;
     float etaErr = pixelData.etaErr;
 
-    ptSLo = alpaka::math::max(acc, ptCut, ptSLo - 10.0f * alpaka::math::max(acc, ptErr, 0.005f * ptSLo));
-    ptSLo = alpaka::math::min(acc, 10.0f, ptSLo);
+    ptSLo = aV2P::math::max(acc, ptCut, ptSLo - 10.0f * aV2P::math::max(acc, ptErr, 0.005f * ptSLo));
+    ptSLo = aV2P::math::min(acc, 10.0f, ptSLo);
 
     const float zpitch_InLo = 0.05f;
     const float zpitch_OutLo = (isPS_OutLo ? kPixelPSZpitch : kStrip2SZpitch);
     const float zGeom = zpitch_InLo + zpitch_OutLo;
 
-    const float slope = alpaka::math::asin(acc, alpaka::math::min(acc, rt_OutLo * k2Rinv1GeVf / ptCut, kSinAlphaMax));
-    const float dzDrtScale = slope / alpaka::math::tan(acc, slope);  // account for a bend in r-z
+    const float slope = aV2P::math::asin(acc, aV2P::math::min(acc, rt_OutLo * k2Rinv1GeVf / ptCut, kSinAlphaMax));
+    const float dzDrtScale = slope / aV2P::math::tan(acc, slope);  // account for a bend in r-z
     const bool signZProd = (z_InUp < 0) ^ (z_OutLo < z_InUp);
     const float dzDrtScaleLo = signZProd ? dzDrtScale : 1.f;
     const float dzDrtScaleHi = signZProd ? 1.f : dzDrtScale;
 
-    const float dLum = alpaka::math::copysign(acc, kDeltaZLum + zGeom, z_OutLo - z_InUp);
+    const float dLum = aV2P::math::copysign(acc, kDeltaZLum + zGeom, z_OutLo - z_InUp);
     bool isInnerMDPS = modules.moduleType()[segmentInnerModuleIndex] == PS;
 
     //FIXME: make this chosen by configuration for lay11,12 full PS
     const float rtGeom1 = isInnerMDPS ? kPixelPSZpitch : kStrip2SZpitch;
-    const float zGeom1 = alpaka::math::copysign(acc, zGeom, z_InUp);  //used in B-E region
+    const float zGeom1 = aV2P::math::copysign(acc, zGeom, z_InUp);  //used in B-E region
     //slope correction only on the lower end
     rtLo = rt_InUp * (1.f + (z_OutLo - z_InUp - zGeom1) / (z_InUp + dLum) * dzDrtScaleLo) - rtGeom1;
     rtHi = rt_InUp * (1.f + (z_OutLo - z_InUp + zGeom1) / (z_InUp - dLum) * dzDrtScaleHi) + rtGeom1;
@@ -1185,17 +1185,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     const float dzOutIn = z_OutLo - z_InUp;
     const float cosh2Eta = 1.f + (pz * pz) / (ptIn * ptIn);
     const float multDzDr2 = (dzOutIn * dzOutIn) * cosh2Eta / ((cosh2Eta - 1.f) * (cosh2Eta - 1.f));
-    const float r3_InUp = alpaka::math::sqrt(acc, z_InUp * z_InUp + rt_InUp * rt_InUp);
+    const float r3_InUp = aV2P::math::sqrt(acc, z_InUp * z_InUp + rt_InUp * rt_InUp);
     const float drt_OutLo_InUp = (rt_OutLo - rt_InUp);  // drOutIn
     const float thetaMuls2 =
-        (kMulsInGeV * kMulsInGeV) * (0.1f + 0.2f * alpaka::math::abs(acc, drt_OutLo_InUp) / 50.f) * (r3_InUp / rt_InUp);
+        (kMulsInGeV * kMulsInGeV) * (0.1f + 0.2f * aV2P::math::abs(acc, drt_OutLo_InUp) / 50.f) * (r3_InUp / rt_InUp);
     const float muls2 = thetaMuls2 * 9.f / (ptCut * ptCut) * 16.f;
 
     float drtErr = (etaErr * etaErr) * multDzDr2;
     drtErr += 0.03f * 0.03f;  // Approximately account for IT module size
     drtErr *= 9.f;            // 3 sigma
     drtErr += muls2 * multDzDr2 / 3.f * cosh2Eta;
-    drtErr = alpaka::math::sqrt(acc, drtErr);
+    drtErr = aV2P::math::sqrt(acc, drtErr);
     const float drtDzIn = ptIn / pz;
 
     const float rtWindow = drtErr + rtGeom1;
@@ -1210,9 +1210,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       return false;
 
     const float alpha1GeV_OutLo =
-        alpaka::math::asin(acc, alpaka::math::min(acc, rt_OutLo * k2Rinv1GeVf / ptCut, kSinAlphaMax));
+        aV2P::math::asin(acc, aV2P::math::min(acc, rt_OutLo * k2Rinv1GeVf / ptCut, kSinAlphaMax));
     const float pvOffset = 0.1f / rt_OutLo;
-    dPhiCut = alpha1GeV_OutLo + alpaka::math::sqrt(acc, muls2 + pvOffset * pvOffset);
+    dPhiCut = alpha1GeV_OutLo + aV2P::math::sqrt(acc, muls2 + pvOffset * pvOffset);
 
     float midPointX = 0.5f * (x_InLo + x_OutLo);
     float midPointY = 0.5f * (y_InLo + y_OutLo);
@@ -1223,7 +1223,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     dPhi = cms::alpakatools::deltaPhi(acc, midPointX, midPointY, diffX, diffY);
 
     // Cut #5: deltaPhiChange
-    if (alpaka::math::abs(acc, dPhi) > dPhiCut)
+    if (aV2P::math::abs(acc, dPhi) > dPhiCut)
       return false;
 
     float alpha_InLo = pixelData.alpha_InLo;
@@ -1240,7 +1240,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
     float tl_axis_x = x_OutUp - x_InUp;
     float tl_axis_y = y_OutUp - y_InUp;
-    float drt_tl_axis = alpaka::math::sqrt(acc, tl_axis_x * tl_axis_x + tl_axis_y * tl_axis_y);
+    float drt_tl_axis = aV2P::math::sqrt(acc, tl_axis_x * tl_axis_x + tl_axis_y * tl_axis_y);
     if (drt_tl_axis < 0.2f)  // avoid very uncertain math. Sub-optimal: could change a ref point
       return true;
 
@@ -1253,10 +1253,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     betaIn = -cms::alpakatools::deltaPhi(acc, px, py, tl_axis_x, tl_axis_y);
     betaOut = -alpha_OutUp + cms::alpakatools::deltaPhi(acc, x_OutUp, y_OutUp, tl_axis_x, tl_axis_y);
     const float drt_tli =
-        alpaka::math::sqrt(acc, (x_OutLo - x_InUp) * (x_OutLo - x_InUp) + (y_OutLo - y_InUp) * (y_OutLo - y_InUp));
-    if (drt_tli < 0.1f && alpaka::math::abs(acc, betaOut) < 1e-3f) {
+        aV2P::math::sqrt(acc, (x_OutLo - x_InUp) * (x_OutLo - x_InUp) + (y_OutLo - y_InUp) * (y_OutLo - y_InUp));
+    if (drt_tli < 0.1f && aV2P::math::abs(acc, betaOut) < 1e-3f) {
       // 3-point degeneracy: fix the sign of betaOut
-      betaOut = alpaka::math::copysign(acc, betaOut, betaIn);
+      betaOut = aV2P::math::copysign(acc, betaOut, betaIn);
     }
     float betaOutRHmin = betaOut;
     float betaOutRHmax = betaOut;
@@ -1293,58 +1293,58 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     //beta computation
     //no betaIn cut for the pixels
     const float rt_InSeg =
-        alpaka::math::sqrt(acc, (x_InUp - x_InLo) * (x_InUp - x_InLo) + (y_InUp - y_InLo) * (y_InUp - y_InLo));
+        aV2P::math::sqrt(acc, (x_InUp - x_InLo) * (x_InUp - x_InLo) + (y_InUp - y_InLo) * (y_InUp - y_InLo));
 
     pt_beta = ptIn;
 
     int lIn = 0;
     int lOut = isEC_lastLayer ? 11 : 5;
     float sdOut_dr =
-        alpaka::math::sqrt(acc, (x_OutUp - x_OutLo) * (x_OutUp - x_OutLo) + (y_OutUp - y_OutLo) * (y_OutUp - y_OutLo));
+        aV2P::math::sqrt(acc, (x_OutUp - x_OutLo) * (x_OutUp - x_OutLo) + (y_OutUp - y_OutLo) * (y_OutUp - y_OutLo));
     float sdOut_d = rt_OutUp - rt_OutLo;
     bool useBetaInSign = drt_tl_axis < sdOut_dr && drt_tli < sdOut_dr;  // pLS ends inside the LS
 
     runDeltaBetaIterations(acc, betaIn, betaOut, pt_beta, rt_InSeg, sdOut_dr, drt_tl_axis, lIn, useBetaInSign);
     // wrap around pi (do for all)
-    if (alpaka::math::abs(acc, betaIn) > kPi / 2.f || alpaka::math::abs(acc, betaOut) > kPi / 2.f) {
+    if (aV2P::math::abs(acc, betaIn) > kPi / 2.f || aV2P::math::abs(acc, betaOut) > kPi / 2.f) {
       betaIn = cms::alpakatools::reducePhiRange(acc, kPi - betaIn);
       betaOut = cms::alpakatools::reducePhiRange(acc, kPi - betaOut);
       betaOutRHmin = cms::alpakatools::reducePhiRange(acc, kPi - betaOutRHmin);
       betaOutRHmax = cms::alpakatools::reducePhiRange(acc, kPi - betaOutRHmax);
     }
 
-    const float betaOutMMSF = (alpaka::math::abs(acc, betaOutRHmin + betaOutRHmax) > 0)
-                                  ? (2.f * betaOut / alpaka::math::abs(acc, betaOutRHmin + betaOutRHmax))
+    const float betaOutMMSF = (aV2P::math::abs(acc, betaOutRHmin + betaOutRHmax) > 0)
+                                  ? (2.f * betaOut / aV2P::math::abs(acc, betaOutRHmin + betaOutRHmax))
                                   : 0.;
     betaOutRHmin *= betaOutMMSF;
     betaOutRHmax *= betaOutMMSF;
 
-    float pt_beta_trunc = alpaka::math::min(
-        acc, alpaka::math::abs(acc, pt_beta), kPt_betaMax);  //need to confirm the range-out value of 7 GeV
+    float pt_beta_trunc = aV2P::math::min(
+        acc, aV2P::math::abs(acc, pt_beta), kPt_betaMax);  //need to confirm the range-out value of 7 GeV
     const float dBetaMuls2 = thetaMuls2 * 16.f / (pt_beta_trunc * pt_beta_trunc);
 
     const float alphaInAbsReg =
-        alpaka::math::max(acc,
-                          alpaka::math::abs(acc, alpha_InLo),
-                          alpaka::math::asin(acc, alpaka::math::min(acc, rt_InUp * k2Rinv1GeVf / 3.0f, kSinAlphaMax)));
+        aV2P::math::max(acc,
+                          aV2P::math::abs(acc, alpha_InLo),
+                          aV2P::math::asin(acc, aV2P::math::min(acc, rt_InUp * k2Rinv1GeVf / 3.0f, kSinAlphaMax)));
     const float alphaOutAbsReg =
-        alpaka::math::max(acc,
-                          alpaka::math::abs(acc, alpha_OutLo),
-                          alpaka::math::asin(acc, alpaka::math::min(acc, rt_OutLo * k2Rinv1GeVf / 3.0f, kSinAlphaMax)));
-    const float dBetaInLum = lIn < 11 ? 0.0f : alpaka::math::abs(acc, alphaInAbsReg * kDeltaZLum / z_InUp);
-    const float dBetaOutLum = lOut < 11 ? 0.0f : alpaka::math::abs(acc, alphaOutAbsReg * kDeltaZLum / z_OutLo);
+        aV2P::math::max(acc,
+                          aV2P::math::abs(acc, alpha_OutLo),
+                          aV2P::math::asin(acc, aV2P::math::min(acc, rt_OutLo * k2Rinv1GeVf / 3.0f, kSinAlphaMax)));
+    const float dBetaInLum = lIn < 11 ? 0.0f : aV2P::math::abs(acc, alphaInAbsReg * kDeltaZLum / z_InUp);
+    const float dBetaOutLum = lOut < 11 ? 0.0f : aV2P::math::abs(acc, alphaOutAbsReg * kDeltaZLum / z_OutLo);
     const float dBetaLum2 = (dBetaInLum + dBetaOutLum) * (dBetaInLum + dBetaOutLum);
 
-    const float sinDPhi = alpaka::math::sin(acc, dPhi);
+    const float sinDPhi = aV2P::math::sin(acc, dPhi);
     const float dBetaRIn2 = 0;  // TODO-RH
 
     float dBetaROut = 0;
     if (isEC_lastLayer) {
       dBetaROut =
-          (alpaka::math::sqrt(acc,
+          (aV2P::math::sqrt(acc,
                               mds.anchorHighEdgeX()[segmentMD1Index] * mds.anchorHighEdgeX()[segmentMD1Index] +
                                   mds.anchorHighEdgeY()[segmentMD1Index] * mds.anchorHighEdgeY()[segmentMD1Index]) -
-           alpaka::math::sqrt(acc,
+           aV2P::math::sqrt(acc,
                               mds.anchorLowEdgeX()[segmentMD1Index] * mds.anchorLowEdgeX()[segmentMD1Index] +
                                   mds.anchorLowEdgeY()[segmentMD1Index] * mds.anchorLowEdgeY()[segmentMD1Index])) *
           sinDPhi / drt_tl_axis;
@@ -1353,21 +1353,21 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     const float dBetaROut2 = dBetaROut * dBetaROut;
 
     //FIXME: need faster version
-    betaOutCut = alpaka::math::asin(acc, alpaka::math::min(acc, drt_tl_axis * k2Rinv1GeVf / ptCut, kSinAlphaMax)) +
-                 (0.02f / sdOut_d) + alpaka::math::sqrt(acc, dBetaLum2 + dBetaMuls2);
+    betaOutCut = aV2P::math::asin(acc, aV2P::math::min(acc, drt_tl_axis * k2Rinv1GeVf / ptCut, kSinAlphaMax)) +
+                 (0.02f / sdOut_d) + aV2P::math::sqrt(acc, dBetaLum2 + dBetaMuls2);
 
     //Cut #6: The real beta cut
-    if (alpaka::math::abs(acc, betaOut) >= betaOutCut)
+    if (aV2P::math::abs(acc, betaOut) >= betaOutCut)
       return false;
 
     float drt_InSeg = rt_InUp - rt_InLo;
 
-    const float dBetaRes = 0.02f / alpaka::math::min(acc, alpaka::math::min(acc, sdOut_d, drt_InSeg), drt_tl_axis);
+    const float dBetaRes = 0.02f / aV2P::math::min(acc, aV2P::math::min(acc, sdOut_d, drt_InSeg), drt_tl_axis);
     const float dBetaCut2 = (dBetaRes * dBetaRes * 2.0f + dBetaMuls2 + dBetaLum2 + dBetaRIn2 + dBetaROut2 +
                              0.25f * (betaOutRHmin - betaOutRHmax) * (betaOutRHmin - betaOutRHmax));
     float dBeta = betaIn - betaOut;
     return dBeta * dBeta <= dBetaCut2;
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::lst
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::lst
 #endif

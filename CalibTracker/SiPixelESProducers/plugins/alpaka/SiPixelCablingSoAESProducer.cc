@@ -18,7 +18,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
 
@@ -134,7 +134,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     edm::ESGetToken<TrackerGeometry, TrackerDigiGeometryRecord> geometryToken_;
     const bool useQuality_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/ModuleFactory.h"
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(SiPixelCablingSoAESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(SiPixelCablingSoAESProducer);

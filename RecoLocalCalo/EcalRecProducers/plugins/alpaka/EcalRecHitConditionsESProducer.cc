@@ -34,7 +34,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/host.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class EcalRecHitConditionsESProducer : public ESProducer {
   public:
@@ -193,6 +193,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     bool const isPhase2_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(EcalRecHitConditionsESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(EcalRecHitConditionsESProducer);

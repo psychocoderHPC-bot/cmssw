@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Portable/interface/alpaka/PortableCollection.h"
 #include "DataFormats/SiPixelDigiSoA/interface/SiPixelDigiErrorsDevice.h"
@@ -11,12 +11,12 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/CopyToHost.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using SiPixelDigiErrorsSoACollection =
-      std::conditional_t<std::is_same_v<Device, alpaka::DevCpu>, SiPixelDigiErrorsHost, SiPixelDigiErrorsDevice<Device>>;
+      std::conditional_t<std::is_same_v<Device, aV2P::DevCpu>, SiPixelDigiErrorsHost, SiPixelDigiErrorsDevice<Device>>;
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 namespace cms::alpakatools {
   template <typename TDevice>
@@ -24,7 +24,7 @@ namespace cms::alpakatools {
     template <typename TQueue>
     static auto copyAsync(TQueue& queue, SiPixelDigiErrorsDevice<TDevice> const& srcData) {
       SiPixelDigiErrorsHost dstData(queue, srcData.maxFedWords());
-      alpaka::memcpy(queue, dstData.buffer(), srcData.buffer());
+      aV2P::memcpy(queue, dstData.buffer(), srcData.buffer());
       return dstData;
     }
   };

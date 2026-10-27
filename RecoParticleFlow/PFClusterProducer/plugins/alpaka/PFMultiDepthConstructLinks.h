@@ -40,7 +40,7 @@
  */
 
 // We perform full warp computation for old NVIDIA and AMD microarchitectures
-#if defined(ALPAKA_ACC_GPU_CUDA_ENABLED) && (__CUDA_ARCH__ < 800) || defined(ALPAKA_ACC_GPU_HIP_ENABLED)
+#if defined(AV2P_ACC_GPU_CUDA_ENABLED) && (__CUDA_ARCH__ < 800) || defined(AV2P_ACC_GPU_HIP_ENABLED)
 /*
 * For pre-Ampere CUDA architectures the operations must be done for all lanes in the whole warp.
 */
@@ -49,7 +49,7 @@ constexpr bool full_warp_compute = true;
 constexpr bool full_warp_compute = false;
 #endif
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace ::cms::alpakatools;
   using namespace ::cms::alpakaintrinsics;
@@ -154,7 +154,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   //  Define operation type:
   template <bool comp_min>
   struct CompFn {
-    ALPAKA_FN_ACC float operator()(float a, float b) const {
+    AV2P_FN_ACC float operator()(float a, float b) const {
       if constexpr (comp_min)
         return a < b ? a : b;
       else
@@ -182,7 +182,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
  *         finished (winner chosen and dst updated, or destination lane is the winner in owner tile).
  */
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE warp::warp_mask_t prune_link(
+  AV2P_FN_ACC AV2P_FN_INLINE warp::warp_mask_t prune_link(
       Acc1D const& acc,
       const warp::warp_mask_t mask,  //excludes the owner lane (corresponding bit set to 0)
       PFMDLinkParam& dst_link_params,
@@ -198,7 +198,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     const float val = src_link_params.value(kind);
     // 3. Do selection process (for active lanes specified in the mask):
     // 3.1 We need to find out the total number of active lanes.
-    const unsigned int nLanes = alpaka::popcount(acc, mask);
+    const unsigned int nLanes = aV2P::popcount(acc, mask);
     // 3.2. then check two cases: for a single active lane, just continue with the current mask, otherwise perform
     //      link filtering.
     warp::warp_mask_t leftover_mask = mask;
@@ -258,7 +258,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   class ConstructLinksKernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   reco::PFMultiDepthClusteringCCLabelsDeviceCollection::View mdpfClusteringCCLabels,
                                   const reco::PFMultiDepthClusteringVarsDeviceCollection::ConstView mdpfClusteringVars,
                                   const PFMultiDepthClusterParams* nSigma) const {
@@ -266,7 +266,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       const unsigned int nClusters = mdpfClusteringVars.size();
 
-      const unsigned int gridDim = alpaka::getWorkDiv<alpaka::Grid, alpaka::Threads>(acc)[0u];
+      const unsigned int gridDim = aV2P::getWorkDiv<aV2P::Grid, aV2P::Threads>(acc)[0u];
 
       const double nSigmaEta = nSigma->nSigmaEta;
       const double nSigmaPhi = nSigma->nSigmaPhi;
@@ -275,13 +275,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         mdpfClusteringCCLabels.size() = nClusters;
         mdpfClusteringCCLabels.ncomponents() = 0;
 
-        const unsigned int blockDim = alpaka::getWorkDiv<alpaka::Block, alpaka::Threads>(acc)[0u];
-        ALPAKA_ASSERT_ACC(blockDim % w_extent == 0u);
+        const unsigned int blockDim = aV2P::getWorkDiv<aV2P::Block, aV2P::Threads>(acc)[0u];
+        AV2P_ASSERT_ACC(blockDim % w_extent == 0u);
       }
 
       constexpr unsigned int cluster_tile_size = w_extent;
       const unsigned int cluster_tiles =
-          (std::is_same_v<Device, alpaka::DevCpu>) ? nClusters : (gridDim + (w_extent - 1)) / w_extent;
+          (std::is_same_v<Device, aV2P::DevCpu>) ? nClusters : (gridDim + (w_extent - 1)) / w_extent;
       // Execution domain along destination (target) clusters
       for (auto idx : ::cms::alpakatools::uniform_elements(acc, ::cms::alpakatools::round_up_by(nClusters, w_extent))) {
         // Reset workl aux array:
@@ -293,7 +293,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         // every warp collective must use a mask that covers all participating lanes;
         // we additionally OR-in the destination lane to keep it active for result updates.
         const warp::warp_mask_t init_active_lanes_mask =
-            alpaka::warp::ballot(acc, full_warp_compute || (idx < nClusters));
+            aV2P::warp::ballot(acc, full_warp_compute || (idx < nClusters));
 
         // From this point all warp-level collectives must be accompanied with init_active_lanes_mask (or any derived from it) mask:
         // for example, new_mask = warp::ballot_mask(acc, old_mask, predicate) will generate a new mask that selects a subset of lanes from old_mask
@@ -412,10 +412,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             auto candidate_link_params =
                 is_non_owner_lane
                     ? PFMDLinkParam(
-                          src_idx, alpaka::math::abs(acc, dz), deta + dphi, dst_energy + src_cl_params.energy())
+                          src_idx, aV2P::math::abs(acc, dz), deta + dphi, dst_energy + src_cl_params.energy())
                     : PFMDLinkParam(idx);
             // 7.2 Check 3 parameters (dZ, dR, energy) to prune the candidate links:
-            if constexpr (std::is_same_v<Device, alpaka::DevCpu>) {
+            if constexpr (std::is_same_v<Device, aV2P::DevCpu>) {
               if (is_non_owner_lane)
                 selected_link_params.try_update(candidate_link_params.index(),
                                                 candidate_link_params.value(PFMDLinkParamKind::DZ),
@@ -425,15 +425,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             } else if constexpr (full_warp_compute) {
               for (unsigned int iter_idx = 0; iter_idx < w_extent; iter_idx++) {
                 const int flag = is_non_owner_lane ? 1 : 0;
-                const int is_valid_candidate = alpaka::warp::shfl(acc, flag, iter_idx);
+                const int is_valid_candidate = aV2P::warp::shfl(acc, flag, iter_idx);
                 if (is_valid_candidate) {
-                  const int candidate_idx = alpaka::warp::shfl(acc, candidate_link_params.index(), iter_idx);
+                  const int candidate_idx = aV2P::warp::shfl(acc, candidate_link_params.index(), iter_idx);
                   const float candidate_dz =
-                      alpaka::warp::shfl(acc, candidate_link_params.value(PFMDLinkParamKind::DZ), iter_idx);
+                      aV2P::warp::shfl(acc, candidate_link_params.value(PFMDLinkParamKind::DZ), iter_idx);
                   const float candidate_dr =
-                      alpaka::warp::shfl(acc, candidate_link_params.value(PFMDLinkParamKind::DR), iter_idx);
+                      aV2P::warp::shfl(acc, candidate_link_params.value(PFMDLinkParamKind::DR), iter_idx);
                   const float candidate_energy =
-                      alpaka::warp::shfl(acc, candidate_link_params.value(PFMDLinkParamKind::ENERGY), iter_idx);
+                      aV2P::warp::shfl(acc, candidate_link_params.value(PFMDLinkParamKind::ENERGY), iter_idx);
                   if (lane_idx == dst_lane_idx)
                     selected_link_params.try_update(candidate_idx, candidate_dz, candidate_dr, candidate_energy);
                 }
@@ -470,6 +470,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }  // end uniform_group_elements
     }
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

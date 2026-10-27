@@ -31,7 +31,7 @@
 #include <vector>
 #include <iomanip>  // for std::setw
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
 
@@ -192,8 +192,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     std::cout << line << std::endl;
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 // define this as a plug-in
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(HGCalRecHitESProducersTest);
+DEFINE_FWK_AV2P_MODULE(HGCalRecHitESProducersTest);

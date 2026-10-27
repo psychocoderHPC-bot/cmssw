@@ -6,7 +6,7 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/EDMetadataAcquireSentry.h"
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/chooseDevice.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   namespace detail {
     EDMetadataAcquireSentry::EDMetadataAcquireSentry(edm::StreamID streamID,
                                                      edm::WaitingTaskWithArenaHolder holder,
@@ -22,11 +22,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           waitingTaskHolder_(std::move(holder)),
           synchronize_(synchronize) {}
 
-#ifndef ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+#ifndef AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
     // all asynchronous backends
     std::shared_ptr<EDMetadata> EDMetadataAcquireSentry::finish() {
       if (synchronize_) {
-        alpaka::wait(metadata_->queue());
+        aV2P::wait(metadata_->queue());
       } else {
         asyncWait();
       }
@@ -40,13 +40,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       // wait for the event to be ready in an async thread, then notify the waitingTaskHolder_
       async->runAsync(
           std::move(waitingTaskHolder_),
-          [event = std::move(event)]() mutable { alpaka::wait(*event); },
+          [event = std::move(event)]() mutable { aV2P::wait(*event); },
           []() {
             return "Enqueued via " EDM_STRINGIZE(
-                ALPAKA_ACCELERATOR_NAMESPACE) "::detail::EDMetadataAcquireSentry::asyncWait()";
+                AV2P_ACCELERATOR_NAMESPACE) "::detail::EDMetadataAcquireSentry::asyncWait()";
           });
     }
 #endif
 
   }  // namespace detail
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

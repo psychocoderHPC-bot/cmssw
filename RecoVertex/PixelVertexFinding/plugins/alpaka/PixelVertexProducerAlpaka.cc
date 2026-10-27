@@ -1,4 +1,4 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "Geometry/CommonTopologies/interface/SimplePixelTopology.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -22,7 +22,7 @@
 
 #include "vertexFinder.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
 
@@ -110,8 +110,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   using PixelVertexProducerAlpakaPhase2 = PixelVertexProducerAlpaka<pixelTopology::Phase2>;
   using PixelVertexProducerAlpakaHIonPhase1 = PixelVertexProducerAlpaka<pixelTopology::HIonPhase1>;
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_ALPAKA_MODULE(PixelVertexProducerAlpakaPhase1);
-DEFINE_FWK_ALPAKA_MODULE(PixelVertexProducerAlpakaPhase2);
-DEFINE_FWK_ALPAKA_MODULE(PixelVertexProducerAlpakaHIonPhase1);
+DEFINE_FWK_AV2P_MODULE(PixelVertexProducerAlpakaPhase1);
+DEFINE_FWK_AV2P_MODULE(PixelVertexProducerAlpakaPhase2);
+DEFINE_FWK_AV2P_MODULE(PixelVertexProducerAlpakaHIonPhase1);

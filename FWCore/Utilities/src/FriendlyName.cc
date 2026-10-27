@@ -94,21 +94,21 @@ namespace edm {
         "edm::RefVector< *Association(.*) *, *edm::helper(.*), *Association(.*)::Find>");
 
     // type aliases for Alpaka internals
-    static std::regex const reAlpakaDevCpu("alpaka::DevCpu");                                     // alpakaDevCpu
-    static std::regex const reAlpakaDevCudaRt("alpaka::DevUniformCudaHipRt<alpaka::ApiCudaRt>");  // alpakaDevCudaRt
-    static std::regex const reAlpakaDevHipRt("alpaka::DevUniformCudaHipRt<alpaka::ApiHipRt>");    // alpakaDevHipRt
+    static std::regex const reAlpakaDevCpu("aV2P::DevCpu");                                     // alpakaDevCpu
+    static std::regex const reAlpakaDevCudaRt("aV2P::DevUniformCudaHipRt<aV2P::ApiCudaRt>");  // alpakaDevCudaRt
+    static std::regex const reAlpakaDevHipRt("aV2P::DevUniformCudaHipRt<aV2P::ApiHipRt>");    // alpakaDevHipRt
     static std::regex const reAlpakaQueueCpuBlocking(
-        "alpaka::QueueGenericThreadsBlocking<alpaka::DevCpu>");  // alpakaQueueCpuBlocking
+        "aV2P::QueueGenericThreadsBlocking<aV2P::DevCpu>");  // alpakaQueueCpuBlocking
     static std::regex const reAlpakaQueueCpuNonBlocking(
-        "alpaka::QueueGenericThreadsNonBlocking<alpaka::DevCpu>");  // alpakaQueueCpuNonBlocking
+        "aV2P::QueueGenericThreadsNonBlocking<aV2P::DevCpu>");  // alpakaQueueCpuNonBlocking
     static std::regex const reAlpakaQueueCudaRtBlocking(
-        "alpaka::uniform_cuda_hip::detail::QueueUniformCudaHipRt<alpaka::ApiCudaRt,true>");  // alpakaQueueCudaRtBlocking
+        "aV2P::uniform_cuda_hip::detail::QueueUniformCudaHipRt<aV2P::ApiCudaRt,true>");  // alpakaQueueCudaRtBlocking
     static std::regex const reAlpakaQueueCudaRtNonBlocking(
-        "alpaka::uniform_cuda_hip::detail::QueueUniformCudaHipRt<alpaka::ApiCudaRt,false>");  // alpakaQueueCudaRtNonBlocking
+        "aV2P::uniform_cuda_hip::detail::QueueUniformCudaHipRt<aV2P::ApiCudaRt,false>");  // alpakaQueueCudaRtNonBlocking
     static std::regex const reAlpakaQueueHipRtBlocking(
-        "alpaka::uniform_cuda_hip::detail::QueueUniformCudaHipRt<alpaka::ApiHipRt,true>");  // alpakaQueueHipRtBlocking
+        "aV2P::uniform_cuda_hip::detail::QueueUniformCudaHipRt<aV2P::ApiHipRt,true>");  // alpakaQueueHipRtBlocking
     static std::regex const reAlpakaQueueHipRtNonBlocking(
-        "alpaka::uniform_cuda_hip::detail::QueueUniformCudaHipRt<alpaka::ApiHipRt,false>");  // alpakaQueueHipRtNonBlocking
+        "aV2P::uniform_cuda_hip::detail::QueueUniformCudaHipRt<aV2P::ApiHipRt,false>");  // alpakaQueueHipRtNonBlocking
 
     std::string standardRenames(std::string const& iIn) {
       using std::regex;

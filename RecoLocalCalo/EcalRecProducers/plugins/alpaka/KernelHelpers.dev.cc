@@ -4,17 +4,17 @@
 
 #include "KernelHelpers.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::reconstruction {
 
   namespace internal::barrel {
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool positiveZ(uint32_t id) { return id & 0x10000; }
+    AV2P_FN_ACC AV2P_FN_INLINE bool positiveZ(uint32_t id) { return id & 0x10000; }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t ietaAbs(uint32_t id) { return (id >> 9) & 0x7F; }
+    AV2P_FN_ACC AV2P_FN_INLINE uint32_t ietaAbs(uint32_t id) { return (id >> 9) & 0x7F; }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t iphi(uint32_t id) { return id & 0x1FF; }
+    AV2P_FN_ACC AV2P_FN_INLINE uint32_t iphi(uint32_t id) { return id & 0x1FF; }
 
-    ALPAKA_FN_ACC int dccFromSm(int ism) {
+    AV2P_FN_ACC int dccFromSm(int ism) {
       int idcc = 9 + ism;
       if (ism > 18)
         idcc -= 18;
@@ -23,7 +23,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
       return idcc;
     }
 
-    ALPAKA_FN_ACC int sm(int ieta, int iphi) {
+    AV2P_FN_ACC int sm(int ieta, int iphi) {
       if (iphi > 360)
         iphi -= 360;
       int ism = (iphi - 1) / 20 + 1;
@@ -32,12 +32,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
       return ism;
     }
 
-    ALPAKA_FN_ACC int dcc(int ieta, int iphi) {
+    AV2P_FN_ACC int dcc(int ieta, int iphi) {
       int const ism = sm(ieta, iphi);
       return dccFromSm(ism);
     }
 
-    ALPAKA_FN_ACC int lm_channel(int iX, int iY) {
+    AV2P_FN_ACC int lm_channel(int iX, int iY) {
       static const int idx_[] = {
           // clang-format off
      // 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16
@@ -60,7 +60,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
       return idx_[ii];
     }
 
-    ALPAKA_FN_ACC int localCoord_x(int ieta) {
+    AV2P_FN_ACC int localCoord_x(int ieta) {
       int iz = 1;
       if (ieta < 0) {
         iz = -1;
@@ -71,7 +71,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
       return ix;
     }
 
-    ALPAKA_FN_ACC int localCoord_y(int ieta, int iphi) {
+    AV2P_FN_ACC int localCoord_y(int ieta, int iphi) {
       if (iphi > 360) {
         iphi -= 360;
       }
@@ -83,21 +83,21 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
       return iy;
     }
 
-    ALPAKA_FN_ACC int lmmod(int ieta, int iphi) {
+    AV2P_FN_ACC int lmmod(int ieta, int iphi) {
       int const ix = localCoord_x(ieta);
       int const iy = localCoord_y(ieta, iphi);
 
       return lm_channel(ix / 5, iy / 5);
     }
 
-    ALPAKA_FN_ACC int side(int ieta, int iphi) {
+    AV2P_FN_ACC int side(int ieta, int iphi) {
       int const ilmmod = lmmod(ieta, iphi);
       return (ilmmod % 2 == 0) ? 1 : 0;
     }
 
   }  // namespace internal::barrel
 
-  ALPAKA_FN_ACC uint32_t hashedIndexEB(uint32_t id) {
+  AV2P_FN_ACC uint32_t hashedIndexEB(uint32_t id) {
     using namespace internal::barrel;
     return (EBDetId::MAX_IETA + (positiveZ(id) ? ietaAbs(id) - 1 : -ietaAbs(id))) * EBDetId::MAX_IPHI + iphi(id) - 1;
   }
@@ -106,7 +106,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
   // https://cmssdt.cern.ch/lxr/source/CalibCalorimetry/EcalLaserAnalyzer/src/MEEBGeom.cc
   //  function: "lmr"
 
-  ALPAKA_FN_ACC int32_t laserMonitoringRegionEB(uint32_t id) {
+  AV2P_FN_ACC int32_t laserMonitoringRegionEB(uint32_t id) {
     using namespace internal::barrel;
 
     int ieta;
@@ -126,11 +126,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
 
   namespace internal::endcap {
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t ix(uint32_t id) { return (id >> 7) & 0x7F; }
+    AV2P_FN_ACC AV2P_FN_INLINE uint32_t ix(uint32_t id) { return (id >> 7) & 0x7F; }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t iy(uint32_t id) { return id & 0x7F; }
+    AV2P_FN_ACC AV2P_FN_INLINE uint32_t iy(uint32_t id) { return id & 0x7F; }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool positiveZ(uint32_t id) { return id & 0x4000; }
+    AV2P_FN_ACC AV2P_FN_INLINE bool positiveZ(uint32_t id) { return id & 0x4000; }
 
     // these constants come from EE Det Id
     HOST_DEVICE_CONSTANT unsigned short kxf[] = {
@@ -157,7 +157,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
         6614, 6649, 6684, 6719, 6754, 6784, 6814, 6844, 6874, 6904, 6934, 6964, 6994, 7024, 7054, 7079, 7104,
         7129, 7154, 7179, 7204, 7219, 7234, 7249, 7264, 7274, 7284, 7294, 7304, 7314};
 
-    ALPAKA_FN_ACC int quadrant(int iX, int iY) {
+    AV2P_FN_ACC int quadrant(int iX, int iY) {
       bool const near = iX >= 11;
       bool const far = !near;
       bool const top = iY >= 11;
@@ -176,7 +176,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
       return iquad;
     }
 
-    ALPAKA_FN_ACC int sector(int iX, int iY) {
+    AV2P_FN_ACC int sector(int iX, int iY) {
       //  Y (towards the surface)
       //  T
       //  |
@@ -225,7 +225,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
 
   }  // namespace internal::endcap
 
-  ALPAKA_FN_ACC uint32_t hashedIndexEE(uint32_t id) {
+  AV2P_FN_ACC uint32_t hashedIndexEE(uint32_t id) {
     using namespace internal::endcap;
 
     const uint32_t jx(ix(id));
@@ -238,7 +238,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
   // https://github.com/cms-sw/cmssw/blob/master/CalibCalorimetry/EcalLaserCorrection/src/EcalLaserDbService.cc
   //
 
-  ALPAKA_FN_ACC int32_t laserMonitoringRegionEE(uint32_t id) {
+  AV2P_FN_ACC int32_t laserMonitoringRegionEE(uint32_t id) {
     using namespace internal::endcap;
 
     // SuperCrysCoord
@@ -273,7 +273,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
     return ilmr;
   }
 
-  ALPAKA_FN_ACC int32_t rechitSetMasked(uint32_t value, uint32_t x, uint32_t offset, uint32_t width) {
+  AV2P_FN_ACC int32_t rechitSetMasked(uint32_t value, uint32_t x, uint32_t offset, uint32_t width) {
     const uint32_t mask = ((1 << width) - 1) << offset;
     value &= ~mask;
     value |= (x & ((1U << width) - 1)) << offset;
@@ -282,7 +282,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
 
   HOST_DEVICE_CONSTANT float p10[] = {1.e-2f, 1.e-1f, 1.f, 1.e1f, 1.e2f, 1.e3f, 1.e4f, 1.e5f, 1.e6f};
 
-  ALPAKA_FN_ACC int32_t rechitGetPower10(float e) {
+  AV2P_FN_ACC int32_t rechitGetPower10(float e) {
     int b = e < p10[4] ? 0 : 5;
     for (; b < 9; ++b)
       if (e < p10[b])
@@ -290,4 +290,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction {
     return b;
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::reconstruction
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::reconstruction

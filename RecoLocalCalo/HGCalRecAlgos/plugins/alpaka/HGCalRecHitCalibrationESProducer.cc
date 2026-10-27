@@ -29,7 +29,7 @@
 #include <fstream>    // needed to read json file with std::ifstream
 #include <algorithm>  // for std::fill
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   namespace hgcalrechit {
     using namespace ::hgcal;  // for check_keys, fill_SoA
@@ -212,6 +212,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   }  // namespace hgcalrechit
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(hgcalrechit::HGCalCalibrationESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(hgcalrechit::HGCalCalibrationESProducer);

@@ -7,7 +7,7 @@
 #include "DataFormats/AlpakaCommon/interface/alpaka/EDMetadata.h"
 #include "FWCore/Utilities/interface/StreamID.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::detail {
+namespace AV2P_ACCELERATOR_NAMESPACE::detail {
 
   /**
      * Helper class to be used in produce()
@@ -42,6 +42,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::detail {
     bool const synchronize_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::detail
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::detail
 
 #endif  // HeterogeneousCore_AlpakaCore_interface_alpaka_EDMetadataSentry_h

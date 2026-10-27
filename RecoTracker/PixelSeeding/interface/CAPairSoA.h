@@ -1,7 +1,7 @@
 #ifndef RecoTracker_PixelSeeding_interface_CAPairSoA_h
 #define RecoTracker_PixelSeeding_interface_CAPairSoA_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/SoATemplate/interface/SoALayout.h"
 

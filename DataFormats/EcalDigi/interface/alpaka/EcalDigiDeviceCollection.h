@@ -5,11 +5,11 @@
 #include "DataFormats/EcalDigi/interface/EcalDigiSoA.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   // EcalDigiSoA in device global memory
   using EcalDigiDeviceCollection = PortableCollection<EcalDigiSoA>;
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

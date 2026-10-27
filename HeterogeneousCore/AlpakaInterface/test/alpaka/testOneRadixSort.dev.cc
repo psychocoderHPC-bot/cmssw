@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <algorithm>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Utilities/interface/stringize.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/radixSort.h"
@@ -15,7 +15,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
 using namespace cms::alpakatools;
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 using FLOAT = double;
 
@@ -52,7 +52,7 @@ using uintT_t = uintN_t<sizeof(T) * 8>;
 
 // Keep only the `N` most significant bytes of `t`, and set the others to zero
 template <int N, typename T, typename SFINAE = std::enable_if_t<N <= sizeof(T)>>
-ALPAKA_FN_HOST_ACC T truncate(T const& t) {
+AV2P_FN_HOST_ACC T truncate(T const& t) {
   const int shift = 8 * (sizeof(T) - N);
   union {
     T t;
@@ -65,36 +65,36 @@ ALPAKA_FN_HOST_ACC T truncate(T const& t) {
 
 namespace {
   struct testKernel {
-    ALPAKA_FN_ACC void operator()(
+    AV2P_FN_ACC void operator()(
         Acc1D const& acc, FLOAT* gpu_input, int* gpu_product, int elements, bool doPrint) const {
       // radix sort works in a single block (and the assert macro does not like the comma of the template parameters).
-      const auto blocksPerGrid = alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[0u];
-      const auto blocksIdx = alpaka::getIdx<alpaka::Grid, alpaka::Blocks>(acc)[0u];
-      ALPAKA_ASSERT_ACC(1 == blocksPerGrid);
-      ALPAKA_ASSERT_ACC(0 == blocksIdx);
-      ALPAKA_ASSERT_ACC(elements <= 2048);
+      const auto blocksPerGrid = aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[0u];
+      const auto blocksIdx = aV2P::getIdx<aV2P::Grid, aV2P::Blocks>(acc)[0u];
+      AV2P_ASSERT_ACC(1 == blocksPerGrid);
+      AV2P_ASSERT_ACC(0 == blocksIdx);
+      AV2P_ASSERT_ACC(elements <= 2048);
 
-      auto& order = alpaka::declareSharedVar<uint16_t[2048], __COUNTER__>(acc);
-      auto& sws = alpaka::declareSharedVar<uint16_t[2048], __COUNTER__>(acc);
-      auto& z = alpaka::declareSharedVar<float[2048], __COUNTER__>(acc);
-      auto& iz = alpaka::declareSharedVar<int[2048], __COUNTER__>(acc);
+      auto& order = aV2P::declareSharedVar<uint16_t[2048], __COUNTER__>(acc);
+      auto& sws = aV2P::declareSharedVar<uint16_t[2048], __COUNTER__>(acc);
+      auto& z = aV2P::declareSharedVar<float[2048], __COUNTER__>(acc);
+      auto& iz = aV2P::declareSharedVar<int[2048], __COUNTER__>(acc);
       for (auto itrack : uniform_elements(acc, elements)) {
         z[itrack] = gpu_input[itrack];
         iz[itrack] = 10000 * gpu_input[itrack];
         // order[itrack] = itrack;
       }
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
       radixSort<Acc1D, float, 2>(acc, z, order, sws, elements);
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
 
       //verify
       for (auto itrack : uniform_elements(acc, elements - 1)) {
         auto ntrack = order[itrack];
         auto mtrack = order[itrack + 1];
-        ALPAKA_ASSERT_ACC(truncate<2>(z[ntrack]) <= truncate<2>(z[mtrack]));
+        AV2P_ASSERT_ACC(truncate<2>(z[ntrack]) <= truncate<2>(z[mtrack]));
       }
 
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
 
       if (doPrint)
         if (once_per_grid(acc)) {
@@ -112,14 +112,14 @@ namespace {
           }
         }
 
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
       radixSort<Acc1D, int, 4>(acc, iz, order, sws, elements);
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
 
       for (auto itrack : uniform_elements(acc, elements - 1)) {
         auto ntrack = order[itrack];
         auto mtrack = order[itrack + 1];
-        ALPAKA_ASSERT_ACC(iz[ntrack] <= iz[mtrack]);
+        AV2P_ASSERT_ACC(iz[ntrack] <= iz[mtrack]);
       }
 
       if (doPrint)
@@ -144,9 +144,9 @@ namespace {
     auto blockSize = 512;  // somewhat arbitrary
     auto gridSize = 1;     // round up to cover the sample size
     const auto workdiv = make_workdiv<Acc1D>(gridSize, blockSize);
-    alpaka::enqueue(queue,
-                    alpaka::createTaskKernel<Acc1D>(workdiv, testKernel(), gpu_input, gpu_product, elements, doPrint));
-    alpaka::wait(queue);
+    aV2P::enqueue(queue,
+                    aV2P::createTaskKernel<Acc1D>(workdiv, testKernel(), gpu_input, gpu_product, elements, doPrint));
+    aV2P::wait(queue);
   }
 }  // namespace
 
@@ -154,7 +154,7 @@ int main() {
   // get the list of devices on the current platform
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }
@@ -218,14 +218,14 @@ int main() {
     auto gpu_input_d = cms::alpakatools::make_device_buffer<FLOAT[]>(queue, nmax);
     auto gpu_product_d = cms::alpakatools::make_device_buffer<int[]>(queue, nmax);
     // copy the input data to the GPU
-    alpaka::memcpy(queue, gpu_input_d, gpu_input_h);
+    aV2P::memcpy(queue, gpu_input_d, gpu_input_h);
 
     for (int k = 2; k <= nmax; k++) {
       std::shuffle(input, input + k, g);
       printf("Test with %d items\n", k);
       // sort on the GPU
       testWrapper(queue, gpu_input_d.data(), gpu_product_d.data(), k, false);
-      alpaka::wait(queue);
+      aV2P::wait(queue);
     }
   }
   return 0;

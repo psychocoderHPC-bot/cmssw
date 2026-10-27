@@ -15,7 +15,7 @@
 #include "PhysicsTools/PyTorchAlpaka/interface/TensorCollection.h"
 #include "PhysicsTools/PyTorchAlpaka/interface/alpaka/AlpakaModel.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class TrackTorchClassifierAlpaka : public stream::FixedQueueEDProducer<> {
   public:
@@ -112,7 +112,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     const int warmupIterations_ = 3;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(TrackTorchClassifierAlpaka);
+DEFINE_FWK_AV2P_MODULE(TrackTorchClassifierAlpaka);

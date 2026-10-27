@@ -1,4 +1,4 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include <TFormula.h>
 #include "CommonTools/Utils/interface/FormulaEvaluator.h"
@@ -103,7 +103,7 @@ namespace reco {
 
 }  // namespace reco
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   template <typename TrackerTraits>
   class CAHitNtupletAlpaka
@@ -413,7 +413,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       auto& queue = iEvent.queue();
       reco::TracksSoACollection tracks(queue, 0, 0);
       auto ntracks_d = cms::alpakatools::make_device_view(queue, tracks.view().tracks().nTracks());
-      alpaka::memset(queue, ntracks_d, 0);
+      aV2P::memset(queue, ntracks_d, 0);
       iEvent.emplace(tokenTrack_, std::move(tracks));
       return;
     }
@@ -447,7 +447,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       auto& queue = iEvent.queue();
       reco::TracksSoACollection tracks(queue, 0, 0);
       auto ntracks_d = cms::alpakatools::make_device_view(queue, tracks.view().tracks().nTracks());
-      alpaka::memset(queue, ntracks_d, 0);
+      aV2P::memset(queue, ntracks_d, 0);
       iEvent.emplace(tokenTrack_, std::move(tracks));
     }
   }
@@ -456,11 +456,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   using CAHitNtupletAlpakaHIonPhase1 = CAHitNtupletAlpaka<pixelTopology::HIonPhase1>;
   using CAHitNtupletAlpakaPhase2 = CAHitNtupletAlpaka<pixelTopology::Phase2>;
   using CAHitNtupletAlpakaPhase2OT = CAHitNtupletAlpaka<pixelTopology::Phase2OT>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
 
-DEFINE_FWK_ALPAKA_MODULE(CAHitNtupletAlpakaPhase1);
-DEFINE_FWK_ALPAKA_MODULE(CAHitNtupletAlpakaHIonPhase1);
-DEFINE_FWK_ALPAKA_MODULE(CAHitNtupletAlpakaPhase2);
-DEFINE_FWK_ALPAKA_MODULE(CAHitNtupletAlpakaPhase2OT);
+DEFINE_FWK_AV2P_MODULE(CAHitNtupletAlpakaPhase1);
+DEFINE_FWK_AV2P_MODULE(CAHitNtupletAlpakaHIonPhase1);
+DEFINE_FWK_AV2P_MODULE(CAHitNtupletAlpakaPhase2);
+DEFINE_FWK_AV2P_MODULE(CAHitNtupletAlpakaPhase2OT);

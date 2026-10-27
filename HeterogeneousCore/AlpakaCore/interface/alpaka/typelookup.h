@@ -10,28 +10,28 @@
 // framework itself). The ESDeviceProduct should be in the same
 // package.
 
-// force expanding ALPAKA_ACCELERATOR_NAMESPACE before stringification inside TYPELOOKUP_DATA_REG
-#define TYPELOOKUP_ALPAKA_DATA_REG2(name) TYPELOOKUP_DATA_REG(name)
+// force expanding AV2P_ACCELERATOR_NAMESPACE before stringification inside TYPELOOKUP_DATA_REG
+#define TYPELOOKUP_AV2P_DATA_REG2(name) TYPELOOKUP_DATA_REG(name)
 
 // Model 1 for ESProducts with Alpaka: ESProduct class for host
 // is defined in global namespace, and for devices in
-// ALPAKA_ACCELERATOR_NAMESPACE
-#ifdef ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+// AV2P_ACCELERATOR_NAMESPACE
+#ifdef AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
 // all host backends
-#define TYPELOOKUP_ALPAKA_DATA_REG(name)
+#define TYPELOOKUP_AV2P_DATA_REG(name)
 #else
-#define TYPELOOKUP_ALPAKA_DATA_REG(name) \
-  TYPELOOKUP_ALPAKA_DATA_REG2(ALPAKA_ACCELERATOR_NAMESPACE::ESDeviceProduct<ALPAKA_ACCELERATOR_NAMESPACE::name>)
+#define TYPELOOKUP_AV2P_DATA_REG(name) \
+  TYPELOOKUP_AV2P_DATA_REG2(AV2P_ACCELERATOR_NAMESPACE::ESDeviceProduct<AV2P_ACCELERATOR_NAMESPACE::name>)
 #endif
 
 // Model 2 for ESProducts with Alpaka: ESProduct class templated over device type
 // TODO: should really instantiated and registered per "memory space" rather than per backend
-#ifdef ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+#ifdef AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
 // all host backends
-#define TYPELOOKUP_ALPAKA_TEMPLATED_DATA_REG(name)
+#define TYPELOOKUP_AV2P_TEMPLATED_DATA_REG(name)
 #else
-#define TYPELOOKUP_ALPAKA_TEMPLATED_DATA_REG(name) \
-  TYPELOOKUP_ALPAKA_DATA_REG2(ALPAKA_ACCELERATOR_NAMESPACE::ESDeviceProduct<name<ALPAKA_ACCELERATOR_NAMESPACE::Device>>)
+#define TYPELOOKUP_AV2P_TEMPLATED_DATA_REG(name) \
+  TYPELOOKUP_AV2P_DATA_REG2(AV2P_ACCELERATOR_NAMESPACE::ESDeviceProduct<name<AV2P_ACCELERATOR_NAMESPACE::Device>>)
 #endif
 
 #endif

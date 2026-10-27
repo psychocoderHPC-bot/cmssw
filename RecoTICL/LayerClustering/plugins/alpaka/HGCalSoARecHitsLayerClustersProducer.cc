@@ -24,7 +24,7 @@
 // Consequently, this producer must be used by another downstream producer to
 // either build traditional clusters or to create a SoA representing the
 // clusters, complete with all required information (e.g., energy, position).
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class HGCalSoARecHitsLayerClustersProducer : public stream::EDProducer<> {
   public:
@@ -70,7 +70,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     const float outlierDeltaFactor_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(HGCalSoARecHitsLayerClustersProducer);
+DEFINE_FWK_AV2P_MODULE(HGCalSoARecHitsLayerClustersProducer);

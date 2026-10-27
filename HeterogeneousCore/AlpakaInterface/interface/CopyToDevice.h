@@ -37,27 +37,27 @@ namespace cms::alpakatools {
 namespace cms::alpakatools {
   // Note: can't do partial specializations along
   // - CopyToDevice<host_buffer<TObject>>
-  // - CopyToDevice<alpaka::Buf<alpaka_common::DevHost, TObject, alpaka_common::Dim0D, alpaka_common::Idx>e
-  // because both host_buffer and alpaka::Buf use trait-style
+  // - CopyToDevice<aV2P::Buf<alpaka_common::DevHost, TObject, alpaka_common::Dim0D, alpaka_common::Idx>e
+  // because both host_buffer and aV2P::Buf use trait-style
   // indirection that prevents template argument type deduction
   template <typename TObject>
-  struct CopyToDevice<alpaka::BufCpu<TObject, alpaka_common::Dim0D, alpaka_common::Idx>> {
+  struct CopyToDevice<aV2P::BufCpu<TObject, alpaka_common::Dim0D, alpaka_common::Idx>> {
     template <typename TQueue>
     static auto copyAsync(TQueue& queue, host_buffer<TObject> const& src) {
-      using TDevice = alpaka::Dev<TQueue>;
+      using TDevice = aV2P::Dev<TQueue>;
       auto dst = make_device_buffer<TObject>(queue);
-      alpaka::memcpy(queue, dst, src);
+      aV2P::memcpy(queue, dst, src);
       return dst;
     }
   };
 
   template <typename TObject>
-  struct CopyToDevice<alpaka::BufCpu<TObject, alpaka_common::Dim1D, alpaka_common::Idx>> {
+  struct CopyToDevice<aV2P::BufCpu<TObject, alpaka_common::Dim1D, alpaka_common::Idx>> {
     template <typename TQueue>
     static auto copyAsync(TQueue& queue, host_buffer<TObject[]> const& src) {
-      using TDevice = alpaka::Dev<TQueue>;
-      auto dst = make_device_buffer<TObject[]>(queue, alpaka::getExtentProduct(src));
-      alpaka::memcpy(queue, dst, src);
+      using TDevice = aV2P::Dev<TQueue>;
+      auto dst = make_device_buffer<TObject[]>(queue, aV2P::getExtentProduct(src));
+      aV2P::memcpy(queue, dst, src);
       return dst;
     }
   };

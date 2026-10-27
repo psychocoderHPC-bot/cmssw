@@ -1,4 +1,4 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/SiPixelDigiSoA/interface/SiPixelDigiErrorsDevice.h"
 #include "DataFormats/SiPixelDigiSoA/interface/SiPixelDigiErrorsHost.h"
@@ -9,13 +9,13 @@
 
 #include "DigiErrors_test.h"
 
-using namespace alpaka;
+using namespace aV2P;
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::testDigisSoA {
+namespace AV2P_ACCELERATOR_NAMESPACE::testDigisSoA {
 
   class TestFillKernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, SiPixelDigiErrorsSoAView digiErrors_view) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, SiPixelDigiErrorsSoAView digiErrors_view) const {
       for (uint32_t j : cms::alpakatools::uniform_elements(acc, digiErrors_view.metadata().size())) {
         digiErrors_view[j].pixelErrors().rawId = j;
         digiErrors_view[j].pixelErrors().word = j;
@@ -27,12 +27,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::testDigisSoA {
 
   class TestVerifyKernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, SiPixelDigiErrorsSoAConstView digiErrors_view) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, SiPixelDigiErrorsSoAConstView digiErrors_view) const {
       for (uint32_t j : cms::alpakatools::uniform_elements(acc, digiErrors_view.metadata().size())) {
-        ALPAKA_ASSERT_ACC(digiErrors_view[j].pixelErrors().rawId == j);
-        ALPAKA_ASSERT_ACC(digiErrors_view[j].pixelErrors().word == j);
-        ALPAKA_ASSERT_ACC(digiErrors_view[j].pixelErrors().errorType == j % 256);
-        ALPAKA_ASSERT_ACC(digiErrors_view[j].pixelErrors().fedId == j % 256);
+        AV2P_ASSERT_ACC(digiErrors_view[j].pixelErrors().rawId == j);
+        AV2P_ASSERT_ACC(digiErrors_view[j].pixelErrors().word == j);
+        AV2P_ASSERT_ACC(digiErrors_view[j].pixelErrors().errorType == j % 256);
+        AV2P_ASSERT_ACC(digiErrors_view[j].pixelErrors().fedId == j % 256);
       }
     }
   };
@@ -41,8 +41,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::testDigisSoA {
     uint32_t items = 64;
     uint32_t groups = cms::alpakatools::divide_up_by(digiErrors_view.metadata().size(), items);
     auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(groups, items);
-    alpaka::exec<Acc1D>(queue, workDiv, TestFillKernel{}, digiErrors_view);
-    alpaka::exec<Acc1D>(queue, workDiv, TestVerifyKernel{}, digiErrors_view);
+    aV2P::exec<Acc1D>(queue, workDiv, TestFillKernel{}, digiErrors_view);
+    aV2P::exec<Acc1D>(queue, workDiv, TestVerifyKernel{}, digiErrors_view);
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::testDigisSoA
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::testDigisSoA

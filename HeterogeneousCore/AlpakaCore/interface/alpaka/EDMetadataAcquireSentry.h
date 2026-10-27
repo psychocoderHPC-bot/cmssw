@@ -7,7 +7,7 @@
 #include "FWCore/Concurrency/interface/WaitingTaskWithArenaHolder.h"
 #include "FWCore/Utilities/interface/StreamID.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   namespace detail {
     /**
      * Helper class to be used in acquire()
@@ -32,7 +32,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       std::shared_ptr<EDMetadata> metadata() { return metadata_; }
 
-#ifdef ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+#ifdef AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
       // all synchronous backends
       std::shared_ptr<EDMetadata> finish() { return std::move(metadata_); }
 #else
@@ -41,7 +41,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 #endif
 
     private:
-#ifndef ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+#ifndef AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
       // all asynchronous backends
       void asyncWait();
 #endif
@@ -52,6 +52,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       bool const synchronize_;
     };
   }  // namespace detail
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

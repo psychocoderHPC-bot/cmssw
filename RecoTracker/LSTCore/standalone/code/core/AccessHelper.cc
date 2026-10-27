@@ -1,6 +1,6 @@
 #include "AccessHelper.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE::lst;
+using namespace AV2P_ACCELERATOR_NAMESPACE::lst;
 
 // ===============
 // ----* Hit *----

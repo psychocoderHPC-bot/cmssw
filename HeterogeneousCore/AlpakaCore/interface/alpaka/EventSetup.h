@@ -7,11 +7,11 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/ESDeviceProductType.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::device {
+namespace AV2P_ACCELERATOR_NAMESPACE::device {
   /**
    * The device::EventSetup mimics edm::EventSetup, and provides access
    * to ESProducts in the host memory space, and in the device memory
-   * space defined by the backend (i.e. ALPAKA_ACCELERATOR_NAMESPACE).
+   * space defined by the backend (i.e. AV2P_ACCELERATOR_NAMESPACE).
    *
    * Access to device memory space products is synchronized properly.
    *
@@ -71,11 +71,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::device {
 
   private:
     edm::EventSetup const& setup_;
-    // Taking a copy because alpaka::getDev() returns a temporary. To
+    // Taking a copy because aV2P::getDev() returns a temporary. To
     // be removed after a proper treatment of multiple devices per
     // backend is implemented in Eventsetup
     Device const device_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::device
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::device
 
 #endif

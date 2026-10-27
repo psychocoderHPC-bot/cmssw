@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Utilities/interface/ReusableObjectHolder.h"
 #include "FWCore/Utilities/interface/thread_safety_macros.h"
@@ -18,21 +18,21 @@ namespace cms::alpakatools {
   template <typename Event>
   class EventCache {
   public:
-#ifdef ALPAKA_ACC_GPU_CUDA_ENABLED
+#ifdef AV2P_ACC_GPU_CUDA_ENABLED
     friend class alpaka_cuda_async::AlpakaService;
 #endif
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef AV2P_ACC_GPU_HIP_ENABLED
     friend class alpaka_rocm_async::AlpakaService;
 #endif
-#ifdef ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+#ifdef AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
     friend class alpaka_serial_sync::AlpakaService;
 #endif
-#ifdef ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLED
+#ifdef AV2P_ACC_CPU_B_TBB_T_SEQ_ENABLED
     friend class alpaka_tbb_async::AlpakaService;
 #endif
 
-    using Device = alpaka::Dev<Event>;
-    using Platform = alpaka::Platform<Device>;
+    using Device = aV2P::Dev<Event>;
+    using Platform = aV2P::Platform<Device>;
 
     // EventCache should be constructed by the first call to
     // getEventCache() only if we have any devices present
@@ -47,7 +47,7 @@ namespace cms::alpakatools {
     std::shared_ptr<Event> get(Device dev) {
       auto event = makeOrGet(dev);
       // captured work has completed, or a just-created event
-      if (alpaka::isComplete(*event)) {
+      if (aV2P::isComplete(*event)) {
         return event;
       }
 
@@ -59,7 +59,7 @@ namespace cms::alpakatools {
       bool completed;
       do {
         event = makeOrGet(dev);
-        completed = alpaka::isComplete(*event);
+        completed = aV2P::isComplete(*event);
         if (not completed) {
           ptrs.emplace_back(std::move(event));
         }
@@ -69,7 +69,7 @@ namespace cms::alpakatools {
 
   private:
     std::shared_ptr<Event> makeOrGet(Device dev) {
-      return cache_[alpaka::getNativeHandle(dev)].makeOrGet([dev]() {
+      return cache_[aV2P::getNativeHandle(dev)].makeOrGet([dev]() {
         // We want non-busy waits
         bool constexpr busyWait = false;
         return std::make_unique<Event>(dev, busyWait);

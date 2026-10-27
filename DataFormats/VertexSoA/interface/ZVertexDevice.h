@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/VertexSoA/interface/ZVertexSoA.h"
 #include "DataFormats/VertexSoA/interface/ZVertexHost.h"

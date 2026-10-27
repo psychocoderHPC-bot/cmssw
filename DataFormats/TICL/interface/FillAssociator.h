@@ -4,14 +4,14 @@
 
 #include "DataFormats/TICL/interface/AssociationMap.h"
 #include "DataFormats/TICL/interface/detail/FillAssociator.h"
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 #include <span>
 
 namespace ticl::associator {
 
-  template <alpaka::concepts::Acc TAcc, typename TQueue, std::integral TKey, concepts::trivially_copyable TMapped>
-    requires alpaka::concepts::Queue<TQueue>
-  ALPAKA_FN_HOST auto fill(TQueue& queue,
+  template <aV2P::concepts::Acc TAcc, typename TQueue, std::integral TKey, concepts::trivially_copyable TMapped>
+    requires aV2P::concepts::Queue<TQueue>
+  AV2P_FN_HOST auto fill(TQueue& queue,
                            ticl::AssociationMapView<TKey, TMapped>& map,
                            std::span<const TKey> keys,
                            std::span<const TMapped> values) {

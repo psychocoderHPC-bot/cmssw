@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include <iostream>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/TrackSoA/interface/TracksSoA.h"
 #include "DataFormats/TrackSoA/interface/alpaka/TracksSoACollection.h"
@@ -22,13 +22,13 @@
 #include "TrajectoryStateSoA_t.h"
 
 // Each test binary is built for a single Alpaka backend.
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
-using namespace ALPAKA_ACCELERATOR_NAMESPACE::reco;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE::reco;
 int main() {
   // Get the list of devices on the current platform.
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }
@@ -45,7 +45,7 @@ int main() {
       test::testTrackSoA<pixelTopology::Phase1>(queue, tracksView);
 
       // Wait for the tests to complete.
-      alpaka::wait(queue);
+      aV2P::wait(queue);
     }
   }
 

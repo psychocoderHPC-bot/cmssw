@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 #include <ATen/core/ScalarType.h>
 
 #include "DataFormats/SoATemplate/interface/SoALayout.h"
@@ -92,7 +92,7 @@ namespace cms::torch::alpakatools {
   //
 
   template <typename TQueue>
-    requires alpaka::concepts::Queue<TQueue>
+    requires aV2P::concepts::Queue<TQueue>
   class TensorCollection {
   public:
     friend class alpaka_cuda_async::torch::AlpakaModel;

@@ -12,7 +12,7 @@
 
 #include "testPtrAlgoAsync.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * This class is part of testing CopyToHost<T>::postCopy().
    */
@@ -35,7 +35,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     const device::EDPutToken<portabletest::TestProductWithPtr<Device>> token_;
     const int32_t size_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(TestAlpakaGlobalProducerWithPtr);
+DEFINE_FWK_AV2P_MODULE(TestAlpakaGlobalProducerWithPtr);

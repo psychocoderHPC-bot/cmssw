@@ -1,7 +1,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
@@ -12,7 +12,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 GENERATE_SOA_LAYOUT(SoAPositionTemplate,
                     SOA_COLUMN(float, x),
@@ -47,8 +47,8 @@ using GenericSoAConstView = GenericSoA::ConstView;
 
 // Kernel for filling the SoA
 struct FillSoA {
-  template <alpaka::concepts::Acc TAcc, typename PositionView, typename PCAView>
-  ALPAKA_FN_ACC void operator()(TAcc const& acc, PositionView positionView, PCAView pcaView) const {
+  template <aV2P::concepts::Acc TAcc, typename PositionView, typename PCAView>
+  AV2P_FN_ACC void operator()(TAcc const& acc, PositionView positionView, PCAView pcaView) const {
     constexpr float interval = 0.01f;
     if (cms::alpakatools::once_per_grid(acc))
       positionView.detectorType() = 1;
@@ -71,14 +71,14 @@ struct FillSoA {
 TEST_CASE("Deep copy from SoA Generic View") {
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    FAIL("No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    FAIL("No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
         "the test will be skipped.");
   }
 
-  auto devHost = alpaka::getDevByIdx(alpaka::PlatformCpu{}, 0u);
+  auto devHost = aV2P::getDevByIdx(aV2P::PlatformCpu{}, 0u);
 
   for (auto const& device : cms::alpakatools::devices<Platform>()) {
-    std::cout << "Running on " << alpaka::getName(device) << std::endl;
+    std::cout << "Running on " << aV2P::getName(device) << std::endl;
 
     Queue queue(device);
 
@@ -102,9 +102,9 @@ TEST_CASE("Deep copy from SoA Generic View") {
 
     const auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
 
-    alpaka::exec<Acc1D>(queue, workDiv, FillSoA{}, positionCollectionView, pcaCollectionView);
+    aV2P::exec<Acc1D>(queue, workDiv, FillSoA{}, positionCollectionView, pcaCollectionView);
 
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
     SECTION("Deep copy the View host to host and device to device") {
       // addresses and size of the SoA columns
@@ -164,11 +164,11 @@ TEST_CASE("Deep copy from SoA Generic View") {
       PortableHostCollection<SoAPosition> positionHostCollection(queue, elems);
       PortableHostCollection<SoAPCA> pcaHostCollection(queue, elems);
 
-      alpaka::memcpy(queue, genericHostCollection.buffer(), genericCollection.buffer());
-      alpaka::memcpy(queue, positionHostCollection.buffer(), positionCollection.buffer());
-      alpaka::memcpy(queue, pcaHostCollection.buffer(), pcaCollection.buffer());
+      aV2P::memcpy(queue, genericHostCollection.buffer(), genericCollection.buffer());
+      aV2P::memcpy(queue, positionHostCollection.buffer(), positionCollection.buffer());
+      aV2P::memcpy(queue, pcaHostCollection.buffer(), pcaCollection.buffer());
 
-      alpaka::wait(queue);
+      aV2P::wait(queue);
 
       const GenericSoAConstView& genericViewHostCollection = genericHostCollection.const_view();
       const SoAPositionConstView& positionViewHostCollection = positionHostCollection.const_view();
@@ -217,10 +217,10 @@ TEST_CASE("Deep copy from SoA Generic View") {
       PortableHostCollection<SoAPosition> positionHostCollection(queue, elems);
       PortableHostCollection<SoAPCA> pcaHostCollection(queue, elems);
 
-      alpaka::memcpy(queue, positionHostCollection.buffer(), positionCollection.buffer());
-      alpaka::memcpy(queue, pcaHostCollection.buffer(), pcaCollection.buffer());
+      aV2P::memcpy(queue, positionHostCollection.buffer(), positionCollection.buffer());
+      aV2P::memcpy(queue, pcaHostCollection.buffer(), pcaCollection.buffer());
 
-      alpaka::wait(queue);
+      aV2P::wait(queue);
 
       const GenericSoAConstView& genericViewCollection = genericCollection.const_view();
       const SoAPositionConstView& positionViewHostCollection = positionHostCollection.const_view();
@@ -240,8 +240,8 @@ TEST_CASE("Deep copy from SoA Generic View") {
       PortableHostCollection<SoAPosition> positionHostCollection(queue, elems);
       PortableHostCollection<SoAPCA> pcaHostCollection(queue, elems);
 
-      alpaka::memcpy(queue, positionHostCollection.buffer(), positionCollection.buffer());
-      alpaka::memcpy(queue, pcaHostCollection.buffer(), pcaCollection.buffer());
+      aV2P::memcpy(queue, positionHostCollection.buffer(), positionCollection.buffer());
+      aV2P::memcpy(queue, pcaHostCollection.buffer(), pcaCollection.buffer());
 
       const SoAPositionConstView& positionViewHostCollection = positionHostCollection.const_view();
       const SoAPCAConstView& pcaViewHostCollection = pcaHostCollection.const_view();
@@ -274,9 +274,9 @@ TEST_CASE("Deep copy from SoA Generic View") {
       // Check for correctness of the copy
       PortableHostCollection<GenericSoA> genericHostCollection(queue, elems);
 
-      alpaka::memcpy(queue, genericHostCollection.buffer(), genericCollection.buffer());
+      aV2P::memcpy(queue, genericHostCollection.buffer(), genericCollection.buffer());
 
-      alpaka::wait(queue);
+      aV2P::wait(queue);
 
       const GenericSoAConstView& genericViewHostCollection = genericHostCollection.const_view();
 

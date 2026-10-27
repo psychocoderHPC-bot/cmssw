@@ -15,7 +15,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/host.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   // Builds the coarse-block lookup table for a TICLGeom collection. The
   // cells product is ordered by rawDetId, so every silicon wafer / scint
@@ -71,6 +71,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     edm::ESGetToken<TICLGeomHost, CaloGeometryRecord> geomToken_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(TICLGeomLookupESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(TICLGeomLookupESProducer);

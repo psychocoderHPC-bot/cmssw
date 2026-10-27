@@ -58,7 +58,7 @@ namespace cms::alpakamath {
  * @brief Compute the pseudorapidity from Cartesian coordinates
  *        using a ROOT-based implementation optimized for numerical stability.
  * 
- * @tparam TAcc Alpaka accelerator type. Enabled only if `alpaka::concepts::Acc<TAcc>` is true.
+ * @tparam TAcc Alpaka accelerator type. Enabled only if `aV2P::concepts::Acc<TAcc>` is true.
  * @tparam T    Floating-point value type.
  *
  * @param acc Alpaka accelerator instance.
@@ -70,8 +70,8 @@ namespace cms::alpakamath {
  *         +/-infinity depending on the sign of z.
  */
 
-  template <alpaka::concepts::Acc TAcc, std::floating_point T>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE T eta(TAcc const& acc, const T x, const T y, const T z) {
+  template <aV2P::concepts::Acc TAcc, std::floating_point T>
+  AV2P_FN_ACC AV2P_FN_INLINE T eta(TAcc const& acc, const T x, const T y, const T z) {
     // ROOT-style fast path:
     // uses log(zs + sqrt(zs^2 + 1)) when |zs| is moderate,
     // and a Taylor-aided form when |zs| is large.
@@ -79,29 +79,29 @@ namespace cms::alpakamath {
 
     T eta_val{0};
 
-    const T rho = alpaka::math::sqrt(acc, x * x + y * y);
+    const T rho = aV2P::math::sqrt(acc, x * x + y * y);
 
     if (rho > T{0}) {
       // threshold for switching to the Taylor-aided branch
       const T zscaled = z_scaled<T>();
 
       const T zs = z / rho;
-      if (alpaka::math::abs(acc, zs) < zscaled) {
-        eta_val = alpaka::math::log(acc, zs + alpaka::math::sqrt(acc, zs * zs + T{1}));
+      if (aV2P::math::abs(acc, zs) < zscaled) {
+        eta_val = aV2P::math::log(acc, zs + aV2P::math::sqrt(acc, zs * zs + T{1}));
       } else {
         // first-order Taylor expansion for the sqrt part
-        eta_val = (z > T{0}) ? alpaka::math::log(acc, T{2} * zs + T{0.5} / zs) : -alpaka::math::log(acc, -T{2} * zs);
+        eta_val = (z > T{0}) ? aV2P::math::log(acc, T{2} * zs + T{0.5} / zs) : -aV2P::math::log(acc, -T{2} * zs);
       }
     } else {
       // Exactly along the beam axis:
       if (z != T{0})
-        eta_val = alpaka::math::copysign(acc, std::numeric_limits<T>::infinity(), z);
+        eta_val = aV2P::math::copysign(acc, std::numeric_limits<T>::infinity(), z);
     }
     return eta_val;
   }
 }  // namespace cms::alpakamath
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
   using namespace cms::alpakaintrinsics;
@@ -127,7 +127,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     using reduce_t = float;
     using compute_t = double;
 
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   reco::PFMultiDepthClusteringVarsDeviceCollection::View mdpfClusteringVars,
                                   const reco::PFClusterDeviceCollection::ConstView pfClusters,
                                   const reco::PFRecHitFractionDeviceCollection::ConstView pfRecHitFracs,
@@ -140,8 +140,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       if (::cms::alpakatools::once_per_grid(acc)) {
         mdpfClusteringVars.size() = nClusters;
         if constexpr (is_cooperative) {
-          const unsigned int blockDim = alpaka::getWorkDiv<alpaka::Block, alpaka::Threads>(acc)[0u];
-          ALPAKA_ASSERT_ACC(blockDim % w_extent == 0u);
+          const unsigned int blockDim = aV2P::getWorkDiv<aV2P::Block, aV2P::Threads>(acc)[0u];
+          AV2P_ASSERT_ACC(blockDim % w_extent == 0u);
         }
       }
 
@@ -182,13 +182,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           //                       also includes lanes for later swap operation
           // - swap_lanes_mask   : lanes that currently hold state and must be preserved to be swapped out to some free lanes.
           if constexpr (is_cooperative) {
-            auto addFn = [] ALPAKA_FN_ACC(double a, double b) -> double { return a + b; };
+            auto addFn = [] AV2P_FN_ACC(double a, double b) -> double { return a + b; };
 
-            const warp::warp_mask_t active_lanes_mask = alpaka::warp::activemask(acc);
+            const warp::warp_mask_t active_lanes_mask = aV2P::warp::activemask(acc);
 
             const unsigned int lane_idx = idx % w_extent;
 
-            const unsigned int eff_w_extent = alpaka::popcount(acc, active_lanes_mask);
+            const unsigned int eff_w_extent = aV2P::popcount(acc, active_lanes_mask);
 
             // Define iteration parameters:
             unsigned int iter_lane_idx = 0;
@@ -240,7 +240,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 const bool is_single_work_lane = is_work_lane(single_worklane_mask, iter_lane_idx);
                 // Available cooperative subgroup capacity: free lanes minus those reserved to preserve state (swap lanes).
                 // Note: the name 'subgroup' is used here because it does not take into account iterative (master) lane itself.
-                const unsigned int free_subgroup_size = alpaka::popcount(acc, free_lanes_mask) - swap_lanes_num;
+                const unsigned int free_subgroup_size = aV2P::popcount(acc, free_lanes_mask) - swap_lanes_num;
 
                 if (is_single_work_lane) {
                   if (is_master_lane) {
@@ -250,7 +250,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                   }
                   iter_lane_idx += 1;
                   update_params = iter_lane_idx < eff_w_extent &&
-                                  (static_cast<std::uint32_t>(alpaka::popcount(acc, free_lanes_mask)) > swap_lanes_num);
+                                  (static_cast<std::uint32_t>(aV2P::popcount(acc, free_lanes_mask)) > swap_lanes_num);
                   continue;
                 }
 
@@ -260,7 +260,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 const unsigned int iter_pfrhf_size =
                     warp::shfl_mask(acc, active_lanes_mask, proc_pfrhf_size, iter_lane_idx, w_extent);
 
-                const unsigned int coop_subgroup_size = alpaka::math::min(acc, iter_pfrhf_size, free_subgroup_size);
+                const unsigned int coop_subgroup_size = aV2P::math::min(acc, iter_pfrhf_size, free_subgroup_size);
 
                 // Check which lane can cooperate in the work:
                 // -- it must be vacant (corresponding bit in 'free_lanes_mask' must be set)
@@ -303,7 +303,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 // Continue scheduling while we have remaining iter lanes and enough free capacity
                 // to eventually place swap lanes
                 update_params = (iter_lane_idx < eff_w_extent) &&
-                                (static_cast<std::uint32_t>(alpaka::popcount(acc, free_lanes_mask)) > swap_lanes_num);
+                                (static_cast<std::uint32_t>(aV2P::popcount(acc, free_lanes_mask)) > swap_lanes_num);
               }
 
               // Now we need to swap cached values to vacant lanes:
@@ -350,9 +350,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               const reduce_t eta_rh = static_cast<reduce_t>(cms::alpakamath::eta(acc, x_rh, y_rh, z_rh));
               const reduce_t phi_rh = static_cast<reduce_t>(::cms::alpakatools::phi(acc, x_rh, y_rh));
 
-              const reduce_t etaSum_ = frac_energy * alpaka::math::abs(acc, eta_rh - proc_eta_c);
+              const reduce_t etaSum_ = frac_energy * aV2P::math::abs(acc, eta_rh - proc_eta_c);
               const reduce_t phiSum_ =
-                  frac_energy * alpaka::math::abs(acc, ::cms::alpakatools::deltaPhi(acc, phi_rh, proc_phi_c));
+                  frac_energy * aV2P::math::abs(acc, ::cms::alpakatools::deltaPhi(acc, phi_rh, proc_phi_c));
 
               iter_accum_etaSum += warp_sparse_reduce(acc, coop_group_mask, lane_idx, etaSum_, addFn);
               iter_accum_phiSum += warp_sparse_reduce(acc, coop_group_mask, lane_idx, phiSum_, addFn);
@@ -381,9 +381,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               const reduce_t eta_rh = static_cast<reduce_t>(cms::alpakamath::eta(acc, x_rh, y_rh, z_rh));
               const reduce_t phi_rh = static_cast<reduce_t>(::cms::alpakatools::phi(acc, x_rh, y_rh));
 
-              const reduce_t etaSum_tmp = (frac_energy)*alpaka::math::abs(acc, eta_rh - eta_c);
+              const reduce_t etaSum_tmp = (frac_energy)*aV2P::math::abs(acc, eta_rh - eta_c);
               const reduce_t phiSum_tmp =
-                  (frac_energy)*alpaka::math::abs(acc, ::cms::alpakatools::deltaPhi(acc, phi_rh, phi_c));
+                  (frac_energy)*aV2P::math::abs(acc, ::cms::alpakatools::deltaPhi(acc, phi_rh, phi_c));
 
               iter_accum_etaSum += etaSum_tmp;
               iter_accum_phiSum += phiSum_tmp;
@@ -393,8 +393,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             accum_phiSum_div_en = static_cast<accum_t>(iter_accum_phiSum / pfc_energy);
           }
         }
-        const double etaRMS2_ = alpaka::math::max(acc, accum_etaSum_div_en, rms2_threshold);
-        const double phiRMS2_ = alpaka::math::max(acc, accum_phiSum_div_en, rms2_threshold);
+        const double etaRMS2_ = aV2P::math::max(acc, accum_etaSum_div_en, rms2_threshold);
+        const double phiRMS2_ = aV2P::math::max(acc, accum_phiSum_div_en, rms2_threshold);
 
         mdpfClusteringVars[idx].etaRMS2() = etaRMS2_ * etaRMS2_;
         mdpfClusteringVars[idx].phiRMS2() = phiRMS2_ * phiRMS2_;
@@ -402,6 +402,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     }
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

@@ -6,9 +6,9 @@
 
 #include "RecoParticleFlow/PFClusterProducer/interface/PFMultiDepthECLCCPrologueArgsSoA.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::reco {
+namespace AV2P_ACCELERATOR_NAMESPACE::reco {
 
   using PFMultiDepthECLCCPrologueArgsDeviceCollection = PortableCollection<::reco::PFMultiDepthECLCCPrologueArgsSoA>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::reco
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::reco
 
 #endif

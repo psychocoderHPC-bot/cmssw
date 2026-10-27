@@ -13,11 +13,11 @@
 
 #include <functional>
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * The ESProducer is a base class for modules producing data into
    * the host memory space and/or the device memory space defined by
-   * the backend (i.e. ALPAKA_ACCELERATOR_NAMESPACE). The interface
+   * the backend (i.e. AV2P_ACCELERATOR_NAMESPACE). The interface
    * looks similar to the normal edm::ESProducer.
    *
    * When producing a host product, the produce function should have
@@ -75,7 +75,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               auto const& devices = cms::alpakatools::devices<Platform>();
               assert(devices.size() == 1);
               device::Record<TRecord> const deviceRecord(record, devices.front());
-              static_assert(std::is_same_v<Queue, alpaka::Queue<Device, alpaka::Blocking>>,
+              static_assert(std::is_same_v<Queue, aV2P::Queue<Device, aV2P::Blocking>>,
                             "Non-blocking queue when trying to use ES data product directly. This might indicate a "
                             "need to extend the Alpaka ESProducer base class.");
               return std::invoke(iMethod, iThis, deviceRecord);
@@ -115,7 +115,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 anynull = true;
               }
               if (synchronize) {
-                alpaka::wait(deviceRecord.queue());
+                aV2P::wait(deviceRecord.queue());
               } else {
                 asyncWait(deviceRecord.queue(), std::move(holder));
               }
@@ -161,6 +161,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     std::string const appendToDataLabel_;
     bool const synchronize_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <typeinfo>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Utilities/interface/TypeDemangler.h"
 
@@ -17,10 +17,10 @@ namespace portablecollection {
   void deepCopy(TQueue& queue, Descriptor& dest, ConstDescriptor const& src) {
     if constexpr (I < ConstDescriptor::num_cols) {
       assert(std::get<I>(dest.buff).size_bytes() == std::get<I>(src.buff).size_bytes());
-      alpaka::memcpy(
+      aV2P::memcpy(
           queue,
-          alpaka::createView(alpaka::getDev(queue), std::get<I>(dest.buff).data(), std::get<I>(dest.buff).size()),
-          alpaka::createView(alpaka::getDev(queue), std::get<I>(src.buff).data(), std::get<I>(src.buff).size()));
+          aV2P::createView(aV2P::getDev(queue), std::get<I>(dest.buff).data(), std::get<I>(dest.buff).size()),
+          aV2P::createView(aV2P::getDev(queue), std::get<I>(src.buff).data(), std::get<I>(src.buff).size()));
       deepCopy<I + 1>(queue, dest, src);
     }
   }

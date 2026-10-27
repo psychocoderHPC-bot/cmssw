@@ -1,7 +1,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
@@ -12,7 +12,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 // This test checks the correctness of using SoABlocks with PortableCollections.
 
@@ -37,7 +37,7 @@ using GraphConstView = Graph::ConstView;
 
 // Fill SoAs
 struct FillSoAs {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, Nodes::View nodes, Edges::View edges) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, Nodes::View nodes, Edges::View edges) const {
     const int N = static_cast<int>(nodes.metadata().size());
     const int E = static_cast<int>(edges.metadata().size());
 
@@ -65,7 +65,7 @@ struct FillSoAs {
 
 // Fill one block SoABlocks
 struct FillOneBlockSoABlocks {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, OneBlockView blocksView) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, OneBlockView blocksView) const {
     const int N = static_cast<int>(blocksView.nodes().metadata().size());
 
     // Fill nodes with the indexes
@@ -80,7 +80,7 @@ struct FillOneBlockSoABlocks {
 
 // Fill SoABlocks
 struct FillBlocks {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, GraphView blocksView) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, GraphView blocksView) const {
     const int N = static_cast<int>(blocksView.nodes().metadata().size());
     const int E = static_cast<int>(blocksView.edges().metadata().size());
 
@@ -109,13 +109,13 @@ struct FillBlocks {
 TEST_CASE("SoABlocks minimal graph in heterogeneous environment") {
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cout << "No devices available for the " << EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE)
+    std::cout << "No devices available for the " << EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE)
               << " backend, skipping.\n";
     return;
   }
 
   for (auto const& device : devices) {
-    std::cout << "Running on " << alpaka::getName(device) << std::endl;
+    std::cout << "Running on " << aV2P::getName(device) << std::endl;
     Queue queue(device);
 
     // Number of elements
@@ -145,10 +145,10 @@ TEST_CASE("SoABlocks minimal graph in heterogeneous environment") {
     const auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
 
     // Fill: separate e blocks
-    alpaka::exec<Acc1D>(queue, workDiv, FillSoAs{}, nodesCollectionView, edgesCollectionView);
-    alpaka::exec<Acc1D>(queue, workDivOneBlockVersion, FillOneBlockSoABlocks{}, oneBlockCollectionView);
-    alpaka::exec<Acc1D>(queue, workDiv, FillBlocks{}, graphCollectionView);
-    alpaka::wait(queue);
+    aV2P::exec<Acc1D>(queue, workDiv, FillSoAs{}, nodesCollectionView, edgesCollectionView);
+    aV2P::exec<Acc1D>(queue, workDivOneBlockVersion, FillOneBlockSoABlocks{}, oneBlockCollectionView);
+    aV2P::exec<Acc1D>(queue, workDiv, FillBlocks{}, graphCollectionView);
+    aV2P::wait(queue);
 
     // Check results on host
     PortableHostCollection<Nodes> nodesHost(cms::alpakatools::host(), N);
@@ -156,11 +156,11 @@ TEST_CASE("SoABlocks minimal graph in heterogeneous environment") {
     PortableHostCollection<OneBlock> oneBlockHost(cms::alpakatools::host(), N);
     PortableHostCollection<Graph> graphHost(cms::alpakatools::host(), N, E);
 
-    alpaka::memcpy(queue, nodesHost.buffer(), nodesCollection.buffer());
-    alpaka::memcpy(queue, edgesHost.buffer(), edgesCollection.buffer());
-    alpaka::memcpy(queue, oneBlockHost.buffer(), oneBlockCollection.buffer());
-    alpaka::memcpy(queue, graphHost.buffer(), graphCollection.buffer());
-    alpaka::wait(queue);
+    aV2P::memcpy(queue, nodesHost.buffer(), nodesCollection.buffer());
+    aV2P::memcpy(queue, edgesHost.buffer(), edgesCollection.buffer());
+    aV2P::memcpy(queue, oneBlockHost.buffer(), oneBlockCollection.buffer());
+    aV2P::memcpy(queue, graphHost.buffer(), graphCollection.buffer());
+    aV2P::wait(queue);
 
     const Nodes::ConstView nodesHostView = nodesHost.const_view();
     const Edges::ConstView edgesHostView = edgesHost.const_view();

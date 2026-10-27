@@ -1,32 +1,32 @@
 #ifndef HeterogeneousCore_AlpakaMath_deltaPhi_h
 #define HeterogeneousCore_AlpakaMath_deltaPhi_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 namespace cms::alpakatools {
 
   // reduce to [-pi,pi]
-  template <alpaka::concepts::Acc TAcc, std::floating_point T>
-  ALPAKA_FN_HOST_ACC inline T reducePhiRange(TAcc const& acc, T x) {
+  template <aV2P::concepts::Acc TAcc, std::floating_point T>
+  AV2P_FN_HOST_ACC inline T reducePhiRange(TAcc const& acc, T x) {
     constexpr T o2pi = T{1.} / (T{2.} * std::numbers::pi_v<T>);
-    if (alpaka::math::abs(acc, x) <= std::numbers::pi_v<T>)
+    if (aV2P::math::abs(acc, x) <= std::numbers::pi_v<T>)
       return x;
-    T n = alpaka::math::round(acc, x * o2pi);
+    T n = aV2P::math::round(acc, x * o2pi);
     return x - n * T{2.} * std::numbers::pi_v<T>;
   }
 
-  template <alpaka::concepts::Acc TAcc, typename T>
-  ALPAKA_FN_HOST_ACC inline T phi(TAcc const& acc, T x, T y) {
-    return reducePhiRange(acc, std::numbers::pi_v<T> + alpaka::math::atan2(acc, -y, -x));
+  template <aV2P::concepts::Acc TAcc, typename T>
+  AV2P_FN_HOST_ACC inline T phi(TAcc const& acc, T x, T y) {
+    return reducePhiRange(acc, std::numbers::pi_v<T> + aV2P::math::atan2(acc, -y, -x));
   }
 
-  template <alpaka::concepts::Acc TAcc, typename T>
-  ALPAKA_FN_HOST_ACC inline T deltaPhi(TAcc const& acc, T x1, T y1, T x2, T y2) {
-    return alpaka::math::atan2(acc, x1 * y2 - x2 * y1, x1 * x2 + y1 * y2);
+  template <aV2P::concepts::Acc TAcc, typename T>
+  AV2P_FN_HOST_ACC inline T deltaPhi(TAcc const& acc, T x1, T y1, T x2, T y2) {
+    return aV2P::math::atan2(acc, x1 * y2 - x2 * y1, x1 * x2 + y1 * y2);
   }
 
-  template <alpaka::concepts::Acc TAcc, typename T>
-  ALPAKA_FN_HOST_ACC inline T deltaPhi(TAcc const& acc, T phi1, T phi2) {
+  template <aV2P::concepts::Acc TAcc, typename T>
+  AV2P_FN_HOST_ACC inline T deltaPhi(TAcc const& acc, T phi1, T phi2) {
     return reducePhiRange(acc, phi1 - phi2);
   }
 

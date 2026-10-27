@@ -4,14 +4,14 @@
 #include <atomic>
 #include <memory>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Common/interface/DeviceProduct.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/EventCache.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/QueueCache.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * The EDMetadata class provides the exact synchronization
    * mechanisms for Event data products for backends with asynchronous
@@ -35,13 +35,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
    * one?
    */
 
-#ifdef ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+#ifdef AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
   // Host backends with a synchronous queue
 
   class EDMetadata {
   public:
     EDMetadata(Device device) : device_(std::move(device)) {}
-    EDMetadata(std::shared_ptr<Queue> queue) : device_(alpaka::getDev(*queue)), queue_(std::move(queue)) {}
+    EDMetadata(std::shared_ptr<Queue> queue) : device_(aV2P::getDev(*queue)), queue_(std::move(queue)) {}
 
     Device const& device() const { return device_; }
 
@@ -81,7 +81,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   class EDMetadata : public edm::DeviceProductMetadataBase {
   public:
     EDMetadata(Device device) : device_(std::move(device)) {}
-    EDMetadata(std::shared_ptr<Queue> queue) : device_(alpaka::getDev(*queue)), queue_(std::move(queue)) {}
+    EDMetadata(std::shared_ptr<Queue> queue) : device_(aV2P::getDev(*queue)), queue_(std::move(queue)) {}
     ~EDMetadata() noexcept override;
 
     Device const& device() const { return device_; }
@@ -114,7 +114,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       if (not event_) {
         event_ = cms::alpakatools::getEventCache<Event>().get(device_);
       }
-      alpaka::enqueue(queue(), *event_);
+      aV2P::enqueue(queue(), *event_);
       return event_;
     }
 
@@ -146,10 +146,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // consumer or not. The goal is to have a "chain" of modules to
     // queue their work to the same queue.
     mutable std::atomic<bool> mayReuseQueue_ = true;
-    // Cache to potentially reduce alpaka::wait() calls
+    // Cache to potentially reduce aV2P::wait() calls
     mutable std::atomic<bool> eventComplete_ = false;
   };
 #endif
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // HeterogeneousCore_AlpakaCore_interface_alpaka_EDMetadata_h

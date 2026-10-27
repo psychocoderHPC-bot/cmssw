@@ -14,7 +14,7 @@
 #include "PhysicsTools/PyTorchAlpaka/interface/alpaka/AlpakaModel.h"
 #include "PhysicsTools/PyTorchAlpakaTest/interface/Environment.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
+namespace AV2P_ACCELERATOR_NAMESPACE::torchtest {
 
   class TinyResNet : public stream::FixedQueueEDProducer<> {
   public:
@@ -65,6 +65,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
     const ::torchtest::Environment environment_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::torchtest
 
-DEFINE_FWK_ALPAKA_MODULE(torchtest::TinyResNet);
+DEFINE_FWK_AV2P_MODULE(torchtest::TinyResNet);

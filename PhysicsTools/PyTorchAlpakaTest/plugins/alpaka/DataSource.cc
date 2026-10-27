@@ -12,7 +12,7 @@
 #include "PhysicsTools/PyTorchAlpakaTest/interface/Environment.h"
 #include "PhysicsTools/PyTorchAlpakaTest/plugins/alpaka/CommonKernels.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
+namespace AV2P_ACCELERATOR_NAMESPACE::torchtest {
 
   class DataSource : public stream::FixedQueueEDProducer<> {
   public:
@@ -51,6 +51,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
     const ::torchtest::Environment environment_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::torchtest
 
-DEFINE_FWK_ALPAKA_MODULE(torchtest::DataSource);
+DEFINE_FWK_AV2P_MODULE(torchtest::DataSource);

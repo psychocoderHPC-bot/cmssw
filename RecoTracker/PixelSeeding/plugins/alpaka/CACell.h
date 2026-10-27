@@ -8,7 +8,7 @@
 #include <cmath>
 #include <limits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/TrackSoA/interface/TrackDefinitions.h"
 #include "DataFormats/TrackSoA/interface/TracksSoA.h"
@@ -23,14 +23,14 @@
 
 #include "CAStructures.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace ::caStructures;
 
   template <typename TrackerTraits>
   class CACell {
   public:
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void init(const HitsMultiView& hh,
+    AV2P_FN_ACC AV2P_FN_INLINE void init(const HitsMultiView& hh,
                                              int layerPairId,
                                              uint8_t theInnerLayer,
                                              uint8_t theOuterLayer,
@@ -72,41 +72,41 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     constexpr unsigned int inner_hit_id() const { return theInnerHitId_; }
     constexpr unsigned int outer_hit_id() const { return theOuterHitId_; }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void kill() { theStatus_ |= uint16_t(StatusBit::kKilled); }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool isKilled() const { return theStatus_ & uint16_t(StatusBit::kKilled); }
+    AV2P_FN_ACC AV2P_FN_INLINE void kill() { theStatus_ |= uint16_t(StatusBit::kKilled); }
+    AV2P_FN_ACC AV2P_FN_INLINE bool isKilled() const { return theStatus_ & uint16_t(StatusBit::kKilled); }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE int16_t layerPairId() const { return theLayerPairId_; }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE int16_t innerLayer() const { return theInnerLayer_; }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE int16_t outerLayer() const { return theOuterLayer_; }
+    AV2P_FN_ACC AV2P_FN_INLINE int16_t layerPairId() const { return theLayerPairId_; }
+    AV2P_FN_ACC AV2P_FN_INLINE int16_t innerLayer() const { return theInnerLayer_; }
+    AV2P_FN_ACC AV2P_FN_INLINE int16_t outerLayer() const { return theOuterLayer_; }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool unused() const { return 0 == (uint16_t(StatusBit::kUsed) & theStatus_); }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void setStatusBits(StatusBit mask) { theStatus_ |= uint16_t(mask); }
+    AV2P_FN_ACC AV2P_FN_INLINE bool unused() const { return 0 == (uint16_t(StatusBit::kUsed) & theStatus_); }
+    AV2P_FN_ACC AV2P_FN_INLINE void setStatusBits(StatusBit mask) { theStatus_ |= uint16_t(mask); }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE float inner_x(const HitsMultiView& hh) const { return hh[theInnerHitId_].xGlobal(); }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE float outer_x(const HitsMultiView& hh) const { return hh[theOuterHitId_].xGlobal(); }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE float inner_y(const HitsMultiView& hh) const { return hh[theInnerHitId_].yGlobal(); }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE float outer_y(const HitsMultiView& hh) const { return hh[theOuterHitId_].yGlobal(); }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE float inner_z(const HitsMultiView& hh) const { return theInnerZ_; }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE float inner_z() const { return theInnerZ_; }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE float outer_z(const HitsMultiView& hh) const { return hh[theOuterHitId_].zGlobal(); }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE float inner_r(const HitsMultiView& hh) const { return theInnerR_; }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE float inner_r() const { return theInnerR_; }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE float outer_r(const HitsMultiView& hh) const { return hh[theOuterHitId_].rGlobal(); }
+    AV2P_FN_ACC AV2P_FN_INLINE float inner_x(const HitsMultiView& hh) const { return hh[theInnerHitId_].xGlobal(); }
+    AV2P_FN_ACC AV2P_FN_INLINE float outer_x(const HitsMultiView& hh) const { return hh[theOuterHitId_].xGlobal(); }
+    AV2P_FN_ACC AV2P_FN_INLINE float inner_y(const HitsMultiView& hh) const { return hh[theInnerHitId_].yGlobal(); }
+    AV2P_FN_ACC AV2P_FN_INLINE float outer_y(const HitsMultiView& hh) const { return hh[theOuterHitId_].yGlobal(); }
+    AV2P_FN_ACC AV2P_FN_INLINE float inner_z(const HitsMultiView& hh) const { return theInnerZ_; }
+    AV2P_FN_ACC AV2P_FN_INLINE float inner_z() const { return theInnerZ_; }
+    AV2P_FN_ACC AV2P_FN_INLINE float outer_z(const HitsMultiView& hh) const { return hh[theOuterHitId_].zGlobal(); }
+    AV2P_FN_ACC AV2P_FN_INLINE float inner_r(const HitsMultiView& hh) const { return theInnerR_; }
+    AV2P_FN_ACC AV2P_FN_INLINE float inner_r() const { return theInnerR_; }
+    AV2P_FN_ACC AV2P_FN_INLINE float outer_r(const HitsMultiView& hh) const { return hh[theOuterHitId_].rGlobal(); }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE auto inner_iphi(const HitsMultiView& hh) const { return hh[theInnerHitId_].iphi(); }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE auto outer_iphi(const HitsMultiView& hh) const { return hh[theOuterHitId_].iphi(); }
+    AV2P_FN_ACC AV2P_FN_INLINE auto inner_iphi(const HitsMultiView& hh) const { return hh[theInnerHitId_].iphi(); }
+    AV2P_FN_ACC AV2P_FN_INLINE auto outer_iphi(const HitsMultiView& hh) const { return hh[theOuterHitId_].iphi(); }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE float inner_detIndex(const HitsMultiView& hh) const {
+    AV2P_FN_ACC AV2P_FN_INLINE float inner_detIndex(const HitsMultiView& hh) const {
       return hh[theInnerHitId_].detectorIndex();
     }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE float outer_detIndex(const HitsMultiView& hh) const {
+    AV2P_FN_ACC AV2P_FN_INLINE float outer_detIndex(const HitsMultiView& hh) const {
       return hh[theOuterHitId_].detectorIndex();
     }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE auto fishboneId() const { return theFishboneId_; }
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool hasFishbone() const { return theFishboneId_ != invalidHitId; }
+    AV2P_FN_ACC AV2P_FN_INLINE auto fishboneId() const { return theFishboneId_; }
+    AV2P_FN_ACC AV2P_FN_INLINE bool hasFishbone() const { return theFishboneId_ != invalidHitId; }
 
-    ALPAKA_FN_ACC void print_cell() const {
+    AV2P_FN_ACC void print_cell() const {
       printf("printing cell: on layerPair: %d, innerLayer: %d, outerLayer: %d, innerHitId: %d, outerHitId: %d \n",
              theLayerPairId_,
              theInnerLayer_,
@@ -115,11 +115,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
              theOuterHitId_);
     }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void setFishbone(Acc2D const& acc, hindex_type id, float z, const HitsMultiView& hh) {
+    AV2P_FN_ACC AV2P_FN_INLINE void setFishbone(Acc2D const& acc, hindex_type id, float z, const HitsMultiView& hh) {
       // make it deterministic: use the farther apart (in z), breaking exact ties by the hit id so
       // that concurrent updates converge to the same winner independently of their order
       auto old = theFishboneId_;
-      while (old != alpaka::atomicCas(
+      while (old != aV2P::atomicCas(
                         acc,
                         &theFishboneId_,
                         old,
@@ -127,11 +127,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                          (std::abs(z - theInnerZ_) == std::abs(hh[old].zGlobal() - theInnerZ_) && id < old))
                             ? id
                             : old,
-                        alpaka::hierarchy::Blocks{}))
+                        aV2P::hierarchy::Blocks{}))
         old = theFishboneId_;
     }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE static bool areAlignedRZ(
+    AV2P_FN_ACC AV2P_FN_INLINE static bool areAlignedRZ(
         float r1, float z1, float ri, float zi, float ro, float zo, const float ptmin, const float thetaCut) {
       float radius_diff = std::abs(r1 - ro);
       float distance_13_squared = radius_diff * radius_diff + (z1 - zo) * (z1 - zo);
@@ -143,7 +143,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       return tan_12_13_half_mul_distance_13_squared * pMin <= thetaCut * distance_13_squared * radius_diff;
     }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE auto dcaCut(const HitsMultiView& hh,
+    AV2P_FN_ACC AV2P_FN_INLINE auto dcaCut(const HitsMultiView& hh,
                                                CACell const& otherCell,
                                                const float region_origin_radius_plus_tolerance,
                                                const float maxCurv) const {
@@ -166,7 +166,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       return std::abs(eq.dca0()) < region_origin_radius_plus_tolerance * std::abs(curvature);
     }
 
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE auto quadrupletCut(const float innerCurvature,
+    AV2P_FN_ACC AV2P_FN_INLINE auto quadrupletCut(const float innerCurvature,
                                                       float& outerCurvature,
                                                       const ::reco::CALayersSoAConstView& ll,
                                                       const HitsMultiView& hh,
@@ -206,7 +206,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // the visit of the graph based on the neighborhood connections between cells.
 
     template <int DEPTH>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void find_ntuplets(Acc1D const& acc,
+    AV2P_FN_ACC AV2P_FN_INLINE void find_ntuplets(Acc1D const& acc,
                                                       const HitsMultiView& hh,
                                                       const ::reco::CALayersSoAConstView& ll,
                                                       CACell* __restrict__ cells,
@@ -230,11 +230,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       // than a threshold
       if constexpr (DEPTH <= 0) {
         printf("ERROR: CACell::find_ntuplets reached full depth!\n");
-        ALPAKA_ASSERT_ACC(false);
+        AV2P_ASSERT_ACC(false);
       } else {
         auto doubletId = this - cells;
         tmpNtuplet.push_back_unsafe(doubletId);  // if we move this to be safe we could parallelize further below?
-        ALPAKA_ASSERT_ACC(tmpNtuplet.size() <= int(TrackerTraits::maxLayersPerTrack - 1));
+        AV2P_ASSERT_ACC(tmpNtuplet.size() <= int(TrackerTraits::maxLayersPerTrack - 1));
 
         // Single bin per cell. Each stored entry encodes the neighbor cell index
         // in its low 31 bits and the layer-skipping flag in bit 31. Walk the
@@ -318,7 +318,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                   hits[nh++] = cells[c].theFishboneId_;  // Fishbone hit is always outer than inner hit
                 }
               }
-              ALPAKA_ASSERT_ACC(nh < TrackerTraits::maxHitsOnTrack);
+              AV2P_ASSERT_ACC(nh < TrackerTraits::maxHitsOnTrack);
               hits[nh] = theOuterHitId_;
               auto it = foundNtuplets.bulkFill(acc, apc, hits, nh + 1);
 #ifdef CA_DEBUG
@@ -329,13 +329,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 #ifdef CA_DEBUG
                   printf("%d - ", c);
 #endif
-                  auto t_ind = alpaka::atomicAdd(acc, nCellTracks, 1u, alpaka::hierarchy::Blocks{});
+                  auto t_ind = aV2P::atomicAdd(acc, nCellTracks, 1u, aV2P::hierarchy::Blocks{});
 
                   if (t_ind >= uint32_t(ct.metadata().size())) {
 #ifdef CA_WARNINGS
                     printf("Warning!!!! Too many cell->tracks associations (limit = %d)!\n", ct.metadata().size());
 #endif
-                    alpaka::atomicSub(acc, nCellTracks, 1u, alpaka::hierarchy::Blocks{});
+                    aV2P::atomicSub(acc, nCellTracks, 1u, aV2P::hierarchy::Blocks{});
                     break;
                   }
                   cellTracksHisto->count(acc, c);
@@ -356,7 +356,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           }
         }
         tmpNtuplet.pop_back();
-        ALPAKA_ASSERT_ACC(tmpNtuplet.size() < int(TrackerTraits::maxHitsOnTrack - 1));
+        AV2P_ASSERT_ACC(tmpNtuplet.size() < int(TrackerTraits::maxHitsOnTrack - 1));
       }
     }
 
@@ -373,6 +373,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     hindex_type theFishboneId_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // RecoTracker_PixelSeeding_plugins_alpaka_CACell_h

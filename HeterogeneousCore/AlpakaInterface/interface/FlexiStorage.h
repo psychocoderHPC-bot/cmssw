@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <limits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 namespace cms::alpakatools {
   class FlexiStorageBase {
@@ -37,8 +37,8 @@ namespace cms::alpakatools {
   class FlexiStorage<I, kDynamicSize> : public FlexiStorageBase {
   public:
     constexpr void init(I* v, size_type s) {
-      ALPAKA_ASSERT_ACC((s != kDynamicSize) && "FlexiStorage::init(v, s): s must not be kDynamicSize");
-      ALPAKA_ASSERT_ACC((s != kOverflow) && "FlexiStorage::init(v, s): s must not be kOverflow");
+      AV2P_ASSERT_ACC((s != kDynamicSize) && "FlexiStorage::init(v, s): s must not be kDynamicSize");
+      AV2P_ASSERT_ACC((s != kOverflow) && "FlexiStorage::init(v, s): s must not be kOverflow");
       m_v = v;
       m_capacity = s;
     }

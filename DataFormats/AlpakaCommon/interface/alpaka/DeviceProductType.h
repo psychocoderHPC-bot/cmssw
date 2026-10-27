@@ -6,11 +6,11 @@
 
 #include <type_traits>
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::detail {
+namespace AV2P_ACCELERATOR_NAMESPACE::detail {
   // host synchronous backends can use TProduct directly
   // all device and asynchronous backends need to be wrapped
   inline constexpr bool useProductDirectly =
-      std::is_same_v<Platform, alpaka::PlatformCpu> and std::is_same_v<Queue, alpaka::QueueCpuBlocking>;
+      std::is_same_v<Platform, aV2P::PlatformCpu> and std::is_same_v<Queue, aV2P::QueueCpuBlocking>;
 
   /**
    * Type alias for the actual product type put in the
@@ -19,6 +19,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::detail {
   template <typename TProduct>
   using DeviceProductType = std::conditional_t<useProductDirectly, TProduct, edm::DeviceProduct<TProduct>>;
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::detail
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::detail
 
 #endif

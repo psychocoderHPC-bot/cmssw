@@ -5,7 +5,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/devices.h"
 #include "HeterogeneousCore/AlpakaServices/interface/alpaka/AlpakaService.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::detail {
+namespace AV2P_ACCELERATOR_NAMESPACE::detail {
   Device const& chooseDevice(edm::StreamID id) {
     // The idea of checking the AlpakaService status here is that
     // regardless of process.options.accelerators setting the
@@ -15,13 +15,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::detail {
     // on the intended accelerators is (eventually) communicated from
     // process.options.accelerators to AlpakaServices via
     // ProcessAcceleratorAlpaka.
-    edm::Service<ALPAKA_ACCELERATOR_NAMESPACE::AlpakaService> alpakaService;
+    edm::Service<AV2P_ACCELERATOR_NAMESPACE::AlpakaService> alpakaService;
     if (not alpakaService->enabled()) {
       cms::Exception ex("AlpakaError");
       ex << "Unable to choose current device because AlpakaService is disabled. If AlpakaService was not explicitly\n"
             "disabled in the configuration, the probable cause is that there is no GPU or there is some problem\n"
             "in the platform runtime or drivers.";
-      ex.addContext("Calling " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) "::detail::chooseDevice()");
+      ex.addContext("Calling " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) "::detail::chooseDevice()");
       throw ex;
     };
 
@@ -34,4 +34,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::detail {
     auto const& devices = cms::alpakatools::devices<Platform>();
     return devices[id % devices.size()];
   }
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::detail
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::detail

@@ -143,15 +143,15 @@ def main():
             return ", ".join(f"{x:.8g}f" for x in v)
         nin, nh = len(names), ck["arch"][1]
         out = ["#ifndef RecoTracker_LSTCore_src_alpaka_T4NeuralNetworkWeights_h",
-               "#define RecoTracker_LSTCore_src_alpaka_T4NeuralNetworkWeights_h", "", "#include <alpaka/alpaka.hpp>", "",
+               "#define RecoTracker_LSTCore_src_alpaka_T4NeuralNetworkWeights_h", "", "#include <aV2P/alpaka.hpp>", "",
                "#include \"FWCore/Utilities/interface/HostDeviceConstant.h\"", "",
-               "namespace ALPAKA_ACCELERATOR_NAMESPACE::lst::dnn::t4dnn {"]
+               "namespace AV2P_ACCELERATOR_NAMESPACE::lst::dnn::t4dnn {"]
         for nmL, (W, b), (i, o) in zip(("layer1", "layer2", "output_layer"), L, ((nin, nh), (nh, nh), (nh, 3))):
             out.append(f"  HOST_DEVICE_CONSTANT float bias_{nmL}[{o}] = {{{carr(b)}}};")
             out.append(f"  HOST_DEVICE_CONSTANT float wgtT_{nmL}[{i}][{o}] = {{")
             out += [f"      {{{carr(row)}}}," for row in W.T]
             out.append("  };")
-        out += ["}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::lst::dnn::t4dnn", "", "#endif", ""]
+        out += ["}  // namespace AV2P_ACCELERATOR_NAMESPACE::lst::dnn::t4dnn", "", "#endif", ""]
         base = os.path.splitext(a.out)[0]
         open(base + "_T4NeuralNetworkWeights.h", "w").write("\n".join(out))
         t = tabs[a.export]["wp"]

@@ -1,4 +1,4 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/EcalDigi/interface/alpaka/EcalDigiPhase2DeviceCollection.h"
 #include "DataFormats/EcalDigi/interface/EcalDataFrame_Ph2.h"
@@ -13,12 +13,12 @@
 #include "EcalUncalibRecHitPhase2WeightsAlgoPortable.h"
 #include "EcalUncalibRecHitPhase2WeightsStruct.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::weights {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::weights {
   using namespace cms::alpakatools;
 
   class Phase2WeightsKernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   EcalUncalibRecHitPhase2Weights const* weightsObj,
                                   EcalDigiPhase2DeviceCollection::ConstView digisDev,
                                   EcalUncalibratedRecHitDeviceCollection::View uncalibratedRecHitsDev) const {
@@ -77,8 +77,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::weights {
     //create the work division
     auto workDiv = make_workdiv<Acc1D>(groups, items);
     //launch the kernel
-    alpaka::exec<Acc1D>(
+    aV2P::exec<Acc1D>(
         queue, workDiv, Phase2WeightsKernel{}, weightsObj, digis.const_view(), uncalibratedRecHits.view());
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::weights
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::weights

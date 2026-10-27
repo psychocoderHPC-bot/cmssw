@@ -11,7 +11,7 @@
 
 #include "TestAlgo.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * This class demonstrates a global EDProducer that
    * - uses a MoveToDeviceCache to copy some host-side data to the devices of the backend.
@@ -77,7 +77,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     cms::alpakatools::MoveToDeviceCache<Device, PortableHostObject<TestAlgo::UpdateInfo>> deviceCache_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(TestAlpakaGlobalProducerMoveToDeviceCache);
+DEFINE_FWK_AV2P_MODULE(TestAlpakaGlobalProducerMoveToDeviceCache);

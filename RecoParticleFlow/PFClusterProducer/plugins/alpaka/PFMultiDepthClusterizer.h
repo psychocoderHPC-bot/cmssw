@@ -2,7 +2,7 @@
 #define PFClusterProducer_plugins_alpaka_PFMultiDepthClusterizer_h
 
 // Alpaka includes
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
 #include "DataFormats/ParticleFlowReco/interface/alpaka/PFRecHitDeviceCollection.h"
@@ -30,7 +30,7 @@
  * @param nClusters       Number of clusters to process.
  */
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
+namespace AV2P_ACCELERATOR_NAMESPACE::eclcc {
 
   void clusterize(Queue& queue,
                   reco::PFClusterDeviceCollection& outPFCluster,
@@ -41,6 +41,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc {
                   const PFMultiDepthClusterParams* params,
                   const unsigned int nClusters);
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::eclcc
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::eclcc
 
 #endif

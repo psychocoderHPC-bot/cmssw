@@ -18,22 +18,22 @@
 #include "KernelHelpers.h"
 #include "EcalMultifitParameters.h"
 
-//#define ECAL_RECO_ALPAKA_DEBUG
+//#define ECAL_RECO_AV2P_DEBUG
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit {
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool use_sample(unsigned int sample_mask, unsigned int sample) {
+  AV2P_FN_ACC AV2P_FN_INLINE bool use_sample(unsigned int sample_mask, unsigned int sample) {
     return sample_mask & (0x1 << (EcalDataFrame::MAXSAMPLES - (sample + 1)));
   }
 
-  ALPAKA_FN_ACC constexpr float fast_expf(float x) { return unsafe_expf<6>(x); }
-  ALPAKA_FN_ACC constexpr float fast_logf(float x) { return unsafe_logf<7>(x); }
+  AV2P_FN_ACC constexpr float fast_expf(float x) { return unsafe_expf<6>(x); }
+  AV2P_FN_ACC constexpr float fast_logf(float x) { return unsafe_logf<7>(x); }
 
   class Kernel_time_compute_nullhypot {
     using ScalarType = ::ecal::multifit::SampleVector::Scalar;
 
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   ScalarType* const sample_values,
                                   ScalarType* const sample_value_errors,
                                   bool* const useless_sample_values,
@@ -44,10 +44,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
       constexpr auto nsamples = EcalDataFrame::MAXSAMPLES;
 
       // indices
-      auto const elemsPerBlock = alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[0u];
+      auto const elemsPerBlock = aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[0u];
 
       // shared mem inits
-      auto* s_sum0 = alpaka::getDynSharedMem<char>(acc);
+      auto* s_sum0 = aV2P::getDynSharedMem<char>(acc);
       auto* s_sum1 = reinterpret_cast<ScalarType*>(s_sum0 + elemsPerBlock);
       auto* s_sumA = s_sum1 + elemsPerBlock;
       auto* s_sumAA = s_sumA + elemsPerBlock;
@@ -68,7 +68,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
         s_sum1[ltx] = inv_error;
         s_sumA[ltx] = sample_value * inv_error;
         s_sumAA[ltx] = sample_value * sample_value * inv_error;
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // 5 threads for [0, 4] samples
         if (sample < 5) {
@@ -77,7 +77,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
           s_sumA[ltx] += s_sumA[ltx + 5];
           s_sumAA[ltx] += s_sumAA[ltx + 5];
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         if (sample < 2) {
           // note double counting of sample 3
@@ -86,7 +86,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
           s_sumA[ltx] += s_sumA[ltx + 2] + s_sumA[ltx + 3];
           s_sumAA[ltx] += s_sumAA[ltx + 2] + s_sumAA[ltx + 3];
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         if (sample == 0) {
           // note, subtract to remove the double counting of sample == 3
@@ -119,7 +119,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
     using ScalarType = ::ecal::multifit::SampleVector::Scalar;
 
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   EcalDigiDeviceCollection::ConstView digisDevEB,
                                   EcalDigiDeviceCollection::ConstView digisDevEE,
                                   ScalarType* const sample_values,
@@ -146,10 +146,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
       auto const offsetForInputs = digisDevEB.size();
       auto const totalElements = nthreads_per_channel * nchannels;
 
-      auto const elemsPerBlock = alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[0u];
-      ALPAKA_ASSERT_ACC(nthreads_per_channel * nchannels_per_block == elemsPerBlock);
+      auto const elemsPerBlock = aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[0u];
+      AV2P_ASSERT_ACC(nthreads_per_channel * nchannels_per_block == elemsPerBlock);
 
-      auto* shr_chi2s = alpaka::getDynSharedMem<ScalarType>(acc);
+      auto* shr_chi2s = aV2P::getDynSharedMem<ScalarType>(acc);
       auto* shr_time_wgt = shr_chi2s + elemsPerBlock;
       auto* shr_time_max = shr_time_wgt + elemsPerBlock;
       auto* shrTimeMax = shr_time_max + elemsPerBlock;
@@ -213,7 +213,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
             sample_j = 9;
           } else {
             // FIXME this needs a more portable solution, that wraps abort() / __trap() / throw depending on the back-end
-            ALPAKA_ASSERT_ACC(false);
+            AV2P_ASSERT_ACC(false);
           }
 
           auto const tx_i = ch_start + sample_i;
@@ -388,7 +388,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
           shr_internalCondForSkipping2[idx.local] = internalCondForSkipping2;
         }
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // find min chi2 - quite crude for now
         // TODO validate/check
@@ -405,7 +405,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
               shr_chi2s[idx.local] = std::min(shr_chi2s[idx.local], shr_chi2s[idx.local + iter]);
             }
           }
-          alpaka::syncBlockThreads(acc);
+          aV2P::syncBlockThreads(acc);
 
           oddElements = iter % 2;
           iter = iter == 1 ? iter / 2 : iter / 2 + iter % 2;
@@ -452,7 +452,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
           }
         }
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // reduce to compute time_max and time_wgt
         iter = nthreads_per_channel / 2 + nthreads_per_channel % 2;
@@ -470,7 +470,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
             }
           }
 
-          alpaka::syncBlockThreads(acc);
+          aV2P::syncBlockThreads(acc);
           oddElements = iter % 2;
           iter = iter == 1 ? iter / 2 : iter / 2 + iter % 2;
         }
@@ -521,7 +521,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
     using ScalarType = ::ecal::multifit::SampleVector::Scalar;
 
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   EcalDigiDeviceCollection::ConstView digisDevEB,
                                   EcalDigiDeviceCollection::ConstView digisDevEE,
                                   ScalarType* const sample_values,
@@ -550,12 +550,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
       auto const nchannels = digisDevEB.size() + digisDevEE.size();
       auto const offsetForInputs = digisDevEB.size();
 
-      auto const elemsPerBlock = alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[0u];
+      auto const elemsPerBlock = aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[0u];
 
       // configure shared mem
       // per block, we need #threads per block * 2 * sizeof(ScalarType)
       // we run with N channels per block
-      auto* shr_sumAf = alpaka::getDynSharedMem<ScalarType>(acc);
+      auto* shr_sumAf = aV2P::getDynSharedMem<ScalarType>(acc);
       auto* shr_sumff = shr_sumAf + elemsPerBlock;
 
       for (auto gtxforward : cms::alpakatools::uniform_elements(acc, nchannels * nsamples)) {
@@ -599,7 +599,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
           shr_sumff[elemIdx] = 0;
         }
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // reduce
         // unroll completely here (but hardcoded)
@@ -608,7 +608,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
           shr_sumff[elemIdx] += shr_sumff[elemIdx + 5];
         }
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         if (sample < 2) {
           // will need to subtract for ltx = 3, we double count here
@@ -616,7 +616,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
           shr_sumff[elemIdx] += shr_sumff[elemIdx + 2] + shr_sumff[elemIdx + 3];
         }
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         if (sample == 0) {
           // exit if the state is done
@@ -727,7 +727,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
     using ScalarType = ::ecal::multifit::SampleVector::Scalar;
 
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   EcalDigiDeviceCollection::ConstView digisDevEB,
                                   EcalDigiDeviceCollection::ConstView digisDevEE,
                                   EcalMultifitConditionsDevice::ConstView conditionsDev,
@@ -740,7 +740,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
       auto const nchannelsEB = digisDevEB.size();
       auto const offsetForInputs = nchannelsEB;
 
-      auto const elemsPerBlock = alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[0u];
+      auto const elemsPerBlock = aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[0u];
 
       for (auto gtx : cms::alpakatools::uniform_elements(acc, nchannelsEB * nsamples)) {
         auto const elemIdx = gtx % elemsPerBlock;
@@ -771,12 +771,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
     }
   };
 
-  //#define ECAL_RECO_ALPAKA_TC_INIT_DEBUG
+  //#define ECAL_RECO_AV2P_TC_INIT_DEBUG
   class Kernel_time_computation_init {
     using ScalarType = ::ecal::multifit::SampleVector::Scalar;
 
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   EcalDigiDeviceCollection::ConstView digisDevEB,
                                   EcalDigiDeviceCollection::ConstView digisDevEE,
                                   EcalMultifitConditionsDevice::ConstView conditionsDev,
@@ -794,10 +794,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
       auto const offsetForInputs = nchannelsEB;
       auto const offsetForHashes = conditionsDev.offsetEE();
 
-      auto const elemsPerBlock = alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[0u];
+      auto const elemsPerBlock = aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[0u];
 
       // configure shared mem
-      auto* shrSampleValues = alpaka::getDynSharedMem<ScalarType>(acc);
+      auto* shrSampleValues = aV2P::getDynSharedMem<ScalarType>(acc);
       auto* shrSampleValueErrors = shrSampleValues + elemsPerBlock;
 
       for (auto txforward : cms::alpakatools::uniform_elements(acc, nchannels * nsamples)) {
@@ -886,7 +886,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
         sample_value_errors[tx] = useless_sample ? 1e+9 : sample_value_error;
 
         // DEBUG
-#ifdef ECAL_RECO_ALPAKA_TC_INIT_DEBUG
+#ifdef ECAL_RECO_AV2P_TC_INIT_DEBUG
         if (ch == 0) {
           printf("sample = %d sample_value = %f sample_value_error = %f useless = %c\n",
                  sample,
@@ -899,7 +899,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
         // store into the shared mem
         shrSampleValues[elemIdx] = sample_value_error > 0 ? sample_value : std::numeric_limits<ScalarType>::min();
         shrSampleValueErrors[elemIdx] = sample_value_error;
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // perform the reduction with min
         if (sample < 5) {
@@ -909,7 +909,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
                                               : shrSampleValueErrors[elemIdx];
           shrSampleValues[elemIdx] = std::max(shrSampleValues[elemIdx], shrSampleValues[elemIdx + 5]);
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // a bit of an overkill, but easier than to compare across 3 values
         if (sample < 3) {
@@ -918,7 +918,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
                                               : shrSampleValueErrors[elemIdx];
           shrSampleValues[elemIdx] = std::max(shrSampleValues[elemIdx], shrSampleValues[elemIdx + 3]);
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         if (sample < 2) {
           shrSampleValueErrors[elemIdx] = shrSampleValues[elemIdx] < shrSampleValues[elemIdx + 2]
@@ -926,7 +926,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
                                               : shrSampleValueErrors[elemIdx];
           shrSampleValues[elemIdx] = std::max(shrSampleValues[elemIdx], shrSampleValues[elemIdx + 2]);
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         if (sample == 0) {
           // we only need the max error
@@ -940,7 +940,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
           ampMaxError[ch] = maxSampleValueError;
 
           // DEBUG
-#ifdef ECAL_RECO_ALPAKA_TC_INIT_DEBUG
+#ifdef ECAL_RECO_AV2P_TC_INIT_DEBUG
           if (ch == 0) {
             printf("pedestal_nums = %d ampMaxError = %f\n", num, maxSampleValueError);
           }
@@ -958,7 +958,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
     using ScalarType = ::ecal::multifit::SampleVector::Scalar;
 
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   EcalDigiDeviceCollection::ConstView digisDevEB,
                                   EcalDigiDeviceCollection::ConstView digisDevEE,
                                   EcalUncalibratedRecHitDeviceCollection::View uncalibRecHitsEB,
@@ -1090,18 +1090,18 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
     }
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit
 
-namespace alpaka::trait {
-  using namespace ALPAKA_ACCELERATOR_NAMESPACE;
-  using namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit;
+namespace aV2P::trait {
+  using namespace AV2P_ACCELERATOR_NAMESPACE;
+  using namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit;
 
   //! The trait for getting the size of the block shared dynamic memory for Kernel_time_compute_nullhypot.
   template <>
   struct BlockSharedMemDynSizeBytes<Kernel_time_compute_nullhypot, Acc1D> {
     //! \return The size of the shared memory allocated for a block.
     template <typename TVec, typename... TArgs>
-    ALPAKA_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_time_compute_nullhypot const&,
+    AV2P_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_time_compute_nullhypot const&,
                                                                  TVec const& threadsPerBlock,
                                                                  TVec const& elemsPerThread,
                                                                  TArgs const&...) -> std::size_t {
@@ -1117,7 +1117,7 @@ namespace alpaka::trait {
   template <>
   struct BlockSharedMemDynSizeBytes<Kernel_time_compute_makeratio, Acc1D> {
     template <typename TVec, typename... TArgs>
-    ALPAKA_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_time_compute_makeratio const&,
+    AV2P_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_time_compute_makeratio const&,
                                                                  TVec const& threadsPerBlock,
                                                                  TVec const& elemsPerThread,
                                                                  TArgs const&...) -> std::size_t {
@@ -1132,7 +1132,7 @@ namespace alpaka::trait {
   template <>
   struct BlockSharedMemDynSizeBytes<Kernel_time_compute_findamplchi2_and_finish, Acc1D> {
     template <typename TVec, typename... TArgs>
-    ALPAKA_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_time_compute_findamplchi2_and_finish const&,
+    AV2P_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_time_compute_findamplchi2_and_finish const&,
                                                                  TVec const& threadsPerBlock,
                                                                  TVec const& elemsPerThread,
                                                                  TArgs const&...) -> std::size_t {
@@ -1147,7 +1147,7 @@ namespace alpaka::trait {
   template <>
   struct BlockSharedMemDynSizeBytes<Kernel_time_computation_init, Acc1D> {
     template <typename TVec, typename... TArgs>
-    ALPAKA_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_time_computation_init const&,
+    AV2P_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_time_computation_init const&,
                                                                  TVec const& threadsPerBlock,
                                                                  TVec const& elemsPerThread,
                                                                  TArgs const&...) -> std::size_t {
@@ -1158,6 +1158,6 @@ namespace alpaka::trait {
     }
   };
 
-}  // namespace alpaka::trait
+}  // namespace aV2P::trait
 
 #endif  // RecoLocalCalo_EcalRecProducers_plugins_TimeComputationKernels_h

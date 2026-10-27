@@ -7,7 +7,7 @@
 #include <cstdio>
 #include <limits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Math/interface/approx_atan2.h"
 #include "DataFormats/SiPixelClusterSoA/interface/ClusteringConstants.h"
@@ -26,7 +26,7 @@
 // #define DOUBLETS_DEBUG
 // #define CA_WARNINGS
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
+namespace AV2P_ACCELERATOR_NAMESPACE::caPixelDoublets {
   using namespace cms::alpakatools;
   using namespace ::caStructures;
   using namespace ::reco;
@@ -37,38 +37,38 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
   using PhiBinner = PhiBinnerT<TrackerTraits>;
   //Move this ^ definition in CAStructures maybe
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool moduleIsOuterLadderPhase1(int const moduleId) {
+  AV2P_FN_ACC AV2P_FN_INLINE bool moduleIsOuterLadderPhase1(int const moduleId) {
     return (0 == (moduleId / 8) % 2);
   }
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool moduleIsOuterLadderPhase2(int const moduleId) {
+  AV2P_FN_ACC AV2P_FN_INLINE bool moduleIsOuterLadderPhase2(int const moduleId) {
     return (0 != (moduleId / 18) % 2);
   }
 
   template <typename TrackerTraits>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool moduleIsOuterLadder(const int moduleId);
+  AV2P_FN_ACC AV2P_FN_INLINE bool moduleIsOuterLadder(const int moduleId);
 
   template <>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool moduleIsOuterLadder<pixelTopology::Phase1>(int const moduleId) {
+  AV2P_FN_ACC AV2P_FN_INLINE bool moduleIsOuterLadder<pixelTopology::Phase1>(int const moduleId) {
     return moduleIsOuterLadderPhase1(moduleId);
   }
 
   template <>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool moduleIsOuterLadder<pixelTopology::HIonPhase1>(int const moduleId) {
+  AV2P_FN_ACC AV2P_FN_INLINE bool moduleIsOuterLadder<pixelTopology::HIonPhase1>(int const moduleId) {
     return moduleIsOuterLadderPhase1(moduleId);
   }
 
   template <>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool moduleIsOuterLadder<pixelTopology::Phase2>(int const moduleId) {
+  AV2P_FN_ACC AV2P_FN_INLINE bool moduleIsOuterLadder<pixelTopology::Phase2>(int const moduleId) {
     return moduleIsOuterLadderPhase2(moduleId);
   }
 
   template <>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool moduleIsOuterLadder<pixelTopology::Phase2OT>(int const moduleId) {
+  AV2P_FN_ACC AV2P_FN_INLINE bool moduleIsOuterLadder<pixelTopology::Phase2OT>(int const moduleId) {
     return moduleIsOuterLadderPhase2(moduleId);
   }
 
-  template <typename TrackerTraits, alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool zSizeCut(const TAcc& acc,
+  template <typename TrackerTraits, aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool zSizeCut(const TAcc& acc,
                                                caStructures::HitsMultiView hh,
                                                ::reco::CALayersSoAConstView ll,
                                                AlgoParams const& params,
@@ -122,8 +122,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
                : innerBarrel && std::abs(mes - int(std::abs(dz / dr) * params.dzdrFact_ + 0.5f)) > params.maxDYPred_;
   }
 
-  template <typename TrackerTraits, alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool clusterCut(const TAcc& acc,
+  template <typename TrackerTraits, aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE bool clusterCut(const TAcc& acc,
                                                  caStructures::HitsMultiView hh,
                                                  ::reco::CALayersSoAConstView ll,
                                                  AlgoParams const& params,
@@ -165,8 +165,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
     return false;
   }
 
-  template <typename TrackerTraits, alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void doubletsFromHisto(const TAcc& acc,
+  template <typename TrackerTraits, aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE void doubletsFromHisto(const TAcc& acc,
                                                         uint32_t maxNumOfDoublets,
                                                         CACell<TrackerTraits>* cells,
                                                         uint32_t* nCells,
@@ -182,15 +182,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
 
     const uint32_t nPairs = cc.metadata().size();
     using PhiHisto = PhiBinner<TrackerTraits>;
-    ALPAKA_ASSERT_ACC(offsets);
+    AV2P_ASSERT_ACC(offsets);
 
     auto layerSize = [=](uint8_t li) { return offsets[li + 1] - offsets[li]; };
 
     // nPairs for the OT-extended CA is 73.
     // If it should become much bigger than 64, consider using a block-wide parallel prefix scan,
     // e.g. see  https://nvlabs.github.io/cub/classcub_1_1_warp_scan.html
-    auto& innerLayerCumulativeSize = alpaka::declareSharedVar<uint32_t[TrackerTraits::nPairs], __COUNTER__>(acc);
-    auto& ntot = alpaka::declareSharedVar<uint32_t, __COUNTER__>(acc);
+    auto& innerLayerCumulativeSize = aV2P::declareSharedVar<uint32_t[TrackerTraits::nPairs], __COUNTER__>(acc);
+    auto& ntot = aV2P::declareSharedVar<uint32_t, __COUNTER__>(acc);
 
 #ifdef DOUBLETS_DEBUG
     if (cms::alpakatools::once_per_grid(acc))
@@ -215,7 +215,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
       }
       ntot = innerLayerCumulativeSize[nPairs - 1];
     }
-    alpaka::syncBlockThreads(acc);
+    aV2P::syncBlockThreads(acc);
 
     // declared outside the loop, as it cannot go backward
     uint32_t pairLayerId = 0;
@@ -227,20 +227,20 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
         ;
       --pairLayerId;
 
-      ALPAKA_ASSERT_ACC(pairLayerId < nPairs);
-      ALPAKA_ASSERT_ACC(j < innerLayerCumulativeSize[pairLayerId]);
-      ALPAKA_ASSERT_ACC(0 == pairLayerId || j >= innerLayerCumulativeSize[pairLayerId - 1]);
+      AV2P_ASSERT_ACC(pairLayerId < nPairs);
+      AV2P_ASSERT_ACC(j < innerLayerCumulativeSize[pairLayerId]);
+      AV2P_ASSERT_ACC(0 == pairLayerId || j >= innerLayerCumulativeSize[pairLayerId - 1]);
 
       uint8_t inner = cc.graph()[pairLayerId][0];
       uint8_t outer = cc.graph()[pairLayerId][1];
-      ALPAKA_ASSERT_ACC(outer > inner);
+      AV2P_ASSERT_ACC(outer > inner);
 
       auto hoff = PhiHisto::histOff(outer);
       auto i = (0 == pairLayerId) ? j : j - innerLayerCumulativeSize[pairLayerId - 1];
       i += offsets[inner];
 
-      ALPAKA_ASSERT_ACC(i >= offsets[inner]);
-      ALPAKA_ASSERT_ACC(i < offsets[inner + 1]);
+      AV2P_ASSERT_ACC(i >= offsets[inner]);
+      AV2P_ASSERT_ACC(i < offsets[inner + 1]);
 #ifdef DOUBLETS_DEBUG
       printf("pairLayerId = %d i = %d inner = %d outer = %d offsets[inner] = %d offsets[inner + 1] = %d\n",
              pairLayerId,
@@ -346,10 +346,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
 
         // innermost parallel loop, using the block elements along the faster dimension (X or 1 in a 2D grid)
         for (uint32_t pIndex : cms::alpakatools::independent_group_elements_x(acc, maxpIndex)) {
-          // FIXME implement alpaka::ldg and use it here? or is it const* __restrict__ enough?
+          // FIXME implement aV2P::ldg and use it here? or is it const* __restrict__ enough?
           auto oi = p[pIndex];
-          ALPAKA_ASSERT_ACC(oi >= offsets[outer]);
-          ALPAKA_ASSERT_ACC(oi < offsets[outer + 1]);
+          AV2P_ASSERT_ACC(oi >= offsets[outer]);
+          AV2P_ASSERT_ACC(oi < offsets[outer + 1]);
 #ifdef DOUBLETS_DEBUG
           printf("Exploring couple i: %d o: %d\n", i, oi);
 #endif
@@ -426,14 +426,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
             continue;
           }
 
-          auto ind = alpaka::atomicAdd(acc, nCells, 1u, alpaka::hierarchy::Blocks{});
+          auto ind = aV2P::atomicAdd(acc, nCells, 1u, aV2P::hierarchy::Blocks{});
           if (ind >= maxNumOfDoublets or ind >= uint32_t(outerHitHisto->capacity())) {
 #ifdef CA_WARNINGS
             printf("Warning!!!! Too many cells (maxNumOfDoublets = %d - nHitsToCell = %d)!\n",
                    maxNumOfDoublets,
                    outerHitHisto->capacity());
 #endif
-            alpaka::atomicSub(acc, nCells, 1u, alpaka::hierarchy::Blocks{});
+            aV2P::atomicSub(acc, nCells, 1u, aV2P::hierarchy::Blocks{});
             break;
           }
 
@@ -447,6 +447,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
     }  // loop in block...
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::caPixelDoublets
 
 #endif  // RecoTracker_PixelSeeding_plugins_alpaka_CAPixelDoubletsAlgos_h

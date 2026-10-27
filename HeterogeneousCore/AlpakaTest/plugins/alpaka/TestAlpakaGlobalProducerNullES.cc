@@ -8,7 +8,7 @@
 #include "HeterogeneousCore/AlpakaTest/interface/AlpakaESTestRecords.h"
 #include "HeterogeneousCore/AlpakaTest/interface/alpaka/AlpakaESTestData.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * This class tests various ways of a device ESProduct being missing
    */
@@ -69,7 +69,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     const device::ESGetToken<AlpakaESTestDataCDevice, AlpakaESTestRecordA> esTokenCNotExist_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(TestAlpakaGlobalProducerNullES);
+DEFINE_FWK_AV2P_MODULE(TestAlpakaGlobalProducerNullES);
