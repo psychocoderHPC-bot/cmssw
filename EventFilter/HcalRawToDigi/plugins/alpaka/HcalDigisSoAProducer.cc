@@ -14,7 +14,7 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/EventSetup.h"
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/stream/EDProducer.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class HcalDigisSoAProducer : public stream::EDProducer<> {
   public:
@@ -178,6 +178,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       event.emplace(digisF3HBToken_, std::move(hf3_));
     }
   }
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(HcalDigisSoAProducer);
+DEFINE_FWK_AV2P_MODULE(HcalDigisSoAProducer);

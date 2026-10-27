@@ -6,9 +6,9 @@
 
 #include "EnergyComputationKernels.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::rechit {
 
-  ALPAKA_FN_ACC void makeRecHit(int const inputCh,
+  AV2P_FN_ACC void makeRecHit(int const inputCh,
                                 uint32_t const* didCh,
                                 float const* amplitude,
                                 float const* amplitudeError,
@@ -315,4 +315,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit {
     }
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::rechit

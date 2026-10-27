@@ -6,12 +6,12 @@
 #include "FWCore/Utilities/interface/EDGetToken.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::device {
+namespace AV2P_ACCELERATOR_NAMESPACE::device {
   class Event;
   /**
    * The device::EDGetToken is similar to edm::EDGetTokenT, but is
    * intended for Event data products in the device memory space
-   * defined by the backend (i.e. ALPAKA_ACCELERATOR_NAMESPACE). It
+   * defined by the backend (i.e. AV2P_ACCELERATOR_NAMESPACE). It
    * can be used only to get data from a device::Event.
    *
    * A specific token class is motivated with
@@ -38,6 +38,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::device {
 
     edm::EDGetTokenT<ProductType> token_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::device
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::device
 
 #endif

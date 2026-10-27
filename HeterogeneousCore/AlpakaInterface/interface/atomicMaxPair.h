@@ -1,13 +1,13 @@
 #ifndef HeterogeneousCore_AlpakaCore_interface_atomicMaxPair_h
 #define HeterogeneousCore_AlpakaCore_interface_atomicMaxPair_h
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Utilities/interface/bit_cast.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-// Note: Does not compile with ALPAKA_FN_ACC on ROCm
-template <alpaka::concepts::Acc TAcc, typename F>
-ALPAKA_FN_HOST_ACC ALPAKA_FN_INLINE void atomicMaxPair(const TAcc& acc,
+// Note: Does not compile with AV2P_FN_ACC on ROCm
+template <aV2P::concepts::Acc TAcc, typename F>
+AV2P_FN_HOST_ACC AV2P_FN_INLINE void atomicMaxPair(const TAcc& acc,
                                                        unsigned long long int* address,
                                                        std::pair<unsigned int, float> value,
                                                        F comparator) {
@@ -29,7 +29,7 @@ ALPAKA_FN_HOST_ACC ALPAKA_FN_INLINE void atomicMaxPair(const TAcc& acc,
                     std::pair{static_cast<unsigned int>(ret >> 32 & 0xffffffff),
                               edm::bit_cast<float>(static_cast<unsigned int>(ret & 0xffffffff))})) {
     unsigned long long int old = ret;
-    if ((ret = alpaka::atomicCas(acc, address, old, val)) == old)
+    if ((ret = aV2P::atomicCas(acc, address, old, val)) == old)
       break;
   }
 #endif  // __CUDA_ARCH__ or __HIP_DEVICE_COMPILE__

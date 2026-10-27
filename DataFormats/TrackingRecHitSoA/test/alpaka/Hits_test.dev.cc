@@ -1,6 +1,6 @@
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/TrackingRecHitSoA/interface/TrackingRecHitsDevice.h"
 #include "DataFormats/TrackingRecHitSoA/interface/TrackingRecHitsSoA.h"
@@ -10,18 +10,18 @@
 
 #include "Hits_test.h"
 
-using namespace alpaka;
+using namespace aV2P;
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
-  using namespace ALPAKA_ACCELERATOR_NAMESPACE::reco;
+  using namespace AV2P_ACCELERATOR_NAMESPACE::reco;
   namespace testTrackingRecHitSoA {
 
     struct TestFillKernel {
-      ALPAKA_FN_ACC void operator()(Acc1D const& acc, ::reco::TrackingBlocksSoAView soa) const {
-        const uint32_t i(alpaka::getIdx<alpaka::Grid, alpaka::Blocks>(acc)[0u]);
-        const uint32_t j(alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[0u]);
+      AV2P_FN_ACC void operator()(Acc1D const& acc, ::reco::TrackingBlocksSoAView soa) const {
+        const uint32_t i(aV2P::getIdx<aV2P::Grid, aV2P::Blocks>(acc)[0u]);
+        const uint32_t j(aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc)[0u]);
 
         if (cms::alpakatools::once_per_grid(acc)) {
           soa.trackingHits().offsetBPIX2() = 22;
@@ -34,7 +34,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     };
 
     struct ShowKernel {
-      ALPAKA_FN_ACC void operator()(Acc1D const& acc, ::reco::TrackingBlocksSoAConstView soa) const {
+      AV2P_FN_ACC void operator()(Acc1D const& acc, ::reco::TrackingBlocksSoAConstView soa) const {
         if (cms::alpakatools::once_per_grid(acc)) {
           printf("offsetBPIX = %d\n", soa.trackingHits().offsetBPIX2());
           printf("nHits = %d\n", soa.trackingHits().metadata().size());
@@ -53,9 +53,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       uint32_t items = 64;
       uint32_t groups = divide_up_by(view.trackingHits().metadata().size(), items);
       auto workDiv = make_workdiv<Acc1D>(groups, items);
-      alpaka::exec<Acc1D>(queue, workDiv, TestFillKernel{}, view);
-      alpaka::exec<Acc1D>(queue, workDiv, ShowKernel{}, view);
+      aV2P::exec<Acc1D>(queue, workDiv, TestFillKernel{}, view);
+      aV2P::exec<Acc1D>(queue, workDiv, ShowKernel{}, view);
     }
 
   }  // namespace testTrackingRecHitSoA
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

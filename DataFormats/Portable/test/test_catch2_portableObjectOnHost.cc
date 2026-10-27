@@ -14,20 +14,20 @@ namespace {
 
 // This test is currently mostly about the code compiling
 TEST_CASE("Use of PortableObject<T> on host code", s_tag) {
-  static_assert(std::is_same_v<PortableObject<alpaka::DevCpu, Test>, PortableHostObject<Test>>);
+  static_assert(std::is_same_v<PortableObject<aV2P::DevCpu, Test>, PortableHostObject<Test>>);
 
   SECTION("Initialize by setting members") {
     SECTION("With device") {
-      PortableObject<alpaka::DevCpu, Test> obj(cms::alpakatools::host());
+      PortableObject<aV2P::DevCpu, Test> obj(cms::alpakatools::host());
       obj->a = 42;
 
       REQUIRE(obj->a == 42);
     }
 
     SECTION("With queue") {
-      alpaka::QueueCpuBlocking queue(cms::alpakatools::host());
+      aV2P::QueueCpuBlocking queue(cms::alpakatools::host());
 
-      PortableObject<alpaka::DevCpu, Test> obj(queue);
+      PortableObject<aV2P::DevCpu, Test> obj(queue);
       obj->a = 42;
 
       REQUIRE(obj->a == 42);
@@ -36,15 +36,15 @@ TEST_CASE("Use of PortableObject<T> on host code", s_tag) {
 
   SECTION("Initialize via constructor") {
     SECTION("With device") {
-      PortableObject<alpaka::DevCpu, Test> obj(cms::alpakatools::host(), Test{42, 3.14f});
+      PortableObject<aV2P::DevCpu, Test> obj(cms::alpakatools::host(), Test{42, 3.14f});
 
       REQUIRE(obj->a == 42);
       REQUIRE(obj->b == 3.14f);
     }
 
     SECTION("With queue") {
-      alpaka::QueueCpuBlocking queue(cms::alpakatools::host());
-      PortableObject<alpaka::DevCpu, Test> obj(queue, Test{42, 3.14f});
+      aV2P::QueueCpuBlocking queue(cms::alpakatools::host());
+      PortableObject<aV2P::DevCpu, Test> obj(queue, Test{42, 3.14f});
 
       REQUIRE(obj->a == 42);
       REQUIRE(obj->b == 3.14f);

@@ -1,19 +1,19 @@
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
 #include "PFRecHitProducerKernel.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   using namespace particleFlowRecHitProducer;
 
   // Kernel to apply cuts to calorimeter hits and construct PFRecHits
   template <typename CAL>
   struct PFRecHitProducerKernelConstruct {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   const typename CAL::ParameterType::ConstView params,
                                   const typename CAL::TopologyTypeDevice::ConstView topology,
                                   const typename CAL::CaloRecHitSoATypeDevice::ConstView recHits,
@@ -28,8 +28,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
         // Use atomic operation to determine index of the PFRecHit to be constructed
         // The index needs to be unique and consequtive across all threads in all blocks.
-        // This is achieved using the alpaka::hierarchy::Blocks argument.
-        const uint32_t j = alpaka::atomicInc(acc, num_pfRecHits, 0xffffffff, alpaka::hierarchy::Blocks{});
+        // This is achieved using the aV2P::hierarchy::Blocks argument.
+        const uint32_t j = aV2P::atomicInc(acc, num_pfRecHits, 0xffffffff, aV2P::hierarchy::Blocks{});
 
         // Construct PFRecHit from CAL recHit (specialised for HCAL/ECAL)
         constructPFRecHit(pfRecHits[j], recHits[i]);
@@ -39,17 +39,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
     }
 
-    ALPAKA_FN_ACC static bool applyCuts(const typename CAL::CaloRecHitSoATypeDevice::ConstView::const_element rh,
+    AV2P_FN_ACC static bool applyCuts(const typename CAL::CaloRecHitSoATypeDevice::ConstView::const_element rh,
                                         const typename CAL::ParameterType::ConstView params,
                                         const typename CAL::TopologyTypeDevice::ConstView topology);
 
-    ALPAKA_FN_ACC static void constructPFRecHit(
+    AV2P_FN_ACC static void constructPFRecHit(
         reco::PFRecHitDeviceCollection::View::element pfrh,
         const typename CAL::CaloRecHitSoATypeDevice::ConstView::const_element rh);
   };
 
   template <>
-  ALPAKA_FN_ACC bool PFRecHitProducerKernelConstruct<HCAL>::applyCuts(
+  AV2P_FN_ACC bool PFRecHitProducerKernelConstruct<HCAL>::applyCuts(
       const typename HCAL::CaloRecHitSoATypeDevice::ConstView::const_element rh,
       const HCAL::ParameterType::ConstView params,
       const HCAL::TopologyTypeDevice::ConstView topology) {
@@ -85,7 +85,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   }
 
   template <>
-  ALPAKA_FN_ACC bool PFRecHitProducerKernelConstruct<ECAL>::applyCuts(
+  AV2P_FN_ACC bool PFRecHitProducerKernelConstruct<ECAL>::applyCuts(
       const ECAL::CaloRecHitSoATypeDevice::ConstView::const_element rh,
       const ECAL::ParameterType::ConstView params,
       const ECAL::TopologyTypeDevice::ConstView topology) {
@@ -103,7 +103,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   }
 
   template <>
-  ALPAKA_FN_ACC void PFRecHitProducerKernelConstruct<HCAL>::constructPFRecHit(
+  AV2P_FN_ACC void PFRecHitProducerKernelConstruct<HCAL>::constructPFRecHit(
       reco::PFRecHitDeviceCollection::View::element pfrh,
       const HCAL::CaloRecHitSoATypeDevice::ConstView::const_element rh) {
     pfrh.detId() = rh.detId();
@@ -121,7 +121,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   }
 
   template <>
-  ALPAKA_FN_ACC void PFRecHitProducerKernelConstruct<ECAL>::constructPFRecHit(
+  AV2P_FN_ACC void PFRecHitProducerKernelConstruct<ECAL>::constructPFRecHit(
       reco::PFRecHitDeviceCollection::View::element pfrh,
       const ECAL::CaloRecHitSoATypeDevice::ConstView::const_element rh) {
     pfrh.detId() = rh.detId();
@@ -141,13 +141,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   // Kernel to associate topology information of PFRecHits
   template <typename CAL>
   struct PFRecHitProducerKernelTopology {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   const typename CAL::TopologyTypeDevice::ConstView topology,
                                   reco::PFRecHitDeviceCollection::View pfRecHits,
                                   const uint32_t* __restrict__ denseId2pfRecHit,
                                   uint32_t* __restrict__ num_pfRecHits) const {
       // First thread updates size field pfRecHits SoA
-      if (const int32_t thread = alpaka::getIdx<alpaka::Grid, alpaka::Threads>(acc)[0u]; thread == 0)
+      if (const int32_t thread = aV2P::getIdx<aV2P::Grid, aV2P::Threads>(acc)[0u]; thread == 0)
         pfRecHits.size() = *num_pfRecHits;
 
       // Assign position information and associate neighbours
@@ -176,8 +176,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       : denseId2pfRecHit_(cms::alpakatools::make_device_buffer<uint32_t[]>(queue, CAL::kSize)),
         num_pfRecHits_(cms::alpakatools::make_device_buffer<uint32_t>(queue)),
         work_div_(cms::alpakatools::make_workdiv<Acc1D>(1, 1)) {
-    alpaka::memset(queue, denseId2pfRecHit_, 0xff);  // Reset denseId -> pfRecHit index map
-    alpaka::memset(queue, num_pfRecHits_, 0x00);     // Reset global pfRecHit counter
+    aV2P::memset(queue, denseId2pfRecHit_, 0xff);  // Reset denseId -> pfRecHit index map
+    aV2P::memset(queue, num_pfRecHits_, 0x00);     // Reset global pfRecHit counter
 
     const uint32_t items = 64;
     const uint32_t groups = cms::alpakatools::divide_up_by(num_recHits, items);
@@ -190,7 +190,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                    const typename CAL::ParameterType& params,
                                                    const typename CAL::TopologyTypeDevice& topology,
                                                    reco::PFRecHitDeviceCollection& pfRecHits) {
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         work_div_,
                         PFRecHitProducerKernelConstruct<CAL>{},
                         params.view(),
@@ -205,7 +205,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   void PFRecHitProducerKernel<CAL>::associateTopologyInfo(Queue& queue,
                                                           const typename CAL::TopologyTypeDevice& topology,
                                                           reco::PFRecHitDeviceCollection& pfRecHits) {
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         work_div_,
                         PFRecHitProducerKernelTopology<CAL>{},
                         topology.view(),
@@ -217,4 +217,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   // Instantiate templates
   template class PFRecHitProducerKernel<HCAL>;
   template class PFRecHitProducerKernel<ECAL>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

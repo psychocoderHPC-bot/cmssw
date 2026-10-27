@@ -1,4 +1,4 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
@@ -8,7 +8,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/CopyToDevice.h"
 
 // each test binary is built for a single Alpaka backend
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 namespace {
   struct Dummy {
@@ -16,8 +16,8 @@ namespace {
   };
 }  // namespace
 
-TEST_CASE("Test CopyToDevice for Alpaka buffers for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend",
-          "[" EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) "]") {
+TEST_CASE("Test CopyToDevice for Alpaka buffers for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend",
+          "[" EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) "]") {
   SECTION("Buffer of scalar") {
     auto buffer_host = cms::alpakatools::make_host_buffer<Dummy>();
 
@@ -26,7 +26,7 @@ TEST_CASE("Test CopyToDevice for Alpaka buffers for the " EDM_STRINGIZE(ALPAKA_A
       auto queue = Queue(device);
       using Copy = cms::alpakatools::CopyToDevice<decltype(buffer_host)>;
       auto buffer_device = Copy::copyAsync(queue, buffer_host);
-      alpaka::wait(queue);
+      aV2P::wait(queue);
     }
   }
 
@@ -44,8 +44,8 @@ TEST_CASE("Test CopyToDevice for Alpaka buffers for the " EDM_STRINGIZE(ALPAKA_A
       auto queue = Queue(device);
       using Copy = cms::alpakatools::CopyToDevice<decltype(buffer_host)>;
       auto buffer_device = Copy::copyAsync(queue, buffer_host);
-      alpaka::wait(queue);
-      REQUIRE(alpaka::getExtentProduct(buffer_device) == N);
+      aV2P::wait(queue);
+      REQUIRE(aV2P::getExtentProduct(buffer_device) == N);
     }
   }
 
@@ -61,8 +61,8 @@ TEST_CASE("Test CopyToDevice for Alpaka buffers for the " EDM_STRINGIZE(ALPAKA_A
       auto queue = Queue(device);
       using Copy = cms::alpakatools::CopyToDevice<decltype(buffer_host)>;
       auto buffer_device = Copy::copyAsync(queue, buffer_host);
-      alpaka::wait(queue);
-      REQUIRE(alpaka::getExtentProduct(buffer_device) == N);
+      aV2P::wait(queue);
+      REQUIRE(aV2P::getExtentProduct(buffer_device) == N);
     }
   }
 }

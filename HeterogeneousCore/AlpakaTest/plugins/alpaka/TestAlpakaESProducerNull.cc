@@ -12,7 +12,7 @@
 #include "HeterogeneousCore/AlpakaTest/interface/ESTestData.h"
 #include "HeterogeneousCore/AlpakaTest/interface/alpaka/AlpakaESTestData.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * This class demonstrates an ESProducer that
    * - produces a null in a host produce function
@@ -36,6 +36,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       return {};
     }
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(TestAlpakaESProducerNull);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(TestAlpakaESProducerNull);

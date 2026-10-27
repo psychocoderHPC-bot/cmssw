@@ -13,12 +13,12 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/EventSetup.h"
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/stream/EDProducer.h"
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DeclsForKernels.h"
 #include "UnpackPortable.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class EcalRawToDigiPortable : public stream::EDProducer<> {
   public:
@@ -101,8 +101,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // memset takes an alpaka view that is created from the scalar in a view to the device collection
     auto digiViewEB = cms::alpakatools::make_device_view<uint32_t>(queue, digisDevEB.view().size());
     auto digiViewEE = cms::alpakatools::make_device_view<uint32_t>(queue, digisDevEE.view().size());
-    alpaka::memset(queue, digiViewEB, 0);
-    alpaka::memset(queue, digiViewEE, 0);
+    aV2P::memset(queue, digiViewEB, 0);
+    aV2P::memset(queue, digiViewEE, 0);
 
     // iterate over FEDs to fill the host buffer
     uint32_t currentCummOffset = 0;
@@ -137,7 +137,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     event.emplace(digisDevEEToken_, std::move(digisDevEE));
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(EcalRawToDigiPortable);
+DEFINE_FWK_AV2P_MODULE(EcalRawToDigiPortable);

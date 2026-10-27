@@ -6,7 +6,7 @@
 #include "DataFormats/Portable/interface/PortableHostCollection.h"
 
 namespace hcal {
-  using HcalRecoParamWithPulseShapeHost = HcalRecoParamWithPulseShapeT<alpaka::DevCpu>;
+  using HcalRecoParamWithPulseShapeHost = HcalRecoParamWithPulseShapeT<aV2P::DevCpu>;
 }
 namespace cms::alpakatools {
   template <>
@@ -15,7 +15,7 @@ namespace cms::alpakatools {
     static auto copyAsync(TQueue& queue, ::hcal::HcalRecoParamWithPulseShapeHost const& hostProduct) {
       using RecoParamCopy = CopyToDevice<::hcal::HcalRecoParamWithPulseShapeHost::RecoParamCollection>;
       using PulseShapeCopy = CopyToDevice<::hcal::HcalRecoParamWithPulseShapeHost::PulseShapeCollection>;
-      using Device = alpaka::Dev<TQueue>;
+      using Device = aV2P::Dev<TQueue>;
       return ::hcal::HcalRecoParamWithPulseShapeT<Device>(RecoParamCopy::copyAsync(queue, hostProduct.recoParam()),
                                                           PulseShapeCopy::copyAsync(queue, hostProduct.pulseShape()));
     }

@@ -9,7 +9,7 @@
 #include "HeterogeneousCore/AlpakaTest/interface/ESTestData.h"
 #include "HeterogeneousCore/AlpakaTest/interface/AlpakaESTestData.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * This class demonstrates an ESProducer that uses the
    * template-over-device data model, and that consumes a standard
@@ -48,6 +48,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   private:
     edm::ESGetToken<cms::alpakatest::ESTestDataB, AlpakaESTestRecordB> token_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(TestAlpakaESProducerB);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(TestAlpakaESProducerB);

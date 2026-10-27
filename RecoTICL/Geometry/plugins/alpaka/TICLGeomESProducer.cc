@@ -29,7 +29,7 @@
 #include "oneapi/tbb.h"
 #include "oneapi/tbb/task_arena.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   // Flattens every RecHitTools per-cell quantity of the selected
   // calorimeters into the TICLGeom SoABlocks (common | silicon | scint),
@@ -221,6 +221,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     std::vector<std::string> detectors_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(TICLGeomESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(TICLGeomESProducer);

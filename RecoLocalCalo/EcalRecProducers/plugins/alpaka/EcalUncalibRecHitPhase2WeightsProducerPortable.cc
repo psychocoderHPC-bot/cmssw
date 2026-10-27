@@ -25,7 +25,7 @@
 #include "EcalUncalibRecHitPhase2WeightsAlgoPortable.h"
 #include "EcalUncalibRecHitPhase2WeightsStruct.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   class EcalUncalibRecHitPhase2WeightsProducerPortable : public global::EDProducer<> {
   public:
     explicit EcalUncalibRecHitPhase2WeightsProducerPortable(edm::ParameterSet const &ps);
@@ -138,5 +138,5 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     event.emplace(uncalibratedRecHitsToken_, std::move(uncalibratedRecHits));
   }
 
-}  //namespace ALPAKA_ACCELERATOR_NAMESPACE
-DEFINE_FWK_ALPAKA_MODULE(EcalUncalibRecHitPhase2WeightsProducerPortable);
+}  //namespace AV2P_ACCELERATOR_NAMESPACE
+DEFINE_FWK_AV2P_MODULE(EcalUncalibRecHitPhase2WeightsProducerPortable);

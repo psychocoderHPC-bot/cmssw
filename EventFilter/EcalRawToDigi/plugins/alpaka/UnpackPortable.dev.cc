@@ -1,4 +1,4 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/EcalDigi/interface/EcalConstants.h"
@@ -8,14 +8,14 @@
 
 #include "UnpackPortable.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::raw {
 
   using namespace ::ecal::raw;
   using namespace cms::alpakatools;
 
   class Kernel_unpack {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   unsigned char const* __restrict__ data,
                                   uint32_t const* __restrict__ offsets,
                                   int const* __restrict__ feds,
@@ -26,8 +26,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
       constexpr auto kSampleSize = ecalPh1::sampleSize;
 
       // indices
-      auto const ifed = alpaka::getIdx<alpaka::Grid, alpaka::Blocks>(acc)[0u];
-      auto const threadIdx = alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[0u];
+      auto const ifed = aV2P::getIdx<aV2P::Grid, aV2P::Blocks>(acc)[0u];
+      auto const threadIdx = aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc)[0u];
 
       // offset in bytes
       auto const offset = offsets[ifed];
@@ -35,7 +35,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
       auto const fed = feds[ifed];
       auto const isBarrel = is_barrel(static_cast<uint8_t>(fed - 600));
       // size
-      auto const gridDim = alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[0u];
+      auto const gridDim = aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[0u];
       auto const size = ifed == gridDim - 1 ? nbytesTotal - offset : offsets[ifed + 1] - offset;
       // digisDevEB.data() returns a span<EcalDataArray>, where EcalDataArray is an array of uint16_t
       // digisDevEB.data().data() returns a pointer to the first EcalDataArray of the data column
@@ -152,14 +152,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
         uint32_t const nchannels = (block_length - 1) / 3;
 
         bool bad_block = false;
-        auto& ch_with_bad_block = alpaka::declareSharedVar<uint32_t, __COUNTER__>(acc);
+        auto& ch_with_bad_block = aV2P::declareSharedVar<uint32_t, __COUNTER__>(acc);
         if (once_per_block(acc)) {
           ch_with_bad_block = std::numeric_limits<uint32_t>::max();
         }
         // make sure the shared memory is initialised for all threads
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
-        auto const threadsPerBlock = alpaka::getWorkDiv<alpaka::Block, alpaka::Threads>(acc)[0u];
+        auto const threadsPerBlock = aV2P::getWorkDiv<aV2P::Block, aV2P::Threads>(acc)[0u];
         // 1 threads per channel in this block
         // All threads enter the loop regardless if they will treat channel indices channel >= nchannels.
         // The threads with excess indices perform no operations but also reach the syncBlockThreads() inside the loop.
@@ -196,11 +196,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
 
           // check if this thread has the lowest bad block
           if (bad_block && channel < ch_with_bad_block) {
-            alpaka::atomicMin(acc, &ch_with_bad_block, channel, alpaka::hierarchy::Threads{});
+            aV2P::atomicMin(acc, &ch_with_bad_block, channel, aV2P::hierarchy::Threads{});
           }
 
           // make sure that all threads that have to have set the ch_with_bad_block shared memory
-          alpaka::syncBlockThreads(acc);
+          aV2P::syncBlockThreads(acc);
 
           // threads outside of the range or bad block detected in this thread or one working on a lower block -> stop this loop iteration here
           if (channel >= nchannels || channel >= ch_with_bad_block) {
@@ -268,7 +268,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
               continue;
           }
 
-          auto const pos = alpaka::atomicAdd(acc, pChannelsCounter, 1u, alpaka::hierarchy::Threads{});
+          auto const pos = aV2P::atomicAdd(acc, pChannelsCounter, 1u, aV2P::hierarchy::Threads{});
 
           // store to global
           ids[pos] = didraw;
@@ -280,7 +280,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
     }
 
   private:
-    ALPAKA_FN_INLINE ALPAKA_FN_ACC void print_raw_buffer(uint8_t const* const buffer,
+    AV2P_FN_INLINE AV2P_FN_ACC void print_raw_buffer(uint8_t const* const buffer,
                                                          uint32_t const nbytes,
                                                          uint32_t const nbytes_per_row = 20) const {
       for (uint32_t i = 0; i < nbytes; ++i) {
@@ -290,7 +290,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
       }
     }
 
-    ALPAKA_FN_INLINE ALPAKA_FN_ACC void print_first3bits(uint64_t const* buffer, uint32_t size) const {
+    AV2P_FN_INLINE AV2P_FN_ACC void print_first3bits(uint64_t const* buffer, uint32_t size) const {
       for (uint32_t i = 0; i < size; ++i) {
         uint8_t const b61 = (buffer[i] >> 61) & 0x1;
         uint8_t const b62 = (buffer[i] >> 62) & 0x1;
@@ -299,18 +299,18 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
       }
     }
 
-    ALPAKA_FN_INLINE ALPAKA_FN_ACC bool is_barrel(uint8_t dccid) const {
+    AV2P_FN_INLINE AV2P_FN_ACC bool is_barrel(uint8_t dccid) const {
       return dccid >= ElectronicsIdGPU::MIN_DCCID_EBM && dccid <= ElectronicsIdGPU::MAX_DCCID_EBP;
     }
 
-    ALPAKA_FN_INLINE ALPAKA_FN_ACC uint8_t fed2dcc(int fed) const { return static_cast<uint8_t>(fed - 600); }
+    AV2P_FN_INLINE AV2P_FN_ACC uint8_t fed2dcc(int fed) const { return static_cast<uint8_t>(fed - 600); }
 
-    ALPAKA_FN_INLINE ALPAKA_FN_ACC int zside_for_eb(ElectronicsIdGPU const& eid) const {
+    AV2P_FN_INLINE AV2P_FN_ACC int zside_for_eb(ElectronicsIdGPU const& eid) const {
       int dcc = eid.dccId();
       return ((dcc >= ElectronicsIdGPU::MIN_DCCID_EBM && dcc <= ElectronicsIdGPU::MAX_DCCID_EBM)) ? -1 : 1;
     }
 
-    ALPAKA_FN_INLINE ALPAKA_FN_ACC uint8_t find_next_tower_block(uint64_t const*& current_tower_block,
+    AV2P_FN_INLINE AV2P_FN_ACC uint8_t find_next_tower_block(uint64_t const*& current_tower_block,
                                                                  uint64_t const* trailer,
                                                                  uint32_t const bx,
                                                                  uint32_t const lv1) const {
@@ -338,7 +338,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
       return TOWER_ID_MASK;  // return the maximum value
     }
 
-    ALPAKA_FN_INLINE ALPAKA_FN_ACC bool is_synced_towerblock(uint16_t const dccbx,
+    AV2P_FN_INLINE AV2P_FN_ACC bool is_synced_towerblock(uint16_t const dccbx,
                                                              uint16_t const bx,
                                                              uint16_t const dccl1,
                                                              uint16_t const l1) const {
@@ -347,13 +347,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
       return bxsync && l1sync;
     }
 
-    ALPAKA_FN_INLINE ALPAKA_FN_ACC bool right_tower_for_eb(int tower) const {
+    AV2P_FN_INLINE AV2P_FN_ACC bool right_tower_for_eb(int tower) const {
       // for EB, two types of tower (LVRB top/bottom)
       return (tower > 12 && tower < 21) || (tower > 28 && tower < 37) || (tower > 44 && tower < 53) ||
              (tower > 60 && tower < 69);
     }
 
-    ALPAKA_FN_INLINE ALPAKA_FN_ACC uint32_t compute_ebdetid(ElectronicsIdGPU const& eid) const {
+    AV2P_FN_INLINE AV2P_FN_ACC uint32_t compute_ebdetid(ElectronicsIdGPU const& eid) const {
       // as in Geometry/EcalMaping/.../EcalElectronicsMapping
       auto const dcc = eid.dccId();
       auto const tower = eid.towerId();
@@ -412,9 +412,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
       return did.rawId() | ((ieta > 0) ? (0x10000 | (ieta << 9)) : ((-ieta) << 9)) | (iphi & 0x1FF);
     }
 
-    ALPAKA_FN_INLINE ALPAKA_FN_ACC int adc(uint16_t sample) const { return sample & 0xfff; }
+    AV2P_FN_INLINE AV2P_FN_ACC int adc(uint16_t sample) const { return sample & 0xfff; }
 
-    ALPAKA_FN_INLINE ALPAKA_FN_ACC int gainId(uint16_t sample) const { return (sample >> 12) & 0x3; }
+    AV2P_FN_INLINE AV2P_FN_ACC int gainId(uint16_t sample) const { return (sample >> 12) & 0x3; }
   };
 
   void unpackRaw(Queue& queue,
@@ -428,12 +428,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
     ecal::raw::InputDataDevice inputDevice(queue, nbytesTotal, nfedsWithData);
 
     // transfer the raw data
-    alpaka::memcpy(queue, inputDevice.data, inputHost.data);
-    alpaka::memcpy(queue, inputDevice.offsets, inputHost.offsets);
-    alpaka::memcpy(queue, inputDevice.feds, inputHost.feds);
+    aV2P::memcpy(queue, inputDevice.data, inputHost.data);
+    aV2P::memcpy(queue, inputDevice.offsets, inputHost.offsets);
+    aV2P::memcpy(queue, inputDevice.feds, inputHost.feds);
 
     auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(nfedsWithData, 32);  // 32 channels per block
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv,
                         Kernel_unpack{},
                         inputDevice.data.data(),
@@ -445,4 +445,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
                         nbytesTotal);
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::raw

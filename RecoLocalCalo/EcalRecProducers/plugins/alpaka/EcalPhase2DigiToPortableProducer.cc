@@ -10,7 +10,7 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class EcalPhase2DigiToPortableProducer : public global::EDProducer<> {
   public:
@@ -80,6 +80,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     //emplace device collection in the event
     event.emplace(outputDigiHostToken_, std::move(digisHostColl));
   }
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_ALPAKA_MODULE(EcalPhase2DigiToPortableProducer);
+DEFINE_FWK_AV2P_MODULE(EcalPhase2DigiToPortableProducer);

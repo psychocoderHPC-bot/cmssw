@@ -1,7 +1,7 @@
 #ifndef DataFormats_VertexSoA_interface_ZVertexSoA_h
 #define DataFormats_VertexSoA_interface_ZVertexSoA_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/SoATemplate/interface/SoALayout.h"
 #include "DataFormats/SoATemplate/interface/SoABlocks.h"
@@ -41,7 +41,7 @@ namespace reco {
   using ZVertexBlocksView = ZVertexBlocks::View;
   using ZVertexBlocksConstView = ZVertexBlocks::ConstView;
 
-  ALPAKA_FN_HOST_ACC ALPAKA_FN_INLINE void init(ZVertexSoAView &vertices) { vertices.nvFinal() = 0; }
+  AV2P_FN_HOST_ACC AV2P_FN_INLINE void init(ZVertexSoAView &vertices) { vertices.nvFinal() = 0; }
 
 }  // namespace reco
 

@@ -1,7 +1,7 @@
 #ifndef RecoLocalCalo_HGCalRecProducers_plugins_alpaka_HGCalLayerClustersSoAAlgoWrapper_h
 #define RecoLocalCalo_HGCalRecProducers_plugins_alpaka_HGCalLayerClustersSoAAlgoWrapper_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/HGCalReco/interface/HGCalSoARecHitsHostCollection.h"
 #include "DataFormats/HGCalReco/interface/alpaka/HGCalSoARecHitsDeviceCollection.h"
@@ -12,7 +12,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/traits.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class HGCalLayerClustersSoAAlgoWrapper {
   public:
@@ -25,6 +25,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
              HGCalSoAClustersDeviceCollection::View outputs,
              HGCalSoAClustersExtraDeviceCollection::View outputs_service) const;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // RecoLocalCalo_HGCalRecProducers_plugins_alpaka_HGCalLayerClustersSoAAlgoWrapper_h

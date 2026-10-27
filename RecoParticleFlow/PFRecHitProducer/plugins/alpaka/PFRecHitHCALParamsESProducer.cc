@@ -9,7 +9,7 @@
 #include "RecoParticleFlow/PFRecHitProducer/interface/PFRecHitParamsRecord.h"
 #include "CalorimeterDefinitions.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   using namespace particleFlowRecHitProducer;
 
   class PFRecHitHCALParamsESProducer : public ESProducer {
@@ -45,7 +45,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     std::array<double, HCAL::kMaxDepthHE> energyThresholdsHE_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/ModuleFactory.h"
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(PFRecHitHCALParamsESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(PFRecHitHCALParamsESProducer);

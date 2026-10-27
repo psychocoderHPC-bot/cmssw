@@ -1,7 +1,7 @@
 #include <cstring>
 #include <utility>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include <catch2/catch_all.hpp>
 
@@ -16,8 +16,8 @@
 #include "DataFormats/TrivialSerialisation/interface/MemoryCopyTraits.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
-namespace alpaka_portable_test = ALPAKA_ACCELERATOR_NAMESPACE::portabletest;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
+namespace alpaka_portable_test = AV2P_ACCELERATOR_NAMESPACE::portabletest;
 
 /*
  * Catch2 tests for MemoryCopyTraits specializations of portable types.
@@ -36,7 +36,7 @@ namespace alpaka_portable_test = ALPAKA_ACCELERATOR_NAMESPACE::portabletest;
 TEST_CASE("Test MemoryCopyTraits with portable types", "[MemoryCopyTraits][Portable]") {
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    FAIL("No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend");
+    FAIL("No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend");
   }
 
   SECTION("PortableHostCollection checks") {
@@ -221,8 +221,8 @@ TEST_CASE("Test MemoryCopyTraits with portable types", "[MemoryCopyTraits][Porta
 
       // Create a device collection and copy the reference data to it
       DeviceCollectionType source(queue, size);
-      alpaka::memcpy(queue, source.buffer(), refHost.buffer());
-      alpaka::wait(queue);
+      aV2P::memcpy(queue, source.buffer(), refHost.buffer());
+      aV2P::wait(queue);
 
       // Get properties
       auto props = ::ngt::MemoryCopyTraits<DeviceCollectionType>::properties(source);
@@ -239,16 +239,16 @@ TEST_CASE("Test MemoryCopyTraits with portable types", "[MemoryCopyTraits][Porta
       REQUIRE(sources_regions.size() == targets_regions.size());
       for (size_t i = 0; i < sources_regions.size(); ++i) {
         REQUIRE(sources_regions[i].size_bytes() == targets_regions[i].size_bytes());
-        auto src_view = alpaka::createView(device, sources_regions[i].data(), sources_regions[i].size_bytes());
-        auto trg_view = alpaka::createView(device, targets_regions[i].data(), targets_regions[i].size_bytes());
-        alpaka::memcpy(queue, trg_view, src_view);
+        auto src_view = aV2P::createView(device, sources_regions[i].data(), sources_regions[i].size_bytes());
+        auto trg_view = aV2P::createView(device, targets_regions[i].data(), targets_regions[i].size_bytes());
+        aV2P::memcpy(queue, trg_view, src_view);
       }
-      alpaka::wait(queue);
+      aV2P::wait(queue);
 
       // Copy the clone back to host to verify
       HostCollectionType verifyHost(queue, size);
-      alpaka::memcpy(queue, verifyHost.buffer(), clone.buffer());
-      alpaka::wait(queue);
+      aV2P::memcpy(queue, verifyHost.buffer(), clone.buffer());
+      aV2P::wait(queue);
 
       REQUIRE(verifyHost.const_view().r() == refHost.const_view().r());
       for (int i = 0; i < size; i++) {
@@ -275,8 +275,8 @@ TEST_CASE("Test MemoryCopyTraits with portable types", "[MemoryCopyTraits][Porta
       hostSource->id = 99;
 
       DeviceObjectType source(queue);
-      alpaka::memcpy(queue, source.buffer(), hostSource.buffer());
-      alpaka::wait(queue);
+      aV2P::memcpy(queue, source.buffer(), hostSource.buffer());
+      aV2P::wait(queue);
 
       // Create an uninitialized clone
       DeviceObjectType clone(edm::kUninitialized);
@@ -290,15 +290,15 @@ TEST_CASE("Test MemoryCopyTraits with portable types", "[MemoryCopyTraits][Porta
       REQUIRE(targets_regions.size() == 1);
       REQUIRE(sources_regions[0].size_bytes() == sizeof(alpaka_portable_test::TestStruct));
 
-      auto src_view = alpaka::createView(device, sources_regions[0].data(), sources_regions[0].size_bytes());
-      auto trg_view = alpaka::createView(device, targets_regions[0].data(), targets_regions[0].size_bytes());
-      alpaka::memcpy(queue, trg_view, src_view);
-      alpaka::wait(queue);
+      auto src_view = aV2P::createView(device, sources_regions[0].data(), sources_regions[0].size_bytes());
+      auto trg_view = aV2P::createView(device, targets_regions[0].data(), targets_regions[0].size_bytes());
+      aV2P::memcpy(queue, trg_view, src_view);
+      aV2P::wait(queue);
 
       // Copy clone back to host and verify
       PortableHostObject<alpaka_portable_test::TestStruct> hostClone(queue);
-      alpaka::memcpy(queue, hostClone.buffer(), clone.buffer());
-      alpaka::wait(queue);
+      aV2P::memcpy(queue, hostClone.buffer(), clone.buffer());
+      aV2P::wait(queue);
 
       REQUIRE(hostClone->x == 1.0);
       REQUIRE(hostClone->y == 2.0);

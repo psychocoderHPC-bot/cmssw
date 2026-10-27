@@ -6,7 +6,7 @@
 
 #include <type_traits>
 #include <utility>
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 namespace cms::alpakatools {
 
@@ -46,9 +46,9 @@ namespace cms::alpakatools {
       }
     }
 
-    ALPAKA_FN_ACC inline T &back() { return m_data[m_size - 1]; }
+    AV2P_FN_ACC inline T &back() { return m_data[m_size - 1]; }
 
-    ALPAKA_FN_ACC inline const T &back() const {
+    AV2P_FN_ACC inline const T &back() const {
       if (m_size > 0) {
         return m_data[m_size - 1];
       } else
@@ -56,49 +56,49 @@ namespace cms::alpakatools {
     }
 
     // thread-safe version of the vector, when used in a CUDA kernel
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC int push_back(const TAcc &acc, const T &element) {
-      auto previousSize = alpaka::atomicAdd(acc, &m_size, 1, alpaka::hierarchy::Blocks{});
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC int push_back(const TAcc &acc, const T &element) {
+      auto previousSize = aV2P::atomicAdd(acc, &m_size, 1, aV2P::hierarchy::Blocks{});
       if (previousSize < m_capacity) {
         m_data[previousSize] = element;
         return previousSize;
       } else {
-        alpaka::atomicSub(acc, &m_size, 1, alpaka::hierarchy::Blocks{});
+        aV2P::atomicSub(acc, &m_size, 1, aV2P::hierarchy::Blocks{});
         return -1;
       }
     }
 
-    template <alpaka::concepts::Acc TAcc, class... Ts>
-    ALPAKA_FN_ACC int emplace_back(const TAcc &acc, Ts &&...args) {
-      auto previousSize = alpaka::atomicAdd(acc, &m_size, 1, alpaka::hierarchy::Blocks{});
+    template <aV2P::concepts::Acc TAcc, class... Ts>
+    AV2P_FN_ACC int emplace_back(const TAcc &acc, Ts &&...args) {
+      auto previousSize = aV2P::atomicAdd(acc, &m_size, 1, aV2P::hierarchy::Blocks{});
       if (previousSize < m_capacity) {
         (new (&m_data[previousSize]) T(std::forward<Ts>(args)...));
         return previousSize;
       } else {
-        alpaka::atomicSub(acc, &m_size, 1, alpaka::hierarchy::Blocks{});
+        aV2P::atomicSub(acc, &m_size, 1, aV2P::hierarchy::Blocks{});
         return -1;
       }
     }
 
     // thread safe version of resize
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC int extend(const TAcc &acc, int size = 1) {
-      auto previousSize = alpaka::atomicAdd(acc, &m_size, size, alpaka::hierarchy::Blocks{});
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC int extend(const TAcc &acc, int size = 1) {
+      auto previousSize = aV2P::atomicAdd(acc, &m_size, size, aV2P::hierarchy::Blocks{});
       if (previousSize < m_capacity) {
         return previousSize;
       } else {
-        alpaka::atomicSub(acc, &m_size, size, alpaka::hierarchy::Blocks{});
+        aV2P::atomicSub(acc, &m_size, size, aV2P::hierarchy::Blocks{});
         return -1;
       }
     }
 
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC int shrink(const TAcc &acc, int size = 1) {
-      auto previousSize = alpaka::atomicSub(acc, &m_size, size, alpaka::hierarchy::Blocks{});
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC int shrink(const TAcc &acc, int size = 1) {
+      auto previousSize = aV2P::atomicSub(acc, &m_size, size, aV2P::hierarchy::Blocks{});
       if (previousSize >= size) {
         return previousSize - size;
       } else {
-        alpaka::atomicAdd(acc, &m_size, size, alpaka::hierarchy::Blocks{});
+        aV2P::atomicAdd(acc, &m_size, size, aV2P::hierarchy::Blocks{});
         return -1;
       }
     }

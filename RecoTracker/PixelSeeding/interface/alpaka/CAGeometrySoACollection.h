@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Portable/interface/alpaka/PortableCollection.h"
 #include "RecoTracker/PixelSeeding/interface/CAGeometryDevice.h"
@@ -12,14 +12,14 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/CopyToHost.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::reco {
+namespace AV2P_ACCELERATOR_NAMESPACE::reco {
 
   using ::reco::CAGeometryDevice;
   using ::reco::CAGeometryHost;
   using CAGeometrySoACollection =
-      std::conditional_t<std::is_same_v<Device, alpaka::DevCpu>, CAGeometryHost, CAGeometryDevice<Device>>;
+      std::conditional_t<std::is_same_v<Device, aV2P::DevCpu>, CAGeometryHost, CAGeometryDevice<Device>>;
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::reco
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::reco
 
 ASSERT_DEVICE_MATCHES_HOST_COLLECTION(reco::CAGeometrySoACollection, reco::CAGeometryHost);
 

@@ -1,17 +1,17 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/EDMetadataSentry.h"
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/chooseDevice.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::detail {
+namespace AV2P_ACCELERATOR_NAMESPACE::detail {
 
   EDMetadataSentry::EDMetadataSentry(edm::StreamID streamID, bool synchronize)
       : metadata_(std::make_shared<EDMetadata>(detail::chooseDevice(streamID))), synchronize_(synchronize) {}
 
   void EDMetadataSentry::finish(bool launchedAsyncWork) {
-    if constexpr (not std::is_same_v<Queue, alpaka::Queue<Device, alpaka::Blocking>>) {
+    if constexpr (not std::is_same_v<Queue, aV2P::Queue<Device, aV2P::Blocking>>) {
       if (launchedAsyncWork and synchronize_) {
-        alpaka::wait(metadata_->queue());
+        aV2P::wait(metadata_->queue());
       }
     }
 
@@ -20,4 +20,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::detail {
     }
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::detail
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::detail

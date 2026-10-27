@@ -2,14 +2,14 @@
 
 // PortableCollection-based model
 #include "HeterogeneousCore/AlpakaTest/interface/alpaka/AlpakaESTestData.h"
-TYPELOOKUP_ALPAKA_DATA_REG(AlpakaESTestDataADevice);
-TYPELOOKUP_ALPAKA_DATA_REG(AlpakaESTestDataCDevice);
-TYPELOOKUP_ALPAKA_DATA_REG(AlpakaESTestDataDDevice);
-TYPELOOKUP_ALPAKA_DATA_REG(AlpakaESTestDataACBlocksDevice);
+TYPELOOKUP_AV2P_DATA_REG(AlpakaESTestDataADevice);
+TYPELOOKUP_AV2P_DATA_REG(AlpakaESTestDataCDevice);
+TYPELOOKUP_AV2P_DATA_REG(AlpakaESTestDataDDevice);
+TYPELOOKUP_AV2P_DATA_REG(AlpakaESTestDataACBlocksDevice);
 
 // Template-over-device model
 #include "HeterogeneousCore/AlpakaTest/interface/AlpakaESTestData.h"
-TYPELOOKUP_ALPAKA_TEMPLATED_DATA_REG(cms::alpakatest::AlpakaESTestDataB);
+TYPELOOKUP_AV2P_TEMPLATED_DATA_REG(cms::alpakatest::AlpakaESTestDataB);
 
 // Template-over-device model with PortableCollection members
-TYPELOOKUP_ALPAKA_TEMPLATED_DATA_REG(cms::alpakatest::AlpakaESTestDataE);
+TYPELOOKUP_AV2P_TEMPLATED_DATA_REG(cms::alpakatest::AlpakaESTestDataE);

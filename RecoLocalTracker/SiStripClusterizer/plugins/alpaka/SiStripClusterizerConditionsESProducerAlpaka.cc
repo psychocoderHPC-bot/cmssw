@@ -22,7 +22,7 @@
 #include "RecoLocalTracker/SiStripClusterizer/interface/SiStripClusterizerConditionsHostObject.h"
 #include "RecoLocalTracker/SiStripClusterizer/interface/alpaka/SiStripClusterizerConditionsDeviceObject.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip {
+namespace AV2P_ACCELERATOR_NAMESPACE::sistrip {
   // Unqualified lookup of the top level namespace
   using namespace ::sistrip;
 
@@ -207,7 +207,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip {
       }
     }
   }
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::sistrip
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/ModuleFactory.h"
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(sistrip::SiStripClusterizerConditionsESProducerAlpaka);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(sistrip::SiStripClusterizerConditionsESProducerAlpaka);

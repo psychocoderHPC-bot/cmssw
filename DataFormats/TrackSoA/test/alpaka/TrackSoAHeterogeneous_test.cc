@@ -16,7 +16,7 @@
 #include <cstdlib>
 #include <unistd.h>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/TrackSoA/interface/TracksDevice.h"
 #include "DataFormats/TrackSoA/interface/TracksHost.h"
@@ -30,14 +30,14 @@
 
 #include "TrackSoAHeterogeneous_test.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
-using namespace ALPAKA_ACCELERATOR_NAMESPACE::reco;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE::reco;
 
 int main() {
   // Get the list of devices on the current platform
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }
@@ -62,8 +62,8 @@ int main() {
       ::reco::TracksHost tracks_h(queue, nTracks, nHits);
 
       std::cout << "no. of tracks = " << tracks_h.view().tracks().metadata().size() << std::endl;
-      alpaka::memcpy(queue, tracks_h.buffer(), tracks_d.const_buffer());
-      alpaka::wait(queue);
+      aV2P::memcpy(queue, tracks_h.buffer(), tracks_d.const_buffer());
+      aV2P::wait(queue);
 
       // Print results
       std::cout << "pt"

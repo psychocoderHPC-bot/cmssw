@@ -5,11 +5,11 @@
 #include "DataFormats/HGCalReco/interface/HGCalSoARecHits.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   // SoA with x, y, z, id fields in device global memory
   using HGCalSoARecHitsDeviceCollection = PortableCollection<HGCalSoARecHits>;
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // DataFormats_PortableTestObjects_interface_alpaka_HGCalSoARecHitsDeviceCollection_h

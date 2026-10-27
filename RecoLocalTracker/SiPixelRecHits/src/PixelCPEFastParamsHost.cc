@@ -1,4 +1,4 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "CondFormats/SiPixelTransient/interface/SiPixelGenError.h"
 #include "DataFormats/GeometrySurface/interface/SOARotation.h"

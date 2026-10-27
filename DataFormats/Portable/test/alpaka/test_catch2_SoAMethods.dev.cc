@@ -1,4 +1,4 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
@@ -9,7 +9,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 GENERATE_SOA_LAYOUT(SoATemplate,
                     SOA_COLUMN(float, x),
@@ -65,7 +65,7 @@ using ResultSoA = ResultTemplate<>;
 using ResultView = ResultSoA::View;
 
 struct calculateNorm {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, SoAConstView soaConstView, ResultView resultView) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, SoAConstView soaConstView, ResultView resultView) const {
     for (auto i : cms::alpakatools::uniform_elements(acc, soaConstView.metadata().size())) {
       resultView[i].positionNorm() = soaConstView[i].square_norm_position();
       resultView[i].velocityNorm() = soaConstView[i].square_norm_velocity();
@@ -74,7 +74,7 @@ struct calculateNorm {
 };
 
 struct checkNormalise {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, SoAView soaView, ResultView resultView) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, SoAView soaView, ResultView resultView) const {
     for (auto i : cms::alpakatools::uniform_elements(acc, soaView.metadata().size())) {
       resultView[i].times() = SoAView::const_element::time(soaView[i].x(), soaView[i].v_x());
       soaView[i].normalise();
@@ -85,13 +85,13 @@ struct checkNormalise {
 TEST_CASE("SoACustomizedMethods Alpaka", "[SoACustomizedMethods][Alpaka]") {
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cout << "No devices available for the " << EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE)
+    std::cout << "No devices available for the " << EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE)
               << " backend, skipping.\n";
     return;
   }
 
   for (auto const& device : devices) {
-    std::cout << "Running on " << alpaka::getName(device) << std::endl;
+    std::cout << "Running on " << aV2P::getName(device) << std::endl;
     Queue queue(device);
 
     constexpr unsigned int elems = 10;
@@ -117,11 +117,11 @@ TEST_CASE("SoACustomizedMethods Alpaka", "[SoACustomizedMethods][Alpaka]") {
     PortableCollection<Device, SoA> deviceCollection(queue, elems);
     auto d_view = deviceCollection.view();
     auto d_Constview = deviceCollection.const_view();
-    alpaka::memcpy(queue, deviceCollection.buffer(), hostCollection.buffer());
+    aV2P::memcpy(queue, deviceCollection.buffer(), hostCollection.buffer());
 
     PortableCollection<Device, ResultSoA> deviceResultCollection(queue, elems);
     auto d_result_view = deviceResultCollection.view();
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
     // Work division
     const std::size_t blockSize = 256;
@@ -129,10 +129,10 @@ TEST_CASE("SoACustomizedMethods Alpaka", "[SoACustomizedMethods][Alpaka]") {
     const auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
 
     SECTION("ConstView methods Alpaka") {
-      alpaka::exec<Acc1D>(queue, workDiv, calculateNorm{}, d_Constview, d_result_view);
-      alpaka::wait(queue);
+      aV2P::exec<Acc1D>(queue, workDiv, calculateNorm{}, d_Constview, d_result_view);
+      aV2P::wait(queue);
 
-      alpaka::memcpy(queue, hostResultCollection.buffer(), deviceResultCollection.buffer());
+      aV2P::memcpy(queue, hostResultCollection.buffer(), deviceResultCollection.buffer());
 
       // Check for the correctness of the square_norm() functions
       for (size_t i = 0; i < elems; i++) {
@@ -157,11 +157,11 @@ TEST_CASE("SoACustomizedMethods Alpaka", "[SoACustomizedMethods][Alpaka]") {
           times[i] = h_view[i].x() / h_view[i].v_x();
       }
 
-      alpaka::exec<Acc1D>(queue, workDiv, checkNormalise{}, d_view, d_result_view);
-      alpaka::wait(queue);
+      aV2P::exec<Acc1D>(queue, workDiv, checkNormalise{}, d_view, d_result_view);
+      aV2P::wait(queue);
 
-      alpaka::memcpy(queue, hostResultCollection.buffer(), deviceResultCollection.buffer());
-      alpaka::memcpy(queue, hostCollection.buffer(), deviceCollection.buffer());
+      aV2P::memcpy(queue, hostResultCollection.buffer(), deviceResultCollection.buffer());
+      aV2P::memcpy(queue, hostCollection.buffer(), deviceCollection.buffer());
 
       // Check for the correctness of the time() function
       for (size_t i = 0; i < elems; i++) {

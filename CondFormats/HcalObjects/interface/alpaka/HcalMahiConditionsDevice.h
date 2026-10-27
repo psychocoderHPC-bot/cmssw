@@ -7,7 +7,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   namespace hcal {
 
@@ -15,6 +15,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     using HcalMahiConditionsPortableDevice = PortableCollection<::hcal::HcalMahiConditionsSoA>;
   }  // namespace hcal
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

@@ -4,7 +4,7 @@
 #include <cassert>
 #include <memory>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Utilities/interface/thread_safety_macros.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/AllocatorConfig.h"
@@ -17,10 +17,10 @@ namespace cms::alpakatools {
 
     template <typename TDev,
               typename TQueue,
-              typename = std::enable_if_t<alpaka::concepts::Device<TDev> and alpaka::concepts::Queue<TQueue>>>
+              typename = std::enable_if_t<aV2P::concepts::Device<TDev> and aV2P::concepts::Queue<TQueue>>>
     auto allocate_device_allocators(AllocatorConfig const& config, bool debug) {
       using Allocator = CachingAllocator<TDev, TQueue>;
-      auto const& devices = cms::alpakatools::devices<alpaka::Platform<TDev>>();
+      auto const& devices = cms::alpakatools::devices<aV2P::Platform<TDev>>();
       ssize_t const size = devices.size();
 
       // allocate the storage for the objects
@@ -69,15 +69,15 @@ namespace cms::alpakatools {
 
   template <typename TDev,
             typename TQueue,
-            typename = std::enable_if_t<alpaka::concepts::Device<TDev> and alpaka::concepts::Queue<TQueue>>>
+            typename = std::enable_if_t<aV2P::concepts::Device<TDev> and aV2P::concepts::Queue<TQueue>>>
   inline CachingAllocator<TDev, TQueue>& getDeviceCachingAllocator(TDev const& device,
                                                                    AllocatorConfig const& config = AllocatorConfig{},
                                                                    bool debug = false) {
     // initialise all allocators, one per device
     CMS_THREAD_SAFE static auto allocators = detail::allocate_device_allocators<TDev, TQueue>(config, debug);
 
-    size_t const index = alpaka::getNativeHandle(device);
-    assert(index < cms::alpakatools::devices<alpaka::Platform<TDev>>().size());
+    size_t const index = aV2P::getNativeHandle(device);
+    assert(index < cms::alpakatools::devices<aV2P::Platform<TDev>>().size());
 
     // the public interface is thread safe
     return allocators[index];

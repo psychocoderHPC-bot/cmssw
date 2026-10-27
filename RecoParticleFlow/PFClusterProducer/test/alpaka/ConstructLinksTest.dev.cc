@@ -5,7 +5,7 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
 #include "DataFormats/HcalDetId/interface/HcalSubdetector.h"
@@ -45,7 +45,7 @@ static constexpr unsigned int nStreams = 1;  //T4:40 RTX:72 L40S:142 4090:128 50
 
 static constexpr unsigned int nIters = 100;
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class ConstructLinksTest {
   public:
@@ -59,7 +59,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                  std::vector<reco::PFMultiDepthClusteringCCLabelsDeviceCollection>& mdpfCCLabels,
                                  const std::vector<reco::PFMultiDepthClusteringVarsDeviceCollection>& mdpfClusteringVars,
                                  const PFMultiDepthClusterParams* nSigma) const {
-    uint32_t items = std::is_same_v<Device, alpaka::DevCpu> ? 1 : 128;
+    uint32_t items = std::is_same_v<Device, aV2P::DevCpu> ? 1 : 128;
 
     auto n = static_cast<uint32_t>(mdpfClusteringVars[0]->metadata().size());
     uint32_t groups = ::cms::alpakatools::divide_up_by(n, items);
@@ -76,12 +76,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       auto wall_start = std::chrono::high_resolution_clock::now();
 
       for (unsigned int s = 0; s < nStreams; s++) {
-        alpaka::exec<Acc1D>(
+        aV2P::exec<Acc1D>(
             queues[0], workDiv, ConstructLinksKernel{}, mdpfCCLabels[s].view(), mdpfClusteringVars[s].view(), nSigma);
       }
 
       for (unsigned int s = 0; s < nStreams; s++)
-        alpaka::wait(queues[s]);
+        aV2P::wait(queues[s]);
 
       auto wall_stop = std::chrono::high_resolution_clock::now();
       //
@@ -106,7 +106,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     auto params_d = cms::alpakatools::make_device_buffer<PFMultiDepthClusterParams>(queues[0]);
 
-    alpaka::memcpy(queues[0], params_d, params_h);
+    aV2P::memcpy(queues[0], params_d, params_h);
 
     auto hClusteringVars = hostClusteringVars[0].view();
 
@@ -122,27 +122,27 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       //
       auto dev_clustering_vars = reco::PFMultiDepthClusteringVarsDeviceCollection{queues[s], nClusters};
       //
-      alpaka::memcpy(queues[s], dev_clustering_vars.buffer(), hostClusteringVars[s].buffer());
+      aV2P::memcpy(queues[s], dev_clustering_vars.buffer(), hostClusteringVars[s].buffer());
 
       devClusteringVars.emplace_back(std::move(dev_clustering_vars));
 
       devClusteringCCLabels.emplace_back(
           reco::PFMultiDepthClusteringCCLabelsDeviceCollection(queues[s], nClusters + 1));
 
-      alpaka::wait(queues[s]);
+      aV2P::wait(queues[s]);
     }
 
     construct_links_test.apply(queues, devClusteringCCLabels, devClusteringVars, params_d.data());
 
-    alpaka::memcpy(queues[0], hostClusteringCCLabels[0].buffer(), devClusteringCCLabels[0].buffer());
+    aV2P::memcpy(queues[0], hostClusteringCCLabels[0].buffer(), devClusteringCCLabels[0].buffer());
 
     for (unsigned int s = 0; s < nStreams; s++)
-      alpaka::wait(queues[s]);
+      aV2P::wait(queues[s]);
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 void create(::reco::PFClusterCollection& clusters, const int nClusters) {
   std::mt19937 rng(12345);
@@ -415,7 +415,7 @@ int main() {
   // get the list of devices on the current platform
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }

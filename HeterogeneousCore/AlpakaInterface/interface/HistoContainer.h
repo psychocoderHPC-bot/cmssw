@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/AtomicPairCounter.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/OneToManyAssoc.h"
@@ -18,8 +18,8 @@
 namespace cms::alpakatools {
 
   struct countFromVector {
-    template <alpaka::concepts::Acc TAcc, typename Histo, typename View, typename Accessor>
-    ALPAKA_FN_ACC void operator()(const TAcc &acc,
+    template <aV2P::concepts::Acc TAcc, typename Histo, typename View, typename Accessor>
+    AV2P_FN_ACC void operator()(const TAcc &acc,
                                   Histo *__restrict__ h,
                                   uint32_t nh,
                                   View v,
@@ -28,16 +28,16 @@ namespace cms::alpakatools {
       const uint32_t nt = offsets[nh];
       for (uint32_t i : uniform_elements(acc, nt)) {
         auto off = alpaka_std::upper_bound(offsets, offsets + nh + 1, i);
-        ALPAKA_ASSERT_ACC((*off) > 0);
+        AV2P_ASSERT_ACC((*off) > 0);
         int32_t ih = off - offsets - 1;
-        ALPAKA_ASSERT_ACC(ih >= 0);
-        ALPAKA_ASSERT_ACC(ih < int(nh));
+        AV2P_ASSERT_ACC(ih >= 0);
+        AV2P_ASSERT_ACC(ih < int(nh));
         h->count(acc, func(v[i]), ih);
       }
     }
 
-    template <alpaka::concepts::Acc TAcc, typename Histo, typename T>
-    ALPAKA_FN_ACC void operator()(const TAcc &acc,
+    template <aV2P::concepts::Acc TAcc, typename Histo, typename T>
+    AV2P_FN_ACC void operator()(const TAcc &acc,
                                   Histo *__restrict__ h,
                                   uint32_t nh,
                                   T const *__restrict__ v,
@@ -45,18 +45,18 @@ namespace cms::alpakatools {
       const uint32_t nt = offsets[nh];
       for (uint32_t i : uniform_elements(acc, nt)) {
         auto off = alpaka_std::upper_bound(offsets, offsets + nh + 1, i);
-        ALPAKA_ASSERT_ACC((*off) > 0);
+        AV2P_ASSERT_ACC((*off) > 0);
         int32_t ih = off - offsets - 1;
-        ALPAKA_ASSERT_ACC(ih >= 0);
-        ALPAKA_ASSERT_ACC(ih < int(nh));
+        AV2P_ASSERT_ACC(ih >= 0);
+        AV2P_ASSERT_ACC(ih < int(nh));
         h->count(acc, v[i], ih);
       }
     }
   };
 
   struct fillFromVector {
-    template <alpaka::concepts::Acc TAcc, typename Histo, typename View, typename Accessor>
-    ALPAKA_FN_ACC void operator()(const TAcc &acc,
+    template <aV2P::concepts::Acc TAcc, typename Histo, typename View, typename Accessor>
+    AV2P_FN_ACC void operator()(const TAcc &acc,
                                   Histo *__restrict__ h,
                                   uint32_t nh,
                                   View v,
@@ -65,16 +65,16 @@ namespace cms::alpakatools {
       const uint32_t nt = offsets[nh];
       for (uint32_t i : uniform_elements(acc, nt)) {
         auto off = alpaka_std::upper_bound(offsets, offsets + nh + 1, i);
-        ALPAKA_ASSERT_ACC((*off) > 0);
+        AV2P_ASSERT_ACC((*off) > 0);
         int32_t ih = off - offsets - 1;
-        ALPAKA_ASSERT_ACC(ih >= 0);
-        ALPAKA_ASSERT_ACC(ih < int(nh));
+        AV2P_ASSERT_ACC(ih >= 0);
+        AV2P_ASSERT_ACC(ih < int(nh));
         h->fill(acc, func(v[i]), i, ih);
       }
     }
 
-    template <alpaka::concepts::Acc TAcc, typename Histo, typename T>
-    ALPAKA_FN_ACC void operator()(const TAcc &acc,
+    template <aV2P::concepts::Acc TAcc, typename Histo, typename T>
+    AV2P_FN_ACC void operator()(const TAcc &acc,
                                   Histo *__restrict__ h,
                                   uint32_t nh,
                                   T const *__restrict__ v,
@@ -82,17 +82,17 @@ namespace cms::alpakatools {
       const uint32_t nt = offsets[nh];
       for (uint32_t i : uniform_elements(acc, nt)) {
         auto off = alpaka_std::upper_bound(offsets, offsets + nh + 1, i);
-        ALPAKA_ASSERT_ACC((*off) > 0);
+        AV2P_ASSERT_ACC((*off) > 0);
         int32_t ih = off - offsets - 1;
-        ALPAKA_ASSERT_ACC(ih >= 0);
-        ALPAKA_ASSERT_ACC(ih < int(nh));
+        AV2P_ASSERT_ACC(ih >= 0);
+        AV2P_ASSERT_ACC(ih < int(nh));
         h->fill(acc, v[i], i, ih);
       }
     }
   };
 
-  template <alpaka::concepts::Acc TAcc, typename Histo, typename View, typename Accessor, typename TQueue>
-  ALPAKA_FN_INLINE void fillManyFromVector(Histo *__restrict__ h,
+  template <aV2P::concepts::Acc TAcc, typename Histo, typename View, typename Accessor, typename TQueue>
+  AV2P_FN_INLINE void fillManyFromVector(Histo *__restrict__ h,
                                            uint32_t nh,
                                            View v,
                                            Accessor func,
@@ -103,14 +103,14 @@ namespace cms::alpakatools {
     Histo::template launchZero<TAcc>(h, queue);
     const auto workDiv = make_workdiv<TAcc>(divide_up_by(totSize, nthreads), nthreads);
 
-    alpaka::exec<TAcc>(queue, workDiv, countFromVector(), h, nh, v, func, offsets);
+    aV2P::exec<TAcc>(queue, workDiv, countFromVector(), h, nh, v, func, offsets);
     Histo::template launchFinalize<TAcc>(h, queue);
 
-    alpaka::exec<TAcc>(queue, workDiv, fillFromVector(), h, nh, v, func, offsets);
+    aV2P::exec<TAcc>(queue, workDiv, fillFromVector(), h, nh, v, func, offsets);
   }
 
-  template <alpaka::concepts::Acc TAcc, typename Histo, typename View, typename Accessor, typename TQueue>
-  ALPAKA_FN_INLINE void fillManyFromVector(Histo *__restrict__ h,
+  template <aV2P::concepts::Acc TAcc, typename Histo, typename View, typename Accessor, typename TQueue>
+  AV2P_FN_INLINE void fillManyFromVector(Histo *__restrict__ h,
                                            typename Histo::View hv,
                                            uint32_t nh,
                                            View v,
@@ -122,14 +122,14 @@ namespace cms::alpakatools {
     Histo::template launchZero<TAcc>(hv, queue);
     const auto workDiv = make_workdiv<TAcc>(divide_up_by(totSize, nthreads), nthreads);
 
-    alpaka::exec<TAcc>(queue, workDiv, countFromVector(), h, nh, v, func, offsets);
+    aV2P::exec<TAcc>(queue, workDiv, countFromVector(), h, nh, v, func, offsets);
     Histo::template launchFinalize<TAcc>(h, queue);
 
-    alpaka::exec<TAcc>(queue, workDiv, fillFromVector(), h, nh, v, func, offsets);
+    aV2P::exec<TAcc>(queue, workDiv, fillFromVector(), h, nh, v, func, offsets);
   }
 
-  template <alpaka::concepts::Acc TAcc, typename Histo, typename T, typename TQueue>
-  ALPAKA_FN_INLINE void fillManyFromVector(Histo *__restrict__ h,
+  template <aV2P::concepts::Acc TAcc, typename Histo, typename T, typename TQueue>
+  AV2P_FN_INLINE void fillManyFromVector(Histo *__restrict__ h,
                                            uint32_t nh,
                                            T const *__restrict__ v,
                                            uint32_t const *__restrict__ offsets,
@@ -139,14 +139,14 @@ namespace cms::alpakatools {
     Histo::template launchZero<TAcc>(h, queue);
     const auto workDiv = make_workdiv<TAcc>(divide_up_by(totSize, nthreads), nthreads);
 
-    alpaka::exec<TAcc>(queue, workDiv, countFromVector(), h, nh, v, offsets);
+    aV2P::exec<TAcc>(queue, workDiv, countFromVector(), h, nh, v, offsets);
     Histo::template launchFinalize<TAcc>(h, queue);
 
-    alpaka::exec<TAcc>(queue, workDiv, fillFromVector(), h, nh, v, offsets);
+    aV2P::exec<TAcc>(queue, workDiv, fillFromVector(), h, nh, v, offsets);
   }
 
-  template <alpaka::concepts::Acc TAcc, typename Histo, typename T, typename TQueue>
-  ALPAKA_FN_INLINE void fillManyFromVector(Histo *__restrict__ h,
+  template <aV2P::concepts::Acc TAcc, typename Histo, typename T, typename TQueue>
+  AV2P_FN_INLINE void fillManyFromVector(Histo *__restrict__ h,
                                            typename Histo::View hv,
                                            uint32_t nh,
                                            T const *__restrict__ v,
@@ -157,19 +157,19 @@ namespace cms::alpakatools {
     Histo::template launchZero<TAcc>(hv, queue);
     const auto workDiv = make_workdiv<TAcc>(divide_up_by(totSize, nthreads), nthreads);
 
-    alpaka::exec<TAcc>(queue, workDiv, countFromVector(), h, nh, v, offsets);
+    aV2P::exec<TAcc>(queue, workDiv, countFromVector(), h, nh, v, offsets);
     Histo::template launchFinalize<TAcc>(h, queue);
 
-    alpaka::exec<TAcc>(queue, workDiv, fillFromVector(), h, nh, v, offsets);
+    aV2P::exec<TAcc>(queue, workDiv, fillFromVector(), h, nh, v, offsets);
   }
 
   // iteratate over N bins left and right of the one containing "v"
-  template <alpaka::concepts::Acc TAcc, typename Hist, typename V, typename Func>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void forEachInBins(const TAcc &acc, Hist const &hist, V value, int n, Func func) {
+  template <aV2P::concepts::Acc TAcc, typename Hist, typename V, typename Func>
+  AV2P_FN_ACC AV2P_FN_INLINE void forEachInBins(const TAcc &acc, Hist const &hist, V value, int n, Func func) {
     int bs = Hist::bin(value);
-    int be = alpaka::math::min(acc, int(Hist::nbins() - 1), bs + n);
-    bs = alpaka::math::max(acc, 0, bs - n);
-    ALPAKA_ASSERT_ACC(be >= bs);
+    int be = aV2P::math::min(acc, int(Hist::nbins() - 1), bs + n);
+    bs = aV2P::math::max(acc, 0, bs - n);
+    AV2P_ASSERT_ACC(be >= bs);
     for (auto pj = hist.begin(bs); pj < hist.end(be); ++pj) {
       func(*pj);
     }
@@ -177,10 +177,10 @@ namespace cms::alpakatools {
 
   // iteratate over bins containing all values in window wmin, wmax
   template <typename Hist, typename V, typename Func>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void forEachInWindow(Hist const &hist, V wmin, V wmax, Func const &func) {
+  AV2P_FN_ACC AV2P_FN_INLINE void forEachInWindow(Hist const &hist, V wmin, V wmax, Func const &func) {
     auto bs = Hist::bin(wmin);
     auto be = Hist::bin(wmax);
-    ALPAKA_ASSERT_ACC(be >= bs);
+    AV2P_ASSERT_ACC(be >= bs);
     for (auto pj = hist.begin(bs); pj < hist.end(be); ++pj) {
       func(*pj);
     }
@@ -230,39 +230,39 @@ namespace cms::alpakatools {
       return (t >> shift) & mask;
     }
 
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void count(const TAcc &acc, T t) {
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE void count(const TAcc &acc, T t) {
       size_type b = bin(t);
-      ALPAKA_ASSERT_ACC(b < nbins());
+      AV2P_ASSERT_ACC(b < nbins());
       Base::atomicIncrement(acc, this->off[b]);
     }
 
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void fill(const TAcc &acc, T t, value_type j) {
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE void fill(const TAcc &acc, T t, value_type j) {
       size_type b = bin(t);
-      ALPAKA_ASSERT_ACC(b < nbins());
+      AV2P_ASSERT_ACC(b < nbins());
       auto w = Base::atomicDecrement(acc, this->off[b]);
-      ALPAKA_ASSERT_ACC(w > 0);
+      AV2P_ASSERT_ACC(w > 0);
       this->content[w - 1] = j;
     }
 
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void count(const TAcc &acc, T t, size_type nh) {
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE void count(const TAcc &acc, T t, size_type nh) {
       size_type b = bin(t);
-      ALPAKA_ASSERT_ACC(b < nbins());
+      AV2P_ASSERT_ACC(b < nbins());
       b += histOff(nh);
-      ALPAKA_ASSERT_ACC(b < totbins());
+      AV2P_ASSERT_ACC(b < totbins());
       Base::atomicIncrement(acc, this->off[b]);
     }
 
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void fill(const TAcc &acc, T t, value_type j, size_type nh) {
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE void fill(const TAcc &acc, T t, value_type j, size_type nh) {
       size_type b = bin(t);
-      ALPAKA_ASSERT_ACC(b < nbins());
+      AV2P_ASSERT_ACC(b < nbins());
       b += histOff(nh);
-      ALPAKA_ASSERT_ACC(b < totbins());
+      AV2P_ASSERT_ACC(b < totbins());
       auto w = Base::atomicDecrement(acc, this->off[b]);
-      ALPAKA_ASSERT_ACC(w > 0);
+      AV2P_ASSERT_ACC(w > 0);
       this->content[w - 1] = j;
     }
   };

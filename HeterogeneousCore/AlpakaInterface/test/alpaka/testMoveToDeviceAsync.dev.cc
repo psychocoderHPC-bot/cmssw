@@ -1,7 +1,7 @@
 #include <optional>
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
@@ -13,7 +13,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
 // each test binary is built for a single Alpaka backend
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 namespace {
   template <typename T>
@@ -67,7 +67,7 @@ namespace {
 
   template <typename T>
   void fillBuffer(TestHostBuffer<T>& buffer) {
-    for (int i = 0, size = alpaka::getExtentProduct(buffer.buffer()); i < size; ++i) {
+    for (int i = 0, size = aV2P::getExtentProduct(buffer.buffer()); i < size; ++i) {
       buffer.data()[i] = i;
     }
   }
@@ -78,15 +78,15 @@ namespace cms::alpakatools {
   struct CopyToDevice<TestHostBuffer<T>> {
     template <typename TQueue>
     static auto copyAsync(TQueue& queue, TestHostBuffer<T> const& hostBuffer) {
-      TestDeviceBuffer<T, alpaka::Dev<TQueue>> deviceBuffer(queue, alpaka::getExtentProduct(hostBuffer.buffer()));
-      alpaka::memcpy(queue, deviceBuffer.buffer(), hostBuffer.buffer());
+      TestDeviceBuffer<T, aV2P::Dev<TQueue>> deviceBuffer(queue, aV2P::getExtentProduct(hostBuffer.buffer()));
+      aV2P::memcpy(queue, deviceBuffer.buffer(), hostBuffer.buffer());
       return deviceBuffer;
     }
   };
 }  // namespace cms::alpakatools
 
-TEST_CASE("Test moveToDeviceAsync() for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend",
-          "[" EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) "]") {
+TEST_CASE("Test moveToDeviceAsync() for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend",
+          "[" EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) "]") {
   // run the test on each device
   for (auto const& device : cms::alpakatools::devices<Platform>()) {
     auto queue = Queue(device);
@@ -102,16 +102,16 @@ TEST_CASE("Test moveToDeviceAsync() for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_N
     } else {
       REQUIRE(buffer_device.data() != ptr_host);
     }
-    alpaka::exec<Acc1D>(
+    aV2P::exec<Acc1D>(
         queue,
         cms::alpakatools::make_workdiv<Acc1D>(1, size),
-        [] ALPAKA_FN_ACC(Acc1D const& acc, int const* data) {
+        [] AV2P_FN_ACC(Acc1D const& acc, int const* data) {
           for (int i : cms::alpakatools::uniform_elements(acc)) {
             assert(data[i] == i);
           }
         },
         buffer_device.data());
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
     /* the following should not compile
     auto buffer2_host = cms::alpakatools::make_host_buffer<int>();

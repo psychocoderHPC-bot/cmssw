@@ -4,10 +4,10 @@
 #include "DataFormats/TrackingRecHitSoA/interface/TrackingRecHitsSoA.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::testTrackingRecHitSoA {
+namespace AV2P_ACCELERATOR_NAMESPACE::testTrackingRecHitSoA {
 
   void runKernels(::reco::TrackingBlocksSoAView& trackingBlocks, Queue& queue);
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::testTrackingRecHitSoA
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::testTrackingRecHitSoA
 
 #endif  // DataFormats_TrackingRecHitSoA_test_alpaka_Hits_test_h

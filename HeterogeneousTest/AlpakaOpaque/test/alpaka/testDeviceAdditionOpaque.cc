@@ -9,12 +9,12 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/devices.h"
 #include "HeterogeneousTest/AlpakaOpaque/interface/alpaka/DeviceAdditionOpaque.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 TEST_CASE("HeterogeneousTest/AlpakaOpaque test", "[alpakaTestOpaqueAdditionOpaque]") {
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    FAIL("No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    FAIL("No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
         "the test will be skipped.");
   }
 
@@ -41,7 +41,7 @@ TEST_CASE("HeterogeneousTest/AlpakaOpaque test", "[alpakaTestOpaqueAdditionOpaqu
     out[i] = 0.;
   }
 
-  SECTION("Test add_vectors_f on " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend") {
+  SECTION("Test add_vectors_f on " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend") {
     // launch the 1-dimensional kernel for vector addition
     REQUIRE_NOTHROW(test::opaque_add_vectors_f(in1.data(), in2.data(), out.data(), size));
 

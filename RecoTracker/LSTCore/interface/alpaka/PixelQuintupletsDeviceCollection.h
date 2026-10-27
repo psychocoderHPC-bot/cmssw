@@ -6,7 +6,7 @@
 #include "RecoTracker/LSTCore/interface/alpaka/Common.h"
 #include "RecoTracker/LSTCore/interface/PixelQuintupletsSoA.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
+namespace AV2P_ACCELERATOR_NAMESPACE::lst {
   using PixelQuintupletsDeviceCollection = PortableCollection<PixelQuintupletsSoA>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::lst
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::lst
 #endif

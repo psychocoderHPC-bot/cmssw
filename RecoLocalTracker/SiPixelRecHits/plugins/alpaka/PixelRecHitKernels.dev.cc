@@ -4,7 +4,7 @@
 #include <type_traits>
 
 // Alpaka headers
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 // CMSSW headers
 #include "DataFormats/BeamSpot/interface/BeamSpotPOD.h"
@@ -24,10 +24,10 @@
 
 //#define GPU_DEBUG
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   using namespace cms::alpakatools;
 
-  using namespace ALPAKA_ACCELERATOR_NAMESPACE::reco;
+  using namespace AV2P_ACCELERATOR_NAMESPACE::reco;
 
   namespace pixelgpudetails {
 
@@ -52,10 +52,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         const auto workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(blocks, threadsPerBlock);
 
 #ifdef GPU_DEBUG
-        std::cout << "launching GetHits kernel on " << alpaka::core::demangled<Acc1D> << " with " << blocks << " blocks"
+        std::cout << "launching GetHits kernel on " << aV2P::core::demangled<Acc1D> << " with " << blocks << " blocks"
                   << std::endl;
 #endif
-        alpaka::exec<Acc1D>(queue,
+        aV2P::exec<Acc1D>(queue,
                             workDiv1D,
                             GetHits<TrackerTraits>{},
                             cpeParams,
@@ -66,12 +66,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                             clusters_d.view(),
                             hits_d.view().trackingHits());
 #ifdef GPU_DEBUG
-        alpaka::wait(queue);
+        aV2P::wait(queue);
 #endif
       }
 
 #ifdef GPU_DEBUG
-      alpaka::wait(queue);
+      aV2P::wait(queue);
       std::cout << "PixelRecHitKernel -> DONE!" << std::endl;
 #endif
 
@@ -83,4 +83,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template class PixelRecHitKernel<pixelTopology::HIonPhase1>;
 
   }  // namespace pixelgpudetails
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

@@ -7,14 +7,14 @@
 #include "RecoTracker/LSTCore/interface/SegmentsSoA.h"
 #include "RecoTracker/LSTCore/interface/TripletsSoA.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
+namespace AV2P_ACCELERATOR_NAMESPACE::lst {
 
   // A triplet's six hit indices are the anchor and outer hits of its three
   // mini-doublets, reachable through its two segments. They used to be cached in
   // a per-triplet column; recovering them here instead costs one extra
   // indirection at the three places that consume them and saves 24 bytes on
   // every triplet slot. This is exactly the gather addTripletToMemory performed.
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void getTripletMDIndices(SegmentsConst segments,
+  AV2P_FN_ACC AV2P_FN_INLINE void getTripletMDIndices(SegmentsConst segments,
                                                           TripletsConst triplets,
                                                           unsigned int tripletIndex,
                                                           unsigned int (&mdIndices)[Params_T3::kLayers]) {
@@ -25,7 +25,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     mdIndices[2] = segments.mdIndices()[outerSegmentIndex][1];
   }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void getTripletHitIndices(MiniDoubletsConst mds,
+  AV2P_FN_ACC AV2P_FN_INLINE void getTripletHitIndices(MiniDoubletsConst mds,
                                                            SegmentsConst segments,
                                                            TripletsConst triplets,
                                                            unsigned int tripletIndex,
@@ -41,7 +41,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   // The last mini-doublet of a triplet: the outer MD of its outer segment. This
   // is the tail that getTripletHitIndices reaches as mdIndices[2]; a consumer
   // needing only the triplet's final two hits can take this and skip the rest.
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE unsigned int getTripletLastMDIndex(SegmentsConst segments,
+  AV2P_FN_ACC AV2P_FN_INLINE unsigned int getTripletLastMDIndex(SegmentsConst segments,
                                                                     TripletsConst triplets,
                                                                     unsigned int tripletIndex) {
     return segments.mdIndices()[triplets.segmentIndices()[tripletIndex][1]][1];
@@ -50,10 +50,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   // The logical layer of a lower module: its layer number, offset by the six
   // barrel layers when the module is in an endcap (subdet 4). This is what
   // Triplets.logicalLayers used to cache, one entry per lower module index.
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE uint8_t getLogicalLayer(ModulesConst modules, uint16_t lowerModuleIndex) {
+  AV2P_FN_ACC AV2P_FN_INLINE uint8_t getLogicalLayer(ModulesConst modules, uint16_t lowerModuleIndex) {
     return modules.layers()[lowerModuleIndex] + (modules.subdets()[lowerModuleIndex] == 4) * 6;
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::lst
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::lst
 
 #endif

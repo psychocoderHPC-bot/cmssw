@@ -33,7 +33,7 @@
 
 #include "PixelRecHitKernel.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   template <typename TrackerTraits>
   class SiPixelRecHitAlpaka : public global::EDProducer<> {
   public:
@@ -95,9 +95,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   using SiPixelRecHitAlpakaPhase1 = SiPixelRecHitAlpaka<pixelTopology::Phase1>;
   using SiPixelRecHitAlpakaHIonPhase1 = SiPixelRecHitAlpaka<pixelTopology::HIonPhase1>;
   using SiPixelRecHitAlpakaPhase2 = SiPixelRecHitAlpaka<pixelTopology::Phase2>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(SiPixelRecHitAlpakaPhase1);
-DEFINE_FWK_ALPAKA_MODULE(SiPixelRecHitAlpakaHIonPhase1);
-DEFINE_FWK_ALPAKA_MODULE(SiPixelRecHitAlpakaPhase2);
+DEFINE_FWK_AV2P_MODULE(SiPixelRecHitAlpakaPhase1);
+DEFINE_FWK_AV2P_MODULE(SiPixelRecHitAlpakaHIonPhase1);
+DEFINE_FWK_AV2P_MODULE(SiPixelRecHitAlpakaPhase2);

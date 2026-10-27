@@ -7,13 +7,13 @@
 
 #include "VertexFinder_t.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 int main() {
   // get the list of devices on the current platform
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }

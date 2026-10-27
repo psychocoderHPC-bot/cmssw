@@ -12,7 +12,7 @@ using namespace std::chrono_literals;
 #include <set>
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Utilities/interface/stringize.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/radixSort.h"
@@ -22,7 +22,7 @@ using namespace std::chrono_literals;
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
 using namespace cms::alpakatools;
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 template <typename T>
 struct RS {
@@ -145,8 +145,8 @@ void go(Queue& queue, bool useShared) {
     auto ws_d = cms::alpakatools::make_device_buffer<uint16_t[]>(queue, N);
     auto off_d = cms::alpakatools::make_device_buffer<uint32_t[]>(queue, blocks + 1);
 
-    alpaka::memcpy(queue, v_d, v_h);
-    alpaka::memcpy(queue, off_d, offsets_h);
+    aV2P::memcpy(queue, v_d, v_h);
+    aV2P::memcpy(queue, off_d, offsets_h);
 
     if (i < 2)
       std::cout << "launch for " << offsets_h[blocks] << std::endl;
@@ -159,8 +159,8 @@ void go(Queue& queue, bool useShared) {
     auto workdiv = make_workdiv<Acc1D>(blocks, ntXBl);
     if (useShared)
       // The original CUDA version used to call a kernel with __launch_bounds__(256, 4) specifier
-      alpaka::enqueue(queue,
-                      alpaka::createTaskKernel<Acc1D>(workdiv,
+      aV2P::enqueue(queue,
+                      aV2P::createTaskKernel<Acc1D>(workdiv,
                                                       radixSortMultiWrapper<U, NS>{},
                                                       v_d.data(),
                                                       ind_d.data(),
@@ -168,16 +168,16 @@ void go(Queue& queue, bool useShared) {
                                                       nullptr,
                                                       MaxSize * sizeof(uint16_t)));
     else
-      alpaka::enqueue(
+      aV2P::enqueue(
           queue,
-          alpaka::createTaskKernel<Acc1D>(
+          aV2P::createTaskKernel<Acc1D>(
               workdiv, radixSortMultiWrapper2<U, NS>{}, v_d.data(), ind_d.data(), off_d.data(), ws_d.data()));
 
     if (i < 2)
       std::cout << "launch done for " << offsets_h[blocks] << std::endl;
 
-    alpaka::memcpy(queue, ind_h, ind_d);
-    alpaka::wait(queue);
+    aV2P::memcpy(queue, ind_h, ind_d);
+    aV2P::wait(queue);
 
     delta += std::chrono::high_resolution_clock::now() - start;
 
@@ -243,7 +243,7 @@ int main() {
   // get the list of devices on the current platform
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }

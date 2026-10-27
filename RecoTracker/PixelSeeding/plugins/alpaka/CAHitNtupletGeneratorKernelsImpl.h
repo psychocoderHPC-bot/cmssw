@@ -13,7 +13,7 @@
 #endif
 
 // Alpaka headers
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 // CMSSW headers
 #include "DataFormats/TrackSoA/interface/TrackDefinitions.h"
@@ -39,7 +39,7 @@
 //#define GPU_DEBUG
 //#define NTUPLE_DEBUG
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   namespace caHitNtupletGeneratorKernels {
 
@@ -74,11 +74,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     class SetHitsLayerStart {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     const ModulesMultiView &mm,
                                     const reco::CALayersSoAConstView &ll,
                                     uint32_t *__restrict__ hitsLayerStart) const {
-        ALPAKA_ASSERT_ACC(0 == mm[0].moduleStart());
+        AV2P_ASSERT_ACC(0 == mm[0].moduleStart());
 
         for (int32_t i : cms::alpakatools::uniform_elements(acc, ll.metadata().size())) {
           hitsLayerStart[i] = mm[ll.layerStarts()[i]].moduleStart();
@@ -97,7 +97,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     class Kernel_printSizes {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     HitsMultiView hh,
                                     TkSoAView tt,
                                     uint32_t const *__restrict__ nCells,
@@ -120,7 +120,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_checkOverflows {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoAView tracks_view,
                                     HitContainer const *__restrict__ foundNtuplets,
                                     TupleMultiplicity const *tupleMultiplicity,
@@ -139,15 +139,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         auto &c = *counters;
         // counters once per event
         if (cms::alpakatools::once_per_grid(acc)) {
-          alpaka::atomicAdd(acc, &c.nEvents, 1ull, alpaka::hierarchy::Blocks{});
-          alpaka::atomicAdd(acc, &c.nHits, static_cast<unsigned long long>(nHits), alpaka::hierarchy::Blocks{});
-          alpaka::atomicAdd(acc, &c.nCells, static_cast<unsigned long long>(*nCells), alpaka::hierarchy::Blocks{});
-          alpaka::atomicAdd(
-              acc, &c.nTuples, static_cast<unsigned long long>(apc->get().first), alpaka::hierarchy::Blocks{});
-          alpaka::atomicAdd(acc,
+          aV2P::atomicAdd(acc, &c.nEvents, 1ull, aV2P::hierarchy::Blocks{});
+          aV2P::atomicAdd(acc, &c.nHits, static_cast<unsigned long long>(nHits), aV2P::hierarchy::Blocks{});
+          aV2P::atomicAdd(acc, &c.nCells, static_cast<unsigned long long>(*nCells), aV2P::hierarchy::Blocks{});
+          aV2P::atomicAdd(
+              acc, &c.nTuples, static_cast<unsigned long long>(apc->get().first), aV2P::hierarchy::Blocks{});
+          aV2P::atomicAdd(acc,
                             &c.nFitTracks,
                             static_cast<unsigned long long>(tupleMultiplicity->size()),
-                            alpaka::hierarchy::Blocks{});
+                            aV2P::hierarchy::Blocks{});
         }
 
 #ifdef NTUPLE_DEBUGS
@@ -158,17 +158,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                  apc->get().second,
                  nHits);
           if (apc->get().first < tracks_view.metadata().size()) {
-            ALPAKA_ASSERT_ACC(foundNtuplets->size(apc->get().first) == 0);
-            ALPAKA_ASSERT_ACC(foundNtuplets->size() == apc->get().second);
+            AV2P_ASSERT_ACC(foundNtuplets->size(apc->get().first) == 0);
+            AV2P_ASSERT_ACC(foundNtuplets->size() == apc->get().second);
           }
         }
 
         for (auto idx : cms::alpakatools::uniform_elements(acc, foundNtuplets->nOnes())) {
           if (foundNtuplets->size(idx) > TrackerTraits::maxHitsOnTrack)  // current real limit
             printf("ERROR %d, %d\n", idx, foundNtuplets->size(idx));
-          ALPAKA_ASSERT_ACC(foundNtuplets->size(idx) <= TrackerTraits::maxHitsOnTrack);
+          AV2P_ASSERT_ACC(foundNtuplets->size(idx) <= TrackerTraits::maxHitsOnTrack);
           for (auto ih = foundNtuplets->begin(idx); ih != foundNtuplets->end(idx); ++ih)
-            ALPAKA_ASSERT_ACC(int(*ih) < nHits);
+            AV2P_ASSERT_ACC(int(*ih) < nHits);
         }
 #endif
 
@@ -186,13 +186,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         for (auto idx : cms::alpakatools::uniform_elements(acc, *nCells)) {
           auto const &thisCell = cells[idx];
           if (thisCell.hasFishbone() && !thisCell.isKilled())
-            alpaka::atomicAdd(acc, &c.nFishCells, 1ull, alpaka::hierarchy::Blocks{});
+            aV2P::atomicAdd(acc, &c.nFishCells, 1ull, aV2P::hierarchy::Blocks{});
           if (thisCell.isKilled())
-            alpaka::atomicAdd(acc, &c.nKilledCells, 1ull, alpaka::hierarchy::Blocks{});
+            aV2P::atomicAdd(acc, &c.nKilledCells, 1ull, aV2P::hierarchy::Blocks{});
           if (!thisCell.unused())
-            alpaka::atomicAdd(acc, &c.nEmptyCells, 1ull, alpaka::hierarchy::Blocks{});
+            aV2P::atomicAdd(acc, &c.nEmptyCells, 1ull, aV2P::hierarchy::Blocks{});
           if ((0 == hitToTuple->size(thisCell.inner_hit_id())) && (0 == hitToTuple->size(thisCell.outer_hit_id())))
-            alpaka::atomicAdd(acc, &c.nZeroTrackCells, 1ull, alpaka::hierarchy::Blocks{});
+            aV2P::atomicAdd(acc, &c.nZeroTrackCells, 1ull, aV2P::hierarchy::Blocks{});
         }
       }
     };
@@ -200,7 +200,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_fishboneCleaner {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     CACell<TrackerTraits> const *cells,
                                     uint32_t const *__restrict__ nCells,
                                     CellToTrack const *__restrict__ cellTracksHisto,
@@ -226,7 +226,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_earlyDuplicateRemover {
     public:
-      ALPAKA_FN_ACC void operator()(Acc2D const &acc,
+      AV2P_FN_ACC void operator()(Acc2D const &acc,
                                     CACell<TrackerTraits> const *cells,
                                     uint32_t const *__restrict__ nCells,
                                     CellToTrack const *__restrict__ cellTracksHisto,
@@ -234,10 +234,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                     bool dupPassThrough) const {
         // quality to mark rejected
         constexpr auto reject = Quality::edup;  /// cannot be loose
-        ALPAKA_ASSERT_ACC(nCells);
+        AV2P_ASSERT_ACC(nCells);
 
-        const int32_t warpSize = alpaka::warp::getSize(acc);
-        const int32_t laneId = static_cast<int32_t>(alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[1u]);
+        const int32_t warpSize = aV2P::warp::getSize(acc);
+        const int32_t laneId = static_cast<int32_t>(aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc)[1u]);
 
         for (uint32_t idx : cms::alpakatools::uniform_elements_y(acc, *nCells)) {
 #ifdef CA_SIZES
@@ -262,7 +262,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           // Idle lanes start with 0 and do not influence the result.
           // All lanes must be active for the shuffle to work: no branching or return early here.
           for (int32_t off = 1; off < warpSize; off <<= 1) {
-            const int32_t y = alpaka::warp::shfl_xor(acc, localMax, off);
+            const int32_t y = aV2P::warp::shfl_xor(acc, localMax, off);
             if (y > localMax)
               localMax = y;
           }
@@ -293,7 +293,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               }
             }
             // All lanes converge here to check if any foundCompatible is true, and if so, mark track as duplicate.
-            if (alpaka::warp::any(acc, static_cast<int32_t>(foundCompatible))) {
+            if (aV2P::warp::any(acc, static_cast<int32_t>(foundCompatible))) {
               // One thread assigns warp-wide decision
               if (laneId == 0) {
                 tracks_view[it].quality() = reject;
@@ -309,7 +309,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // It does not seem to affect efficiency in any way!
     class Kernel_earlyDuplicateRemoverPhase1 {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     CACell<pixelTopology::Phase1> const *cells,
                                     uint32_t const *__restrict__ nCells,
                                     CellToTrack const *__restrict__ cellTracksHisto,
@@ -317,7 +317,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                     bool dupPassThrough) const {
         // quality to mark rejected
         constexpr auto reject = Quality::edup;  /// cannot be loose
-        ALPAKA_ASSERT_ACC(nCells);
+        AV2P_ASSERT_ACC(nCells);
         for (auto idx : cms::alpakatools::uniform_elements(acc, *nCells)) {
 #ifdef CA_SIZES
           printf("cellTracksSizes;%d;%d;%d\n", idx, cT.size(), cT.capacity());
@@ -363,7 +363,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     //     each thread reads that snapshot and writes only its own track's quality() (no atomics, no copy-back)
     class Kernel_snapshotQuality {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoAView tracks_view,
                                     HitContainer const *__restrict__ foundNtuplets,
                                     int32_t *__restrict__ qualityScratch) const {
@@ -374,7 +374,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     class Kernel_applyQuality {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoAView tracks_view,
                                     HitContainer const *__restrict__ foundNtuplets,
                                     int32_t const *__restrict__ qualityScratch) const {
@@ -386,7 +386,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_fastDuplicateRemover {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     CACell<TrackerTraits> const *__restrict__ cells,
                                     uint32_t const *__restrict__ nCells,
                                     CellToTrack const *__restrict__ cellTracksHisto,
@@ -397,12 +397,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         auto const reject = dupPassThrough ? Quality::loose : Quality::dup;
         constexpr auto loose = Quality::loose;
 
-        ALPAKA_ASSERT_ACC(nCells);
+        AV2P_ASSERT_ACC(nCells);
         const auto ntNCells = (*nCells);
 
         auto score = [&](uint32_t it) { return tracks_view[it].chi2(); };
         auto demote = [&](uint32_t it, Quality q) {
-          alpaka::atomicMin(acc, &qualityScratch[it], static_cast<int32_t>(q), alpaka::hierarchy::Blocks{});
+          aV2P::atomicMin(acc, &qualityScratch[it], static_cast<int32_t>(q), aV2P::hierarchy::Blocks{});
         };
 
         for (auto idx : cms::alpakatools::uniform_elements(acc, ntNCells)) {
@@ -489,7 +489,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <>
     class Kernel_fastDuplicateRemover<pixelTopology::Phase1> {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     CACell<pixelTopology::Phase1> const *__restrict__ cells,
                                     uint32_t const *__restrict__ nCells,
                                     CellToTrack const *__restrict__ cellTracksHisto,
@@ -500,12 +500,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         auto const reject = dupPassThrough ? Quality::loose : Quality::dup;
         constexpr auto loose = Quality::loose;
 
-        ALPAKA_ASSERT_ACC(nCells);
+        AV2P_ASSERT_ACC(nCells);
         const auto ntNCells = (*nCells);
 
         auto score = [&](uint32_t it) { return std::abs(reco::tip(tracks_view, it)); };
         auto demote = [&](uint32_t it, Quality q) {
-          alpaka::atomicMin(acc, &qualityScratch[it], static_cast<int32_t>(q), alpaka::hierarchy::Blocks{});
+          aV2P::atomicMin(acc, &qualityScratch[it], static_cast<int32_t>(q), aV2P::hierarchy::Blocks{});
         };
 
         for (auto idx : cms::alpakatools::uniform_elements(acc, ntNCells)) {
@@ -589,7 +589,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_connect {
     public:
-      ALPAKA_FN_ACC void operator()(Acc2D const &acc,
+      AV2P_FN_ACC void operator()(Acc2D const &acc,
                                     cms::alpakatools::AtomicPairCounter *apc,  // just to zero them
                                     HitsMultiView hh,
                                     reco::CALayersSoAConstView ll,
@@ -644,7 +644,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             bool aligned = Cell::areAlignedRZ(r1, z1, ri, zi, ro, zo, params.ptmin_, thetaCut);
             if (aligned) {
               if (thisCell.dcaCut(hh, oc, dcaCut, params.hardCurvCut_)) {
-                auto t_ind = alpaka::atomicAdd(acc, nTrips, 1u, alpaka::hierarchy::Blocks{});
+                auto t_ind = aV2P::atomicAdd(acc, nTrips, 1u, aV2P::hierarchy::Blocks{});
 #ifdef CA_DEBUG
                 printf("Triplet no. %d %.5f %.5f (%d %d) - %d %d -> (%d, %d, %d, %d) \n",
                        t_ind,
@@ -669,7 +669,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                   printf("Warning!!!! Too many cell->cell (triplets) associations (limit = %d)!\n",
                          cn.metadata().size());
 #endif
-                  alpaka::atomicSub(acc, nTrips, 1u, alpaka::hierarchy::Blocks{});
+                  aV2P::atomicSub(acc, nTrips, 1u, aV2P::hierarchy::Blocks{});
                   break;
                 }
 
@@ -694,7 +694,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class FillDoubletsHisto {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     CACell<TrackerTraits> const *__restrict__ cells,
                                     uint32_t *nCells,
                                     uint32_t offsetBPIX2,
@@ -711,7 +711,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename CAPairView, typename Container>
     class Kernel_fillGenericPair {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     CAPairView cn,
                                     uint32_t const *nElements,
                                     Container *genericHisto) const {
@@ -724,7 +724,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_find_ntuplets {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     HitsMultiView hh,
                                     const ::reco::CALayersSoAConstView &ll,
                                     const ::reco::CAGraphSoAConstView &cc,
@@ -801,7 +801,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                       stack,
                                                       hits,
                                                       params.minHitsPerNtuplet_);
-            ALPAKA_ASSERT_ACC(stack.empty());
+            AV2P_ASSERT_ACC(stack.empty());
           }
         }
       }
@@ -810,7 +810,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_mark_used {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     CACell<TrackerTraits> *__restrict__ cells,
                                     CellToTrack const *__restrict__ cellTracksHisto,
                                     uint32_t const *nCells) const {
@@ -826,7 +826,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_countMultiplicity {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoAView tracks_view,
                                     HitContainer const *__restrict__ foundNtuplets,
                                     TupleMultiplicity *tupleMultiplicity) const {
@@ -837,10 +837,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             continue;
           if (tracks_view[it].quality() == Quality::edup)
             continue;
-          ALPAKA_ASSERT_ACC(tracks_view[it].quality() == Quality::bad);
+          AV2P_ASSERT_ACC(tracks_view[it].quality() == Quality::bad);
           if (nhits > TrackerTraits::maxHitsOnTrack)  // current limit
             printf("wrong mult %d %d\n", it, nhits);
-          ALPAKA_ASSERT_ACC(nhits <= TrackerTraits::maxHitsOnTrack);
+          AV2P_ASSERT_ACC(nhits <= TrackerTraits::maxHitsOnTrack);
           tupleMultiplicity->count(acc, nhits);
         }
       }
@@ -849,7 +849,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_fillMultiplicity {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoAView tracks_view,
                                     HitContainer const *__restrict__ foundNtuplets,
                                     TupleMultiplicity *tupleMultiplicity) const {
@@ -860,10 +860,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             continue;
           if (tracks_view[it].quality() == Quality::edup)
             continue;
-          ALPAKA_ASSERT_ACC(tracks_view[it].quality() == Quality::bad);
+          AV2P_ASSERT_ACC(tracks_view[it].quality() == Quality::bad);
           if (nhits > TrackerTraits::maxHitsOnTrack)
             printf("wrong mult %d %d\n", it, nhits);
-          ALPAKA_ASSERT_ACC(nhits <= TrackerTraits::maxHitsOnTrack);
+          AV2P_ASSERT_ACC(nhits <= TrackerTraits::maxHitsOnTrack);
           tupleMultiplicity->fill(acc, nhits, it);
         }
       }
@@ -872,7 +872,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_classifyTracks {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoAView tracks_view,
                                     HitContainer const *__restrict__ foundNtuplets,
                                     QualityCuts<TrackerTraits> cuts) const {
@@ -885,7 +885,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           if (tracks_view[it].quality() == Quality::edup)
             continue;
 
-          ALPAKA_ASSERT_ACC(tracks_view[it].quality() == Quality::bad);
+          AV2P_ASSERT_ACC(tracks_view[it].quality() == Quality::bad);
 
           // mark doublets as bad
           if (nhits < 3)
@@ -923,7 +923,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_doStatsForTracks {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoAView tracks_view,
                                     HitContainer const *__restrict__ foundNtuplets,
                                     Counters *counters) const {
@@ -932,10 +932,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             break;  //guard
           if (tracks_view[idx].quality() < Quality::loose)
             continue;
-          alpaka::atomicAdd(acc, &(counters->nLooseTracks), 1ull, alpaka::hierarchy::Blocks{});
+          aV2P::atomicAdd(acc, &(counters->nLooseTracks), 1ull, aV2P::hierarchy::Blocks{});
           if (tracks_view[idx].quality() < Quality::strict)
             continue;
-          alpaka::atomicAdd(acc, &(counters->nGoodTracks), 1ull, alpaka::hierarchy::Blocks{});
+          aV2P::atomicAdd(acc, &(counters->nGoodTracks), 1ull, aV2P::hierarchy::Blocks{});
         }
       }
     };
@@ -943,7 +943,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_countHitInTracks {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoAView tracks_view,
                                     HitContainer const *__restrict__ foundNtuplets,
                                     HitToTuple *hitToTuple) const {
@@ -959,7 +959,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_fillHitInTracks {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoAView tracks_view,
                                     HitContainer const *__restrict__ foundNtuplets,
                                     HitToTuple *hitToTuple) const {
@@ -975,7 +975,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_fillHitDetIndices {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoAView tracks_view,
                                     TkHitSoAView track_hits_view,
                                     HitContainer const *__restrict__ foundNtuplets,
@@ -992,7 +992,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         }
         // fill hit indices
         for (auto idx : cms::alpakatools::uniform_elements(acc, foundNtuplets->size())) {
-          ALPAKA_ASSERT_ACC(foundNtuplets->content[idx] < static_cast<uint32_t>(hh.size()));
+          AV2P_ASSERT_ACC(foundNtuplets->content[idx] < static_cast<uint32_t>(hh.size()));
           track_hits_view[idx].id() = foundNtuplets->content[idx];
           track_hits_view[idx].detId() = hh[foundNtuplets->content[idx]].detectorIndex();
 #ifdef CA_DEBUG
@@ -1008,7 +1008,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_fillNLayers {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoABlocksView view,
                                     uint32_t const *__restrict__ layerStarts,
                                     uint16_t maxLayers,
@@ -1019,7 +1019,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         if (cms::alpakatools::once_per_grid(acc))
           view.tracks().nTracks() = ntracks;
         for (auto idx : cms::alpakatools::uniform_elements(acc, ntracks)) {
-          ALPAKA_ASSERT_ACC(reco::nHits(view.tracks(), idx) >= 3);
+          AV2P_ASSERT_ACC(reco::nHits(view.tracks(), idx) >= 3);
           view.tracks()[idx].nLayers() = reco::nLayers(view, maxLayers, layerStarts, idx);
 #ifdef CA_DEBUG
           printf("Kernel_fillNLayers %d %d %d - %d %d\n",
@@ -1036,16 +1036,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_doStatsForHitInTracks {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     HitToTuple const *__restrict__ hitToTuple,
                                     Counters *counters) const {
         auto &c = *counters;
         for (auto idx : cms::alpakatools::uniform_elements(acc, hitToTuple->nOnes())) {
           if (hitToTuple->size(idx) == 0)
             continue;  // SHALL NOT BE break
-          alpaka::atomicAdd(acc, &c.nUsedHits, 1ull, alpaka::hierarchy::Blocks{});
+          aV2P::atomicAdd(acc, &c.nUsedHits, 1ull, aV2P::hierarchy::Blocks{});
           if (hitToTuple->size(idx) > 1)
-            alpaka::atomicAdd(acc, &c.nDupHits, 1ull, alpaka::hierarchy::Blocks{});
+            aV2P::atomicAdd(acc, &c.nDupHits, 1ull, aV2P::hierarchy::Blocks{});
         }
       }
     };
@@ -1053,7 +1053,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_countSharedHit {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     int *__restrict__ nshared,
                                     HitContainer const *__restrict__ ptuples,
                                     Quality const *__restrict__ quality,
@@ -1082,7 +1082,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           for (auto it = hitToTuple.begin(idx); it != hitToTuple.end(idx); ++it) {
             if (foundNtuplets.size(*it) > 3)
               continue;
-            alpaka::atomicAdd(acc, &nshared[*it], 1, alpaka::hierarchy::Blocks{});
+            aV2P::atomicAdd(acc, &nshared[*it], 1, aV2P::hierarchy::Blocks{});
           }
 
         }  //  hit loop
@@ -1091,7 +1091,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     template <typename TrackerTraits>
     class Kernel_markSharedHit {
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     int const *__restrict__ nshared,
                                     HitContainer const *__restrict__ tuples,
                                     Quality *__restrict__ quality,
@@ -1120,7 +1120,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_rejectDuplicate {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoAView tracks_view,
                                     bool dupPassThrough,
                                     HitContainer const *__restrict__ foundNtuplets,
@@ -1196,7 +1196,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <>
     class Kernel_rejectDuplicate<pixelTopology::Phase1> {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoAView tracks_view,
                                     bool dupPassThrough,
                                     HitContainer const *__restrict__ foundNtuplets,
@@ -1262,7 +1262,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_sharedHitCleaner {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     HitsMultiView hh,
                                     uint32_t const *__restrict__ layerStarts,
                                     TkSoAView tracks_view,
@@ -1316,7 +1316,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_tripletCleaner {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoAView tracks_view,
                                     bool dupPassThrough,
                                     HitContainer const *__restrict__ foundNtuplets,
@@ -1377,7 +1377,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_simpleTripletCleaner {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     TkSoAView tracks_view,
                                     bool dupPassThrough,
                                     HitContainer const *__restrict__ foundNtuplets,
@@ -1427,7 +1427,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     template <typename TrackerTraits>
     class Kernel_print_found_ntuplets {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc,
+      AV2P_FN_ACC void operator()(Acc1D const &acc,
                                     HitsMultiView hh,
                                     TkSoAView tracks_view,
                                     HitContainer const *__restrict__ foundNtuplets,
@@ -1469,7 +1469,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     class Kernel_printCounters {
     public:
-      ALPAKA_FN_ACC void operator()(Acc1D const &acc, Counters const *counters) const {
+      AV2P_FN_ACC void operator()(Acc1D const &acc, Counters const *counters) const {
         auto const &c = *counters;
         printf(
             "||Counters | nEvents | nHits | nCells | nTuples | nFitTacks  |  nLooseTracks  |  nGoodTracks | nUsedHits "
@@ -1671,16 +1671,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     deviceTracksCells_ = CAPairSoACollection(queue, nCellsToTracks);
 
     //TODO: if doStats?
-    alpaka::memset(queue, *counters_, 0);
+    aV2P::memset(queue, *counters_, 0);
 
-    alpaka::memset(queue, *device_nCells_, 0);
-    alpaka::memset(queue, *device_nTriplets_, 0);
-    alpaka::memset(queue, *device_nCellTracks_, 0);
+    aV2P::memset(queue, *device_nCells_, 0);
+    aV2P::memset(queue, *device_nTriplets_, 0);
+    aV2P::memset(queue, *device_nCellTracks_, 0);
 
     maxNumberOfDoublets_ = maxDoublets;
 
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     std::cout << "Allocations for CAHitNtupletGeneratorKernels: done!" << std::endl;
 #endif
   }
@@ -1693,9 +1693,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     using namespace caHitNtupletGeneratorKernels;
 
     const auto workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(1, ll.metadata().size() - 1);
-    alpaka::exec<Acc1D>(queue, workDiv1D, SetHitsLayerStart{}, mm, ll, this->device_layerStarts_->data());
+    aV2P::exec<Acc1D>(queue, workDiv1D, SetHitsLayerStart{}, mm, ll, this->device_layerStarts_->data());
 
-    auto accessor_iphi = [] ALPAKA_FN_ACC(auto const &v) { return v.iphi(); };
+    auto accessor_iphi = [] AV2P_FN_ACC(auto const &v) { return v.iphi(); };
 
     cms::alpakatools::fillManyFromVector<Acc1D>(device_hitPhiHist_->data(),
                                                 device_hitPhiView_,
@@ -1708,7 +1708,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                 queue);
 
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     std::cout << "CAHitNtupletGeneratorKernels -> Hits prepared (layer starts and histo) -> DONE!" << std::endl;
 #endif
   }
@@ -1753,7 +1753,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     const Vec2D thrs{blockSize, stride};
     const auto kernelConnectWorkDiv = cms::alpakatools::make_workdiv<Acc2D>(blks, thrs);
 
-    alpaka::exec<Acc2D>(queue,
+    aV2P::exec<Acc2D>(queue,
                         kernelConnectWorkDiv,
                         Kernel_connect<TrackerTraits>{},
                         this->device_hitTuple_apc_,  // needed only to be reset, ready for next kernel
@@ -1771,7 +1771,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     CellToCell::template launchFinalize<Acc1D>(this->device_cellToNeighborsView_, queue);
 
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     std::cout << "Kernel_connect -> Done!" << std::endl;
 #endif
 
@@ -1780,7 +1780,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                  threadsPerBlock);
     auto workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(blocks, threadsPerBlock);
 
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv1D,
                         Kernel_fillGenericPair<caStructures::CAPairSoAConstView, GenericContainer>{},
                         this->deviceTriplets_->view(),
@@ -1788,7 +1788,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         this->device_cellToNeighbors_->data());
 
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     std::cout << "cellToNeighbors -> Filled!" << std::endl;
 #endif
 
@@ -1801,7 +1801,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       const Vec2D blks{numberOfBlocks, 1u};
       const Vec2D thrs{blockSize, stride};
       const auto fishboneWorkDiv = cms::alpakatools::make_workdiv<Acc2D>(blks, thrs);
-      alpaka::exec<Acc2D>(queue,
+      aV2P::exec<Acc2D>(queue,
                           fishboneWorkDiv,
                           CAFishbone<TrackerTraits>{},
                           hh,
@@ -1814,14 +1814,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           false,
                           this->m_params.algoParams_.onlySameLayersFishbone_);
 #ifdef GPU_DEBUG
-      alpaka::wait(queue);
+      aV2P::wait(queue);
       std::cout << "Early fishbone -> Done!" << std::endl;
 #endif
     }
     blockSize = 64;
     numberOfBlocks = cms::alpakatools::divide_up_by(3 * maxDoublets / 4, blockSize);
     workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv1D,
                         Kernel_find_ntuplets<TrackerTraits>{},
                         hh,
@@ -1840,7 +1840,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         this->m_params.algoParams_);
 
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     std::cout << "Kernel_find_ntuplets -> Done!" << std::endl;
 #endif
 
@@ -1850,7 +1850,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                             threadsPerBlock);
     workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(blocks, threadsPerBlock);
 
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv1D,
                         Kernel_fillGenericPair<caStructures::CAPairSoAConstView, GenericContainer>{},
                         this->deviceTracksCells_->view(),
@@ -1858,7 +1858,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         this->device_cellToTracks_->data());
 
     if (this->m_params.algoParams_.doStats_)
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv1D,
                           Kernel_mark_used<TrackerTraits>{},
                           this->device_simpleCells_->data(),
@@ -1866,24 +1866,24 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           this->device_nCells_->data());
 
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 #endif
 
     blockSize = 128;
     numberOfBlocks = cms::alpakatools::divide_up_by(maxTuples + 1, blockSize);
     workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
 
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv1D,
                         typename HitContainer::finalizeBulk{},
                         this->device_hitTuple_apc_,
                         this->device_hitContainer_->data());
 
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 #endif
 
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv1D,
                         Kernel_fillHitDetIndices<TrackerTraits>{},
                         tracks_view,
@@ -1893,7 +1893,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         this->device_hitTuple_apc_);
 
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     std::cout << "Kernel_fillHitDetIndices   -> done!" << std::endl;
 #endif
 
@@ -1904,7 +1904,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         numberOfBlocks = cms::alpakatools::divide_up_by(3 * maxDoublets / 4, blockSize);
         workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
 
-        alpaka::exec<Acc1D>(queue,
+        aV2P::exec<Acc1D>(queue,
                             workDiv1D,
                             Kernel_earlyDuplicateRemoverPhase1{},
                             this->device_simpleCells_->data(),
@@ -1915,7 +1915,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       } else {
         // remove duplicates (tracks that share a doublet).
         // Warp-cooperative work division: one cell per Y-thread, one warp per cell.
-        const uint32_t stride = alpaka::getPreferredWarpSize(alpaka::getDev(queue));
+        const uint32_t stride = aV2P::getPreferredWarpSize(aV2P::getDev(queue));
         const uint32_t cellsPerBlock = 8;  // 8 cells * 32 threads = 256 threads/block
         // gridDim.y is capped at 65535 by CUDA. If maxDoublets needs more, uniform_elements_y
         // strides each Y-thread across the remaining cells.
@@ -1927,7 +1927,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         const auto earlyDupRemoverWorkDiv =
             cms::alpakatools::make_workdiv<Acc2D>(earlyDupRemoverBlocks, earlyDupRemoverThreads);
 
-        alpaka::exec<Acc2D>(queue,
+        aV2P::exec<Acc2D>(queue,
                             earlyDupRemoverWorkDiv,
                             Kernel_earlyDuplicateRemover<TrackerTraits>{},
                             this->device_simpleCells_->data(),
@@ -1937,7 +1937,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                             this->m_params.algoParams_.dupPassThrough_);
       }
 #ifdef GPU_DEBUG
-      alpaka::wait(queue);
+      aV2P::wait(queue);
       std::cout << "Kernel_earlyDuplicateRemover   -> done!" << std::endl;
 #endif
     }
@@ -1946,7 +1946,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     numberOfBlocks = cms::alpakatools::divide_up_by(3 * maxTuples / 4, blockSize);
     workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
 
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv1D,
                         Kernel_countMultiplicity<TrackerTraits>{},
                         tracks_view,
@@ -1955,19 +1955,19 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     GenericContainer::template launchFinalize<Acc1D>(this->device_tupleMultiplicityView_, queue);
 
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     std::cout << "Kernel_countMultiplicity   -> done!" << std::endl;
 #endif
 
     workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv1D,
                         Kernel_fillMultiplicity<TrackerTraits>{},
                         tracks_view,
                         this->device_hitContainer_->data(),
                         this->device_tupleMultiplicity_->data());
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     std::cout << "Kernel_fillMultiplicity -> done!" << std::endl;
 #endif
     // do not run the fishbone if there are hits only in BPIX1
@@ -1980,7 +1980,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       const Vec2D thrs{blockSize, stride};
       const auto workDiv2D = cms::alpakatools::make_workdiv<Acc2D>(blks, thrs);
 
-      alpaka::exec<Acc2D>(queue,
+      aV2P::exec<Acc2D>(queue,
                           workDiv2D,
                           CAFishbone<TrackerTraits>{},
                           hh,
@@ -1996,7 +1996,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
 #ifdef GPU_DEBUG
     std::cout << "lateFishbone -> done!" << std::endl;
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 #endif
   }
 
@@ -2016,7 +2016,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 #endif
 
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 #endif
 
     if (0 == nhits)
@@ -2033,7 +2033,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     std::cout << "nActualPairs = " << cc.metadata().size() << std::endl;
     std::cout << blocks << " - " << threadsPerBlock << " - " << stride << std::endl;
 #endif
-    alpaka::exec<Acc2D>(queue,
+    aV2P::exec<Acc2D>(queue,
                         workDiv2D,
                         GetDoubletsFromHisto<TrackerTraits>{},
                         maxDoublets,
@@ -2054,11 +2054,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(blocks, threadsPerBlock);
 
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     std::cout << "GetDoubletsFromHisto   -> done!" << std::endl;
 #endif
 
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv1D,
                         FillDoubletsHisto<TrackerTraits>{},
                         this->device_simpleCells_->data(),
@@ -2067,7 +2067,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         this->device_hitToCell_->data());
 
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     std::cout << "FillDoubletsHisto   -> done!" << std::endl;
 #endif
   }
@@ -2079,7 +2079,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     using namespace caHitNtupletGeneratorKernels;
 
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     std::cout << "Starting CAHitNtupletGeneratorKernels<TrackerTraits>::classifyTuples" << std::endl;
 #endif
 
@@ -2096,25 +2096,25 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto qScratchWorkDiv =
         cms::alpakatools::make_workdiv<Acc1D>(cms::alpakatools::divide_up_by(maxTuples, blockSize), blockSize);
     auto snapshotQuality = [&]() {
-      alpaka::exec<Acc1D>(
+      aV2P::exec<Acc1D>(
           queue, qScratchWorkDiv, Kernel_snapshotQuality{}, tracks_view, this->device_hitContainer_->data(), qScratch);
     };
     auto applyQuality = [&]() {
-      alpaka::exec<Acc1D>(
+      aV2P::exec<Acc1D>(
           queue, qScratchWorkDiv, Kernel_applyQuality{}, tracks_view, this->device_hitContainer_->data(), qScratch);
     };
 
     // classify tracks based on kinematics
     auto numberOfBlocks = cms::alpakatools::divide_up_by(3 * maxTuples / 4, blockSize);
     auto workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv1D,
                         Kernel_classifyTracks<TrackerTraits>{},
                         tracks_view,
                         this->device_hitContainer_->data(),
                         this->m_params.qualityCuts_);
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     std::cout << "Kernel_classifyTracks -> done!" << std::endl;
 #endif
 
@@ -2122,7 +2122,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       // apply fishbone cleaning to good tracks
       numberOfBlocks = cms::alpakatools::divide_up_by(3 * maxDoublets / 4, blockSize);
       workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv1D,
                           Kernel_fishboneCleaner<TrackerTraits>{},
                           this->device_simpleCells_->data(),
@@ -2131,7 +2131,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           tracks_view);
     }
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     std::cout << "Kernel_fishboneCleaner   -> done!" << std::endl;
 #endif
     if (this->m_params.algoParams_.doFastDuplicateRemover_) {
@@ -2139,7 +2139,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       numberOfBlocks = cms::alpakatools::divide_up_by(3 * maxDoublets / 4, blockSize);
       workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
       snapshotQuality();
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv1D,
                           Kernel_fastDuplicateRemover<TrackerTraits>{},
                           this->device_simpleCells_->data(),
@@ -2150,7 +2150,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           this->m_params.algoParams_.dupPassThrough_);
       applyQuality();
 #ifdef GPU_DEBUG
-      alpaka::wait(queue);
+      aV2P::wait(queue);
       std::cout << "Kernel_fastDuplicateRemover   -> done!" << std::endl;
 #endif
     }
@@ -2158,7 +2158,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       // fill hit->track "map"
       numberOfBlocks = cms::alpakatools::divide_up_by(3 * maxTuples / 4, blockSize);
       workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv1D,
                           Kernel_countHitInTracks<TrackerTraits>{},
                           tracks_view,
@@ -2166,14 +2166,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           this->device_hitToTuple_->data());
 
       GenericContainer::template launchFinalize<Acc1D>(this->device_hitToTupleView_, queue);
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv1D,
                           Kernel_fillHitInTracks<TrackerTraits>{},
                           tracks_view,
                           this->device_hitContainer_->data(),
                           this->device_hitToTuple_->data());
 #ifdef GPU_DEBUG
-      alpaka::wait(queue);
+      aV2P::wait(queue);
       std::cout << "Kernel_countHitInTracks   -> done!" << std::endl;
 #endif
     }
@@ -2186,7 +2186,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       // quality into the scratch, the kernel reads the scratch and writes only each track's own
       // quality directly (no atomics, no copy-back)
       snapshotQuality();
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv1D,
                           Kernel_rejectDuplicate<TrackerTraits>{},
                           tracks_view,
@@ -2195,12 +2195,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           qScratch,
                           this->device_hitToTuple_->data());
 #ifdef GPU_DEBUG
-      alpaka::wait(queue);
+      aV2P::wait(queue);
       std::cout << "Kernel_rejectDuplicate   -> done!" << std::endl;
 #endif
 
       snapshotQuality();
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv1D,
                           Kernel_sharedHitCleaner<TrackerTraits>{},
                           hh,
@@ -2212,7 +2212,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           qScratch,
                           this->device_hitToTuple_->data());
 #ifdef GPU_DEBUG
-      alpaka::wait(queue);
+      aV2P::wait(queue);
       std::cout << "Kernel_sharedHitCleaner   -> done!" << std::endl;
 #endif
       if (this->m_params.algoParams_.doTripletCleaner_ && (this->m_params.algoParams_.minHitsPerNtuplet_ <= 3)) {
@@ -2221,7 +2221,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               cms::alpakatools::divide_up_by(int(nhits * this->m_params.algoParams_.avgHitsPerTrack_) + 1, blockSize);
           workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
           snapshotQuality();
-          alpaka::exec<Acc1D>(queue,
+          aV2P::exec<Acc1D>(queue,
                               workDiv1D,
                               Kernel_simpleTripletCleaner<TrackerTraits>{},
                               tracks_view,
@@ -2230,7 +2230,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                               qScratch,
                               this->device_hitToTuple_->data());
 #ifdef GPU_DEBUG
-          alpaka::wait(queue);
+          aV2P::wait(queue);
           std::cout << "Kernel_simpleTripletCleaner   -> done!" << std::endl;
 #endif
         } else {
@@ -2238,7 +2238,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
               cms::alpakatools::divide_up_by(int(nhits * this->m_params.algoParams_.avgHitsPerTrack_) + 1, blockSize);
           workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
           snapshotQuality();
-          alpaka::exec<Acc1D>(queue,
+          aV2P::exec<Acc1D>(queue,
                               workDiv1D,
                               Kernel_tripletCleaner<TrackerTraits>{},
                               tracks_view,
@@ -2247,7 +2247,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                               qScratch,
                               this->device_hitToTuple_->data());
 #ifdef GPU_DEBUG
-          alpaka::wait(queue);
+          aV2P::wait(queue);
           std::cout << "Kernel_tripletCleaner   -> done!" << std::endl;
 #endif
         }
@@ -2258,7 +2258,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       numberOfBlocks = cms::alpakatools::divide_up_by(std::max(nhits, maxDoublets), blockSize);
       workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
 
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv1D,
                           Kernel_checkOverflows<TrackerTraits>{},
                           tracks_view,
@@ -2279,9 +2279,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     }
 
 #ifdef CA_STATS
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(1, 1);
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv1D,
                         Kernel_printSizes{},
                         hh,
@@ -2290,7 +2290,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         this->device_nTriplets_->data(),
                         this->device_nCellTracks_->data());
 
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 #endif
     if (this->m_params.algoParams_.doStats_) {
       // counters (add flag???)
@@ -2298,7 +2298,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       numberOfBlocks =
           cms::alpakatools::divide_up_by(int(nhits * this->m_params.algoParams_.avgHitsPerTrack_) + 1, blockSize);
       workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv1D,
                           Kernel_doStatsForHitInTracks<TrackerTraits>{},
                           this->device_hitToTuple_->data(),
@@ -2306,7 +2306,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       numberOfBlocks = cms::alpakatools::divide_up_by(3 * maxTuples / 4, blockSize);
       workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(numberOfBlocks, blockSize);
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv1D,
                           Kernel_doStatsForTracks<TrackerTraits>{},
                           tracks_view,
@@ -2314,10 +2314,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           this->counters_->data());
 
       auto workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(1, 1);
-      alpaka::exec<Acc1D>(queue, workDiv1D, Kernel_printCounters{}, this->counters_->data());
+      aV2P::exec<Acc1D>(queue, workDiv1D, Kernel_printCounters{}, this->counters_->data());
     }
 #ifdef GPU_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 #endif
 
 #ifdef DUMP_GPU_TK_TUPLES
@@ -2328,7 +2328,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       std::lock_guard<std::mutex> guard(lock);
       ++iev;
       for (uint32_t k = 0; k < 20000; k += 500) {
-        alpaka::exec<Acc1D>(queue,
+        aV2P::exec<Acc1D>(queue,
                             workDiv1D,
                             Kernel_print_found_ntuplets<TrackerTraits>{},
                             hh,
@@ -2338,9 +2338,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                             k,
                             k + 500,
                             iev);
-        alpaka::wait(queue);
+        aV2P::wait(queue);
       }
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv1D,
                           Kernel_print_found_ntuplets<TrackerTraits>{},
                           hh,
@@ -2350,7 +2350,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                           1000000,
                           iev);
 
-      alpaka::wait(queue);
+      aV2P::wait(queue);
     }
 #endif
   }
@@ -2360,10 +2360,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   template <typename TrackerTraits>
   void CAHitNtupletGeneratorKernels<TrackerTraits>::printCounters() {
     auto workDiv1D = cms::alpakatools::make_workdiv<Acc1D>(1,1);
-    alpaka::exec<Acc1D>(queue_, workDiv1D, Kernel_printCounters{}, this->counters_->data());
+    aV2P::exec<Acc1D>(queue_, workDiv1D, Kernel_printCounters{}, this->counters_->data());
   }
   */
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // RecoTracker_PixelSeeding_plugins_alpaka_CAHitNtupletGeneratorKernelsImpl_h

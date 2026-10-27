@@ -1,0 +1,5 @@
+<tool revision="1">
+  <use name="alpaka"/>
+  <flags CXXFLAGS="-DAV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED"/>
+  <flags GENREFLEX_CPPFLAGS="-DAV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED"/>
+</tool>

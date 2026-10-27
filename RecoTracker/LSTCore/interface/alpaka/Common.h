@@ -7,11 +7,11 @@
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "RecoTracker/LSTCore/interface/Common.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
+namespace AV2P_ACCELERATOR_NAMESPACE::lst {
 
   using namespace ::lst;
 
-  ALPAKA_FN_HOST ALPAKA_FN_INLINE void lstWarning(std::string_view warning) {
+  AV2P_FN_HOST AV2P_FN_INLINE void lstWarning(std::string_view warning) {
 #ifdef LST_STANDALONE
     printf("%s\n", warning.data());
 #else
@@ -19,7 +19,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 #endif
   }
 
-  // The constants below are usually used in functions like alpaka::math::min(),
+  // The constants below are usually used in functions like aV2P::math::min(),
   // expecting a reference (T const&) in the arguments. Hence,
   // HOST_DEVICE_CONSTANT needs to be used instead of constexpr.
 
@@ -124,12 +124,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
       // kWp's must be defined with inline static in the structs to compile.
       struct pT3WP {
-        ALPAKA_FN_ACC static inline float wp(unsigned i) { return kWp_pT3[i]; }
-        ALPAKA_FN_ACC static inline float wpHigh() { return kWpHigh_pT3; }
+        AV2P_FN_ACC static inline float wp(unsigned i) { return kWp_pT3[i]; }
+        AV2P_FN_ACC static inline float wpHigh() { return kWpHigh_pT3; }
       };
       struct pT5WP {
-        ALPAKA_FN_ACC static inline float wp(unsigned i) { return kWp_pT5[i]; }
-        ALPAKA_FN_ACC static inline float wpHigh() { return kWpHigh_pT5; }
+        AV2P_FN_ACC static inline float wp(unsigned i) { return kWp_pT5[i]; }
+        AV2P_FN_ACC static inline float wpHigh() { return kWpHigh_pT5; }
       };
     }  // namespace pt3dnn
 
@@ -145,5 +145,5 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
   }  // namespace dnn
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::lst
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::lst
 #endif

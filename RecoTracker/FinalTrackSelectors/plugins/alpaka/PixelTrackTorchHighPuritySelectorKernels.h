@@ -1,7 +1,7 @@
 #ifndef PixelTrackTorchHighPuritySelectorKernels_h
 #define PixelTrackTorchHighPuritySelectorKernels_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
@@ -15,7 +15,7 @@
 
 #include "RecoTracker/FinalTrackSelectors/interface/PixelTrackFeaturesSoA.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   void launchCAPreselection(Queue& queue,
                             const int maxNumberOfTracks,
@@ -53,6 +53,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                       const int* selectedTrackIndices,
                                                       const int* nSelectedTracks,
                                                       const int* selectedTrackHitOffsets);
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

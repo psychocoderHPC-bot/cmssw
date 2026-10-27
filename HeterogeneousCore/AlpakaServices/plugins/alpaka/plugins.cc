@@ -2,4 +2,4 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaServices/interface/alpaka/AlpakaService.h"
 
-DEFINE_FWK_SERVICE(ALPAKA_TYPE_ALIAS(AlpakaService));
+DEFINE_FWK_SERVICE(AV2P_TYPE_ALIAS(AlpakaService));

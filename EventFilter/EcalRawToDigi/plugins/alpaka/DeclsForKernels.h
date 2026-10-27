@@ -4,7 +4,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::raw {
 
   struct InputDataHost {
     // delete the default constructor because alpaka buffers do not have a default constructor
@@ -38,6 +38,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw {
     cms::alpakatools::device_buffer<Device, int[]> feds;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::raw
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::raw
 
 #endif  // EventFilter_EcalRawToDigi_plugins_alpaka_DeclsForKernels_h

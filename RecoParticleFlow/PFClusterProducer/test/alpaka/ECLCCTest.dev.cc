@@ -47,7 +47,7 @@ June 2018.
 #include <iostream>
 #include <cstdlib>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/traits.h"
@@ -70,7 +70,7 @@ June 2018.
 #include "RecoParticleFlow/PFClusterProducer/interface/alpaka/PFMultiDepthClusteringVarsDeviceCollection.h"
 #include "RecoParticleFlow/PFClusterProducer/interface/alpaka/PFMultiDepthClusteringEdgeVarsDeviceCollection.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class ECLCCTest {
   public:
@@ -91,29 +91,29 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(groups, items);
 
     // ECL-CC init stage:
-    alpaka::exec<Acc1D>(
+    aV2P::exec<Acc1D>(
         queue, workDiv, eclcc::ECLCCInitKernel{}, mdpfClusteringCCLabels.view(), mdpfClusteringEdgeVars.view());
     // ECL-CC run low-degree hooking:
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv,
                         eclcc::ECLCCLowDegreeComputeKernel{},
                         mdpfClusteringCCLabels.view(),
                         mdpfClusteringEdgeVars.view());
     // ECL-CC run mid-degree hooking:
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv,
                         eclcc::ECLCCMidDegreeComputeKernel{},
                         mdpfClusteringCCLabels.view(),
                         mdpfClusteringEdgeVars.view());
     // ECL-CC run high-degree hooking:
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv,
                         eclcc::ECLCCHighDegreeComputeKernel{},
                         mdpfClusteringCCLabels.view(),
                         mdpfClusteringEdgeVars.view());
     // ECL-CC run finalizing stage:
-    alpaka::exec<Acc1D>(queue, workDiv, eclcc::ECLCCFlattenKernel{}, mdpfClusteringCCLabels.view());
-    alpaka::wait(queue);
+    aV2P::exec<Acc1D>(queue, workDiv, eclcc::ECLCCFlattenKernel{}, mdpfClusteringCCLabels.view());
+    aV2P::wait(queue);
   }
 
   void launch_eclcc_test(Queue& queue,
@@ -128,21 +128,21 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     reco::PFMultiDepthClusteringCCLabelsDeviceCollection devClusteringCCLabels{queue, nClusters};
     reco::PFMultiDepthClusteringEdgeVarsDeviceCollection devClusteringEdgeVars{queue, 2 * nClusters};
 
-    alpaka::memcpy(queue, devClusteringCCLabels.buffer(), hostClusteringCCLabels.buffer());
-    alpaka::memcpy(queue, devClusteringEdgeVars.buffer(), hostClusteringEdgeVars.buffer());
+    aV2P::memcpy(queue, devClusteringCCLabels.buffer(), hostClusteringCCLabels.buffer());
+    aV2P::memcpy(queue, devClusteringEdgeVars.buffer(), hostClusteringEdgeVars.buffer());
 
     eclcc_test.apply(queue, devClusteringCCLabels, devClusteringEdgeVars, nClusters);
 
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
-    alpaka::memcpy(queue, hostClusteringCCLabels.buffer(), devClusteringCCLabels.buffer());
+    aV2P::memcpy(queue, hostClusteringCCLabels.buffer(), devClusteringCCLabels.buffer());
 
-    alpaka::wait(queue);
+    aV2P::wait(queue);
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 std::vector<std::vector<int>> buildAdj(const std::vector<int>& v) {
   const int n = (int)v.size();
@@ -369,7 +369,7 @@ int main() {
   // get the list of devices on the current platform
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }

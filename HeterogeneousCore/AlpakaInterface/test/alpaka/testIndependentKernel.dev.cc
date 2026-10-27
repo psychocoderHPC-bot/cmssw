@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <random>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
@@ -12,14 +12,14 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
 // each test binary is built for a single Alpaka backend
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 /* Add the group id to te value of each element in the group.
  * Each group is composed by the elements first[group]..first[group+1]-1 .
  */
 struct IndependentWorkKernel {
   template <typename T>
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+  AV2P_FN_ACC void operator()(Acc1D const& acc,
                                 T const* __restrict__ in,
                                 T* __restrict__ out,
                                 size_t const* __restrict__ indices,
@@ -77,7 +77,7 @@ void testIndependentWorkKernel(size_t groups, size_t grid_size, size_t block_siz
 
   // run the test on each device
   for (auto const& device : cms::alpakatools::devices<Platform>()) {
-    std::cout << "Test IndependentWorkKernel on " << alpaka::getName(device) << " over " << size << " elements in "
+    std::cout << "Test IndependentWorkKernel on " << aV2P::getName(device) << " over " << size << " elements in "
               << groups << " independent groups with " << grid_size << " blocks of " << block_size << " elements\n";
     auto queue = Queue(device);
 
@@ -87,21 +87,21 @@ void testIndependentWorkKernel(size_t groups, size_t grid_size, size_t block_siz
     auto out_d = cms::alpakatools::make_device_buffer<float[]>(queue, size);
 
     // copy the input data to the device; the size is known from the buffer objects
-    alpaka::memcpy(queue, indices_d, indices_h);
-    alpaka::memcpy(queue, in_d, in_h);
+    aV2P::memcpy(queue, indices_d, indices_h);
+    aV2P::memcpy(queue, in_d, in_h);
 
     // fill the output buffer with zeros; the size is known from the buffer objects
-    alpaka::memset(queue, out_d, 0.);
+    aV2P::memset(queue, out_d, 0.);
 
     // launch the 1-dimensional kernel with independent work groups
     auto div = cms::alpakatools::make_workdiv<Acc1D>(grid_size, block_size);
-    alpaka::exec<Acc1D>(queue, div, kernel, in_d.data(), out_d.data(), indices_d.data(), groups);
+    aV2P::exec<Acc1D>(queue, div, kernel, in_d.data(), out_d.data(), indices_d.data(), groups);
 
     // copy the results from the device to the host
-    alpaka::memcpy(queue, out_h, out_d);
+    aV2P::memcpy(queue, out_h, out_d);
 
     // wait for all the operations to complete
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
     // check the results
     for (size_t g = 0; g < groups; ++g) {
@@ -117,13 +117,13 @@ void testIndependentWorkKernel(size_t groups, size_t grid_size, size_t block_siz
   }
 }
 
-TEST_CASE("Test alpaka kernels for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend",
-          "[" EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) "]") {
+TEST_CASE("Test alpaka kernels for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend",
+          "[" EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) "]") {
   SECTION("Independent work groups") {
     // get the list of devices on the current platform
     auto const& devices = cms::alpakatools::devices<Platform>();
     if (devices.empty()) {
-      FAIL("No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+      FAIL("No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
            "the test will be skipped.");
     }
 

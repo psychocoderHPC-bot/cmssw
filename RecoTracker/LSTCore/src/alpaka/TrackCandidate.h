@@ -24,8 +24,8 @@
 #include "NeuralNetwork.h"
 #include "TripletAccessors.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void addpLSTrackCandidateToMemory(TrackCandidatesBase& candsBase,
+namespace AV2P_ACCELERATOR_NAMESPACE::lst {
+  AV2P_FN_ACC AV2P_FN_INLINE void addpLSTrackCandidateToMemory(TrackCandidatesBase& candsBase,
                                                                    TrackCandidatesExtended& candsExtended,
                                                                    unsigned int trackletIndex,
                                                                    unsigned int trackCandidateIndex,
@@ -54,7 +54,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     tcHits[1][1] = hitIndices[3];
   }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void addTrackCandidateLayerHits(
+  AV2P_FN_ACC AV2P_FN_INLINE void addTrackCandidateLayerHits(
       TrackCandidatesBase& candsBase,
       TrackCandidatesExtended& candsExtended,
       unsigned int trackCandidateIndex,
@@ -70,7 +70,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     tcHits[layerSlot][1] = hitIndex1;
   }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void addTrackCandidateToMemory(TrackCandidatesBase& candsBase,
+  AV2P_FN_ACC AV2P_FN_INLINE void addTrackCandidateToMemory(TrackCandidatesBase& candsBase,
                                                                 TrackCandidatesExtended& candsExtended,
                                                                 LSTObjType trackCandidateType,
                                                                 unsigned int innerTrackletIndex,
@@ -152,7 +152,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 #endif
   }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool pixelHitsOverlapAny(unsigned int ix,
+  AV2P_FN_ACC AV2P_FN_INLINE bool pixelHitsOverlapAny(unsigned int ix,
                                                           unsigned int jx,
                                                           PixelSegmentsConst pixelSegments) {
     if (ix == jx)
@@ -171,7 +171,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   }
 
   struct CrossCleanpT3 {
-    ALPAKA_FN_ACC void operator()(Acc2D const& acc,
+    AV2P_FN_ACC void operator()(Acc2D const& acc,
                                   ModulesConst modules,
                                   ObjectRangesConst ranges,
                                   PixelTriplets pixelTriplets,
@@ -194,7 +194,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
           unsigned int pLS_jx = pixelQuintuplets.pixelSegmentIndices()[pixelQuintupletIndex];
           float eta2 = pixelSeeds.eta()[pLS_jx - prefix];
           float phi2 = pixelSeeds.phi()[pLS_jx - prefix];
-          float dEta = alpaka::math::abs(acc, (eta1 - eta2));
+          float dEta = aV2P::math::abs(acc, (eta1 - eta2));
           float dPhi = cms::alpakatools::deltaPhi(acc, phi1, phi2);
 
           float dR2 = dEta * dEta + dPhi * dPhi;
@@ -206,7 +206,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   };
 
   struct CrossCleanT5 {
-    ALPAKA_FN_ACC void operator()(Acc3D const& acc,
+    AV2P_FN_ACC void operator()(Acc3D const& acc,
                                   ModulesConst modules,
                                   Quintuplets quintuplets,
                                   QuintupletsOccupancyConst quintupletsOccupancy,
@@ -243,8 +243,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
             const unsigned int ptidx = isPT5 ? jx : (jx - nPT5);
             const float eta2 = __H2F(isPT5 ? pixelQuintuplets.eta()[ptidx] : pixelTriplets.eta()[ptidx]);
             const float phi2 = __H2F(isPT5 ? pixelQuintuplets.phi()[ptidx] : pixelTriplets.phi()[ptidx]);
-            if (alpaka::math::abs(acc, eta1 - eta2) >= 0.15f ||
-                alpaka::math::abs(acc, cms::alpakatools::deltaPhi(acc, phi1, phi2)) >= 0.15f)
+            if (aV2P::math::abs(acc, eta1 - eta2) >= 0.15f ||
+                aV2P::math::abs(acc, cms::alpakatools::deltaPhi(acc, phi1, phi2)) >= 0.15f)
               continue;
             // Only a promoted (!isDup) pixel object may delete.
             if (isPT5 ? pixelQuintuplets.isDup()[ptidx] : pixelTriplets.isDup()[ptidx])
@@ -277,7 +277,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   };
 
   struct CrossCleanpLS {
-    ALPAKA_FN_ACC void operator()(Acc2D const& acc,
+    AV2P_FN_ACC void operator()(Acc2D const& acc,
                                   ModulesConst modules,
                                   ObjectRangesConst ranges,
                                   PixelTripletsConst pixelTriplets,
@@ -308,7 +308,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
         }
 
         // Get pLS embedding eta bin and cut value for that bin.
-        float absEta1 = alpaka::math::abs(acc, eta1);
+        float absEta1 = aV2P::math::abs(acc, eta1);
         uint8_t bin_idx = (absEta1 > 2.5f) ? (dnn::kEtaBins - 1) : static_cast<uint8_t>(absEta1 / dnn::kEtaSize);
         const float threshold = dnn::plsembdnn::kWP[bin_idx];
 
@@ -320,7 +320,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
             unsigned int quintupletIndex = innerTrackletIdx;  // T5 index
             float eta2 = __H2F(quintuplets.eta()[quintupletIndex]);
             float phi2 = __H2F(quintuplets.phi()[quintupletIndex]);
-            float dEta = alpaka::math::abs(acc, eta1 - eta2);
+            float dEta = aV2P::math::abs(acc, eta1 - eta2);
             float dPhi = cms::alpakatools::deltaPhi(acc, phi1, phi2);
             float dR2 = dEta * dEta + dPhi * dPhi;
             // Cut on pLS-T5 embed distance.
@@ -344,7 +344,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
             float eta2 = __H2F(pixelTriplets.eta_pix()[pT3Index]);
             float phi2 = __H2F(pixelTriplets.phi_pix()[pT3Index]);
-            float dEta = alpaka::math::abs(acc, eta1 - eta2);
+            float dEta = aV2P::math::abs(acc, eta1 - eta2);
             float dPhi = cms::alpakatools::deltaPhi(acc, phi1, phi2);
 
             float dR2 = dEta * dEta + dPhi * dPhi;
@@ -359,7 +359,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
             float eta2 = pixelSeeds.eta()[pLSIndex - prefix];
             float phi2 = pixelSeeds.phi()[pLSIndex - prefix];
-            float dEta = alpaka::math::abs(acc, eta1 - eta2);
+            float dEta = aV2P::math::abs(acc, eta1 - eta2);
             float dPhi = cms::alpakatools::deltaPhi(acc, phi1, phi2);
 
             float dR2 = dEta * dEta + dPhi * dPhi;
@@ -372,7 +372,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
     }
   };
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE int nSharedHitsT4(unsigned int const* __restrict__ t4Hits,
+  AV2P_FN_ACC AV2P_FN_INLINE int nSharedHitsT4(unsigned int const* __restrict__ t4Hits,
                                                    unsigned int const* __restrict__ otherHits,
                                                    int nOtherHits) {
     // Every quadruplet hit slot is filled, so no empty-slot check.
@@ -390,7 +390,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   }
 
   struct CrossCleanT4 {
-    ALPAKA_FN_ACC void operator()(Acc3D const& acc,
+    AV2P_FN_ACC void operator()(Acc3D const& acc,
                                   ModulesConst modules,
                                   Quadruplets quadruplets,
                                   QuadrupletsOccupancyConst quadrupletsOccupancy,
@@ -440,7 +440,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   };
 
   struct CountSurvivingTCs {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   uint16_t nLowerModules,
                                   PixelQuintupletsConst pixelQuintuplets,
                                   PixelTripletsConst pixelTriplets,
@@ -458,14 +458,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       unsigned int nPixelQuintuplets = pixelQuintuplets.nPixelQuintuplets();
       for (unsigned int i : cms::alpakatools::uniform_elements(acc, nPixelQuintuplets)) {
         if (!pixelQuintuplets.isDup()[i])
-          alpaka::atomicAdd(acc, &nSurviving[0], 1u, alpaka::hierarchy::Threads{});
+          aV2P::atomicAdd(acc, &nSurviving[0], 1u, aV2P::hierarchy::Threads{});
       }
 
       // Count surviving pT3s
       unsigned int nPixelTriplets = pixelTriplets.nPixelTriplets();
       for (unsigned int i : cms::alpakatools::uniform_elements(acc, nPixelTriplets)) {
         if (!pixelTriplets.isDup()[i])
-          alpaka::atomicAdd(acc, &nSurviving[1], 1u, alpaka::hierarchy::Threads{});
+          aV2P::atomicAdd(acc, &nSurviving[1], 1u, aV2P::hierarchy::Threads{});
       }
 
       // Count surviving T5s
@@ -476,7 +476,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
         for (unsigned int jdx = 0; jdx < nQuints; ++jdx) {
           unsigned int quintupletIndex = ranges.quintupletModuleIndices()[idx] + jdx;
           if (!quintuplets.isDup()[quintupletIndex] && !quintuplets.partOfPT5()[quintupletIndex])
-            alpaka::atomicAdd(acc, &nSurviving[2], 1u, alpaka::hierarchy::Threads{});
+            aV2P::atomicAdd(acc, &nSurviving[2], 1u, aV2P::hierarchy::Threads{});
         }
       }
 
@@ -488,7 +488,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
         for (unsigned int jdx = 0; jdx < nQuads; ++jdx) {
           unsigned int quadrupletIndex = ranges.quadrupletModuleIndices()[idx] + jdx;
           if (!quadruplets.isDup()[quadrupletIndex])
-            alpaka::atomicAdd(acc, &nSurviving[3], 1u, alpaka::hierarchy::Threads{});
+            aV2P::atomicAdd(acc, &nSurviving[3], 1u, aV2P::hierarchy::Threads{});
         }
       }
 
@@ -496,13 +496,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       unsigned int nPixels = segmentsOccupancy.nSegments()[nLowerModules];
       for (unsigned int i : cms::alpakatools::uniform_elements(acc, nPixels)) {
         if ((tc_pls_triplets || pixelSeeds.isQuad()[i]) && !pixelSegments.isDup()[i])
-          alpaka::atomicAdd(acc, &nSurviving[4], 1u, alpaka::hierarchy::Threads{});
+          aV2P::atomicAdd(acc, &nSurviving[4], 1u, aV2P::hierarchy::Threads{});
       }
     }
   };
 
   struct AddpT3asTrackCandidates {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   uint16_t nLowerModules,
                                   PixelTripletsConst pixelTriplets,
                                   TrackCandidatesBase candsBase,
@@ -511,7 +511,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
                                   ObjectRangesConst ranges,
                                   unsigned int nAllocated) const {
       // implementation is 1D with a single block
-      ALPAKA_ASSERT_ACC((alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[0] == 1));
+      AV2P_ASSERT_ACC((aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[0] == 1));
 
       unsigned int nPixelTriplets = pixelTriplets.nPixelTriplets();
       unsigned int pLS_offset = ranges.segmentModuleIndices()[nLowerModules];
@@ -520,16 +520,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
           continue;
 
         unsigned int trackCandidateIdx =
-            alpaka::atomicAdd(acc, &candsBase.nTrackCandidates(), 1u, alpaka::hierarchy::Threads{});
+            aV2P::atomicAdd(acc, &candsBase.nTrackCandidates(), 1u, aV2P::hierarchy::Threads{});
         if (trackCandidateIdx >= nAllocated) {
 #ifdef WARNINGS
           printf("Track Candidate excess alert! Type = pT3");
 #endif
-          alpaka::atomicSub(acc, &candsBase.nTrackCandidates(), 1u, alpaka::hierarchy::Threads{});
+          aV2P::atomicSub(acc, &candsBase.nTrackCandidates(), 1u, aV2P::hierarchy::Threads{});
           break;
 
         } else {
-          alpaka::atomicAdd(acc, &candsExtended.nTrackCandidatespT3(), 1u, alpaka::hierarchy::Threads{});
+          aV2P::atomicAdd(acc, &candsExtended.nTrackCandidatespT3(), 1u, aV2P::hierarchy::Threads{});
 
           float radius = 0.5f * (__H2F(pixelTriplets.pixelRadius()[pixelTripletIndex]) +
                                  __H2F(pixelTriplets.tripletRadius()[pixelTripletIndex]));
@@ -554,7 +554,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   };
 
   struct AddT5asTrackCandidate {
-    ALPAKA_FN_ACC void operator()(Acc2D const& acc,
+    AV2P_FN_ACC void operator()(Acc2D const& acc,
                                   uint16_t nLowerModules,
                                   QuintupletsConst quintuplets,
                                   QuintupletsOccupancyConst quintupletsOccupancy,
@@ -573,15 +573,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
             continue;
 
           unsigned int trackCandidateIdx =
-              alpaka::atomicAdd(acc, &candsBase.nTrackCandidates(), 1u, alpaka::hierarchy::Threads{});
+              aV2P::atomicAdd(acc, &candsBase.nTrackCandidates(), 1u, aV2P::hierarchy::Threads{});
           if (trackCandidateIdx >= nAllocated) {
 #ifdef WARNINGS
             printf("Track Candidate excess alert! Type = T5");
 #endif
-            alpaka::atomicSub(acc, &candsBase.nTrackCandidates(), 1u, alpaka::hierarchy::Threads{});
+            aV2P::atomicSub(acc, &candsBase.nTrackCandidates(), 1u, aV2P::hierarchy::Threads{});
             break;
           } else {
-            alpaka::atomicAdd(acc, &candsExtended.nTrackCandidatesT5(), 1u, alpaka::hierarchy::Threads{});
+            aV2P::atomicAdd(acc, &candsExtended.nTrackCandidatesT5(), 1u, aV2P::hierarchy::Threads{});
             addTrackCandidateToMemory(candsBase,
                                       candsExtended,
                                       LSTObjType::T5,
@@ -603,7 +603,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   };
 
   struct AddpLSasTrackCandidate {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   uint16_t nLowerModules,
                                   TrackCandidatesBase candsBase,
                                   TrackCandidatesExtended candsExtended,
@@ -618,16 +618,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
           continue;
 
         unsigned int trackCandidateIdx =
-            alpaka::atomicAdd(acc, &candsBase.nTrackCandidates(), 1u, alpaka::hierarchy::Threads{});
+            aV2P::atomicAdd(acc, &candsBase.nTrackCandidates(), 1u, aV2P::hierarchy::Threads{});
         if (trackCandidateIdx >= nAllocated) {
 #ifdef WARNINGS
           printf("Track Candidate excess alert! Type = pLS");
 #endif
-          alpaka::atomicSub(acc, &candsBase.nTrackCandidates(), 1u, alpaka::hierarchy::Threads{});
+          aV2P::atomicSub(acc, &candsBase.nTrackCandidates(), 1u, aV2P::hierarchy::Threads{});
           break;
 
         } else {
-          alpaka::atomicAdd(acc, &candsExtended.nTrackCandidatespLS(), 1u, alpaka::hierarchy::Threads{});
+          aV2P::atomicAdd(acc, &candsExtended.nTrackCandidatespLS(), 1u, aV2P::hierarchy::Threads{});
           addpLSTrackCandidateToMemory(candsBase,
                                        candsExtended,
                                        pixelArrayIndex,
@@ -640,7 +640,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   };
 
   struct AddpT5asTrackCandidate {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   uint16_t nLowerModules,
                                   PixelQuintupletsConst pixelQuintuplets,
                                   TrackCandidatesBase candsBase,
@@ -649,7 +649,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
                                   ObjectRangesConst ranges,
                                   unsigned int nAllocated) const {
       // implementation is 1D with a single block
-      ALPAKA_ASSERT_ACC((alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[0] == 1));
+      AV2P_ASSERT_ACC((aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[0] == 1));
 
       int nPixelQuintuplets = pixelQuintuplets.nPixelQuintuplets();
       unsigned int pLS_offset = ranges.segmentModuleIndices()[nLowerModules];
@@ -658,16 +658,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
           continue;
 
         unsigned int trackCandidateIdx =
-            alpaka::atomicAdd(acc, &candsBase.nTrackCandidates(), 1u, alpaka::hierarchy::Threads{});
+            aV2P::atomicAdd(acc, &candsBase.nTrackCandidates(), 1u, aV2P::hierarchy::Threads{});
         if (trackCandidateIdx >= nAllocated) {
 #ifdef WARNINGS
           printf("Track Candidate excess alert! Type = pT5");
 #endif
-          alpaka::atomicSub(acc, &candsBase.nTrackCandidates(), 1u, alpaka::hierarchy::Threads{});
+          aV2P::atomicSub(acc, &candsBase.nTrackCandidates(), 1u, aV2P::hierarchy::Threads{});
           break;
 
         } else {
-          alpaka::atomicAdd(acc, &candsExtended.nTrackCandidatespT5(), 1u, alpaka::hierarchy::Threads{});
+          aV2P::atomicAdd(acc, &candsExtended.nTrackCandidatespT5(), 1u, aV2P::hierarchy::Threads{});
 
           float radius = 0.5f * (__H2F(pixelQuintuplets.pixelRadius()[pixelQuintupletIndex]) +
                                  __H2F(pixelQuintuplets.quintupletRadius()[pixelQuintupletIndex]));
@@ -692,7 +692,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   };
 
   struct AddT4asTrackCandidate {
-    ALPAKA_FN_ACC void operator()(Acc2D const& acc,
+    AV2P_FN_ACC void operator()(Acc2D const& acc,
                                   uint16_t nLowerModules,
                                   Quadruplets quadruplets,
                                   QuadrupletsOccupancyConst quadrupletsOccupancy,
@@ -713,15 +713,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
             continue;
 
           unsigned int trackCandidateIdx =
-              alpaka::atomicAdd(acc, &candsBase.nTrackCandidates(), 1u, alpaka::hierarchy::Threads{});
+              aV2P::atomicAdd(acc, &candsBase.nTrackCandidates(), 1u, aV2P::hierarchy::Threads{});
           if (trackCandidateIdx >= nAllocated) {
 #ifdef WARNINGS
             printf("Track Candidate excess alert! Type = T4");
 #endif
-            alpaka::atomicSub(acc, &candsBase.nTrackCandidates(), 1u, alpaka::hierarchy::Threads{});
+            aV2P::atomicSub(acc, &candsBase.nTrackCandidates(), 1u, aV2P::hierarchy::Threads{});
             break;
           } else {
-            alpaka::atomicAdd(acc, &candsExtended.nTrackCandidatesT4(), 1u, alpaka::hierarchy::Threads{});
+            aV2P::atomicAdd(acc, &candsExtended.nTrackCandidatesT4(), 1u, aV2P::hierarchy::Threads{});
             addTrackCandidateToMemory(candsBase,
                                       candsExtended,
                                       LSTObjType::T4,
@@ -741,7 +741,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       }
     }
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::lst
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::lst
 
 ASSERT_DEVICE_MATCHES_HOST_COLLECTION(lst::TrackCandidatesBaseDeviceCollection, lst::TrackCandidatesBaseHostCollection);
 ASSERT_DEVICE_MATCHES_HOST_COLLECTION(lst::TrackCandidatesExtendedDeviceCollection,

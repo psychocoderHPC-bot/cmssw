@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Utilities/interface/ReusableObjectHolder.h"
 #include "FWCore/Utilities/interface/thread_safety_macros.h"
@@ -16,21 +16,21 @@ namespace cms::alpakatools {
 
   template <typename Queue>
   class QueueCache {
-#ifdef ALPAKA_ACC_GPU_CUDA_ENABLED
+#ifdef AV2P_ACC_GPU_CUDA_ENABLED
     friend class alpaka_cuda_async::AlpakaService;
 #endif
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef AV2P_ACC_GPU_HIP_ENABLED
     friend class alpaka_rocm_async::AlpakaService;
 #endif
-#ifdef ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+#ifdef AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
     friend class alpaka_serial_sync::AlpakaService;
 #endif
-#ifdef ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLED
+#ifdef AV2P_ACC_CPU_B_TBB_T_SEQ_ENABLED
     friend class alpaka_tbb_async::AlpakaService;
 #endif
 
-    using Device = alpaka::Dev<Queue>;
-    using Platform = alpaka::Platform<Device>;
+    using Device = aV2P::Dev<Queue>;
+    using Platform = aV2P::Platform<Device>;
 
   public:
     // QueueCache should be constructed by the first call to
@@ -41,7 +41,7 @@ namespace cms::alpakatools {
     // will be returned to the cache by the shared_ptr destructor.
     // This function is thread safe
     std::shared_ptr<Queue> get(Device const& dev) {
-      return cache_[alpaka::getNativeHandle(dev)].makeOrGet([dev]() { return std::make_unique<Queue>(dev); });
+      return cache_[aV2P::getNativeHandle(dev)].makeOrGet([dev]() { return std::make_unique<Queue>(dev); });
     }
 
   private:

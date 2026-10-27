@@ -14,7 +14,7 @@
 
 #include "HcalMahiPulseOffsetsSoA.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::hcal::reconstruction {
+namespace AV2P_ACCELERATOR_NAMESPACE::hcal::reconstruction {
 
   struct ConfigParameters {
     uint32_t maxTimeSamples;
@@ -54,5 +54,5 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::hcal::reconstruction {
                     HcalMahiPulseOffsetsSoA::ConstView const& mahiPulseOffsets,
                     ConfigParameters const& configParameters);
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::hcal::reconstruction
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::hcal::reconstruction
 #endif

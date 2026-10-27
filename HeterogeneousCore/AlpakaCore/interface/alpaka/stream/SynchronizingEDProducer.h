@@ -10,13 +10,13 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/ProducerBase.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   namespace stream {
     template <typename... Args>
     class SynchronizingEDProducer : public ProducerBase<edm::stream::EDProducer, edm::ExternalWork, Args...> {
       static_assert(
           not edm::CheckAbility<edm::module::Abilities::kExternalWork, Args...>::kHasIt,
-          "ExternalWork ability is redundant with ALPAKA_ACCELERATOR_NAMESPACE::stream::SynchronizingEDProducer."
+          "ExternalWork ability is redundant with AV2P_ACCELERATOR_NAMESPACE::stream::SynchronizingEDProducer."
           "Please remove it.");
       using Base = ProducerBase<edm::stream::EDProducer, edm::ExternalWork, Args...>;
 
@@ -51,6 +51,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       std::shared_ptr<EDMetadata> metadata_;
     };
   }  // namespace stream
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

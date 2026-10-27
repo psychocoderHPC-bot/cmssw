@@ -3,7 +3,7 @@
 
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Portable/interface/alpaka/PortableCollection.h"
 #include "DataFormats/TrackSoA/interface/TracksDevice.h"
@@ -13,14 +13,14 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/CopyToHost.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::reco {
+namespace AV2P_ACCELERATOR_NAMESPACE::reco {
 
   using ::reco::TracksDevice;
   using ::reco::TracksHost;
   using TracksSoACollection =
-      std::conditional_t<std::is_same_v<Device, alpaka::DevCpu>, TracksHost, TracksDevice<Device>>;
+      std::conditional_t<std::is_same_v<Device, aV2P::DevCpu>, TracksHost, TracksDevice<Device>>;
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::reco
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::reco
 
 ASSERT_DEVICE_MATCHES_HOST_COLLECTION(reco::TracksSoACollection, reco::TracksHost);
 

@@ -6,9 +6,9 @@
 
 #include "RecoParticleFlow/PFClusterProducer/interface/PFMultiDepthClusteringEdgeVarsSoA.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::reco {
+namespace AV2P_ACCELERATOR_NAMESPACE::reco {
 
   using PFMultiDepthClusteringEdgeVarsDeviceCollection = PortableCollection<::reco::PFMultiDepthClusteringEdgeVarsSoA>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::reco
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::reco
 
 #endif

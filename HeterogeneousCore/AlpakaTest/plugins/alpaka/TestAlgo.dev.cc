@@ -1,9 +1,9 @@
-// Check that ALPAKA_HOST_ONLY is not defined during device compilation:
-#ifdef ALPAKA_HOST_ONLY
-#error ALPAKA_HOST_ONLY defined in device compilation
+// Check that AV2P_HOST_ONLY is not defined during device compilation:
+#ifdef AV2P_HOST_ONLY
+#error AV2P_HOST_ONLY defined in device compilation
 #endif
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/PortableTestObjects/interface/alpaka/TestDeviceCollection.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
@@ -11,13 +11,13 @@
 
 #include "TestAlgo.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
 
   class TestAlgoKernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, portabletest::TestSoA::View view, double xvalue) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, portabletest::TestSoA::View view, double xvalue) const {
       const portabletest::Matrix matrix{{1, 2, 3, 4, 5, 6}, {2, 4, 6, 8, 10, 12}, {3, 6, 9, 12, 15, 18}};
       const portabletest::Array flags = {{6, 4, 2, 0}};
 
@@ -35,7 +35,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   class TestAlgoMultiKernel2 {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, portabletest::TestSoA2::View view, double xvalue) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, portabletest::TestSoA2::View view, double xvalue) const {
       const portabletest::Matrix matrix{{1, 2, 3, 4, 5, 6}, {2, 4, 6, 8, 10, 12}, {3, 6, 9, 12, 15, 18}};
 
       // set this only once in the whole kernel grid
@@ -52,7 +52,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   class TestAlgoMultiKernel3 {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, portabletest::TestSoA3::View view, double xvalue) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, portabletest::TestSoA3::View view, double xvalue) const {
       const portabletest::Matrix matrix{{1, 2, 3, 4, 5, 6}, {2, 4, 6, 8, 10, 12}, {3, 6, 9, 12, 15, 18}};
 
       // set this only once in the whole kernel grid
@@ -79,7 +79,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     //   - elements within a single thread on a CPU backend
     auto workDiv = make_workdiv<Acc1D>(groups, items);
 
-    alpaka::exec<Acc1D>(queue, workDiv, TestAlgoKernel{}, collection.view(), xvalue);
+    aV2P::exec<Acc1D>(queue, workDiv, TestAlgoKernel{}, collection.view(), xvalue);
   }
 
   void TestAlgo::fillMulti2(Queue& queue, portabletest::TestDeviceCollection2& collection, double xvalue) const {
@@ -99,13 +99,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto view1 = collection.view().first();
     auto view2 = collection.view().second();
 
-    alpaka::exec<Acc1D>(queue, workDiv, TestAlgoKernel{}, view1, xvalue);
-    alpaka::exec<Acc1D>(queue, workDiv2, TestAlgoMultiKernel2{}, view2, xvalue);
+    aV2P::exec<Acc1D>(queue, workDiv, TestAlgoKernel{}, view1, xvalue);
+    aV2P::exec<Acc1D>(queue, workDiv2, TestAlgoMultiKernel2{}, view2, xvalue);
   }
 
   class TestAlgoStructKernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   portabletest::TestDeviceObject::Product* data,
                                   double x,
                                   double y,
@@ -126,7 +126,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // run on a single thread
     auto workDiv = make_workdiv<Acc1D>(1, 1);
 
-    alpaka::exec<Acc1D>(queue, workDiv, TestAlgoStructKernel{}, object.data(), x, y, z, id);
+    aV2P::exec<Acc1D>(queue, workDiv, TestAlgoStructKernel{}, object.data(), x, y, z, id);
   }
 
   void TestAlgo::fillMulti3(Queue& queue, portabletest::TestDeviceCollection3& collection, double xvalue) const {
@@ -149,14 +149,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto view2 = collection.view().second();
     auto view3 = collection.view().third();
 
-    alpaka::exec<Acc1D>(queue, workDiv, TestAlgoKernel{}, view1, xvalue);
-    alpaka::exec<Acc1D>(queue, workDiv2, TestAlgoMultiKernel2{}, view2, xvalue);
-    alpaka::exec<Acc1D>(queue, workDiv3, TestAlgoMultiKernel3{}, view3, xvalue);
+    aV2P::exec<Acc1D>(queue, workDiv, TestAlgoKernel{}, view1, xvalue);
+    aV2P::exec<Acc1D>(queue, workDiv2, TestAlgoMultiKernel2{}, view2, xvalue);
+    aV2P::exec<Acc1D>(queue, workDiv3, TestAlgoMultiKernel3{}, view3, xvalue);
   }
 
   class TestAlgoKernelUpdate {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   portabletest::TestDeviceCollection::ConstView input,
                                   AlpakaESTestDataEDevice::ConstView esData,
                                   portabletest::TestDeviceCollection::View output) const {
@@ -175,7 +175,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
     }
 
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   portabletest::TestDeviceCollection::ConstView input,
                                   TestAlgo::UpdateInfo const* updateInfo,
                                   portabletest::TestDeviceCollection::View output) const {
@@ -195,7 +195,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   class TestAlgoKernelUpdateMulti2 {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   portabletest::TestSoA::ConstView input,
                                   portabletest::TestSoA2::ConstView input2,
                                   AlpakaESTestDataEDevice::ConstView esData,
@@ -224,7 +224,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
     }
 
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   portabletest::TestSoA::ConstView input,
                                   portabletest::TestSoA2::ConstView input2,
                                   TestAlgo::UpdateInfo const* updateInfo,
@@ -252,7 +252,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   class TestAlgoKernelUpdateMulti3 {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   portabletest::TestSoA::ConstView input,
                                   portabletest::TestSoA2::ConstView input2,
                                   portabletest::TestSoA3::ConstView input3,
@@ -293,7 +293,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
     }
 
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   portabletest::TestSoA::ConstView input,
                                   portabletest::TestSoA2::ConstView input2,
                                   portabletest::TestSoA3::ConstView input3,
@@ -345,7 +345,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     //   - elements within a single thread on a CPU backend
     auto workDiv = make_workdiv<Acc1D>(groups, items);
 
-    alpaka::exec<Acc1D>(queue, workDiv, TestAlgoKernelUpdate{}, input.view(), esData.view(), collection.view());
+    aV2P::exec<Acc1D>(queue, workDiv, TestAlgoKernelUpdate{}, input.view(), esData.view(), collection.view());
 
     return collection;
   }
@@ -372,7 +372,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto outputView1 = collection.view().first();
     auto outputView2 = collection.view().second();
 
-    alpaka::exec<Acc1D>(
+    aV2P::exec<Acc1D>(
         queue, workDiv, TestAlgoKernelUpdateMulti2{}, inputView1, inputView2, esData.view(), outputView1, outputView2);
     return collection;
   }
@@ -401,7 +401,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto outputView2 = collection.view().second();
     auto outputView3 = collection.view().third();
 
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv,
                         TestAlgoKernelUpdateMulti3{},
                         inputView1,
@@ -431,7 +431,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     //   - elements within a single thread on a CPU backend
     auto workDiv = make_workdiv<Acc1D>(groups, items);
 
-    alpaka::exec<Acc1D>(queue, workDiv, TestAlgoKernelUpdate{}, input.view(), d_updateInfo, collection.view());
+    aV2P::exec<Acc1D>(queue, workDiv, TestAlgoKernelUpdate{}, input.view(), d_updateInfo, collection.view());
 
     return collection;
   }
@@ -458,7 +458,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto outputView1 = collection.view().first();
     auto outputView2 = collection.view().second();
 
-    alpaka::exec<Acc1D>(
+    aV2P::exec<Acc1D>(
         queue, workDiv, TestAlgoKernelUpdateMulti2{}, inputView1, inputView2, d_updateInfo, outputView1, outputView2);
     return collection;
   }
@@ -487,7 +487,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto outputView2 = collection.view().second();
     auto outputView3 = collection.view().third();
 
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDiv,
                         TestAlgoKernelUpdateMulti3{},
                         inputView1,
@@ -503,81 +503,81 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   class TestZeroCollectionKernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, portabletest::TestDeviceCollection::ConstView view) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, portabletest::TestDeviceCollection::ConstView view) const {
       const portabletest::Matrix matrix{{0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}};
       const portabletest::Array flags = {{0, 0, 0, 0}};
 
       // check this only once in the whole kernel grid
       if (once_per_grid(acc)) {
-        ALPAKA_ASSERT(view.r() == 0.);
+        AV2P_ASSERT(view.r() == 0.);
       }
 
       // make a strided loop over the kernel grid, covering up to "size" elements
       for (int32_t i : uniform_elements(acc, view.metadata().size())) {
         auto element = view[i];
-        ALPAKA_ASSERT(element.x() == 0.);
-        ALPAKA_ASSERT(element.y() == 0.);
-        ALPAKA_ASSERT(element.z() == 0.);
-        ALPAKA_ASSERT(element.id() == 0.);
-        ALPAKA_ASSERT(element.flags() == flags);
-        ALPAKA_ASSERT(element.m() == matrix);
+        AV2P_ASSERT(element.x() == 0.);
+        AV2P_ASSERT(element.y() == 0.);
+        AV2P_ASSERT(element.z() == 0.);
+        AV2P_ASSERT(element.id() == 0.);
+        AV2P_ASSERT(element.flags() == flags);
+        AV2P_ASSERT(element.m() == matrix);
       }
     }
   };
 
   class TestZeroMultiCollectionKernel2 {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, portabletest::TestSoA2::ConstView view) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, portabletest::TestSoA2::ConstView view) const {
       const portabletest::Matrix matrix{{0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}};
 
       // check this only once in the whole kernel grid
       if (once_per_grid(acc)) {
-        ALPAKA_ASSERT(view.r2() == 0.);
+        AV2P_ASSERT(view.r2() == 0.);
       }
 
       // make a strided loop over the kernel grid, covering up to "size" elements
       for (int32_t i : uniform_elements(acc, view.metadata().size())) {
         auto element = view[i];
-        ALPAKA_ASSERT(element.x2() == 0.);
-        ALPAKA_ASSERT(element.y2() == 0.);
-        ALPAKA_ASSERT(element.z2() == 0.);
-        ALPAKA_ASSERT(element.id2() == 0.);
-        ALPAKA_ASSERT(element.m2() == matrix);
+        AV2P_ASSERT(element.x2() == 0.);
+        AV2P_ASSERT(element.y2() == 0.);
+        AV2P_ASSERT(element.z2() == 0.);
+        AV2P_ASSERT(element.id2() == 0.);
+        AV2P_ASSERT(element.m2() == matrix);
       }
     }
   };
 
   class TestZeroMultiCollectionKernel3 {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, portabletest::TestSoA3::ConstView view) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, portabletest::TestSoA3::ConstView view) const {
       const portabletest::Matrix matrix{{0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}};
 
       // check this only once in the whole kernel grid
       if (once_per_grid(acc)) {
-        ALPAKA_ASSERT(view.r3() == 0.);
+        AV2P_ASSERT(view.r3() == 0.);
       }
 
       // make a strided loop over the kernel grid, covering up to "size" elements
       for (int32_t i : uniform_elements(acc, view.metadata().size())) {
         auto element = view[i];
-        ALPAKA_ASSERT(element.x3() == 0.);
-        ALPAKA_ASSERT(element.y3() == 0.);
-        ALPAKA_ASSERT(element.z3() == 0.);
-        ALPAKA_ASSERT(element.id3() == 0.);
-        ALPAKA_ASSERT(element.m3() == matrix);
+        AV2P_ASSERT(element.x3() == 0.);
+        AV2P_ASSERT(element.y3() == 0.);
+        AV2P_ASSERT(element.z3() == 0.);
+        AV2P_ASSERT(element.id3() == 0.);
+        AV2P_ASSERT(element.m3() == matrix);
       }
     }
   };
 
   class TestZeroStructKernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, portabletest::TestDeviceObject::Product const* data) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, portabletest::TestDeviceObject::Product const* data) const {
       // check this only once in the whole kernel grid
       if (once_per_grid(acc)) {
-        ALPAKA_ASSERT(data->x == 0.);
-        ALPAKA_ASSERT(data->y == 0.);
-        ALPAKA_ASSERT(data->z == 0.);
-        ALPAKA_ASSERT(data->id == 0);
+        AV2P_ASSERT(data->x == 0.);
+        AV2P_ASSERT(data->y == 0.);
+        AV2P_ASSERT(data->z == 0.);
+        AV2P_ASSERT(data->id == 0);
       }
     }
   };
@@ -590,7 +590,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto workDiv = make_workdiv<Acc1D>(1, 32);
 
     // the kernel will make a strided loop over the launch grid to cover all elements in the collection
-    alpaka::exec<Acc1D>(queue, workDiv, TestZeroCollectionKernel{}, collection.const_view());
+    aV2P::exec<Acc1D>(queue, workDiv, TestZeroCollectionKernel{}, collection.const_view());
   }
 
   // Check that the collection has been filled with zeroes.
@@ -604,8 +604,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto constView2 = collection.const_view().second();
 
     // the kernels will make a strided loop over the launch grid to cover all elements in the collection
-    alpaka::exec<Acc1D>(queue, workDiv, TestZeroCollectionKernel{}, constView1);
-    alpaka::exec<Acc1D>(queue, workDiv, TestZeroMultiCollectionKernel2{}, constView2);
+    aV2P::exec<Acc1D>(queue, workDiv, TestZeroCollectionKernel{}, constView1);
+    aV2P::exec<Acc1D>(queue, workDiv, TestZeroMultiCollectionKernel2{}, constView2);
   }
 
   // Check that the collection has been filled with zeroes.
@@ -620,9 +620,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto constView3 = collection.const_view().third();
 
     // the kernels will make a strided loop over the launch grid to cover all elements in the collection
-    alpaka::exec<Acc1D>(queue, workDiv, TestZeroCollectionKernel{}, constView1);
-    alpaka::exec<Acc1D>(queue, workDiv, TestZeroMultiCollectionKernel2{}, constView2);
-    alpaka::exec<Acc1D>(queue, workDiv, TestZeroMultiCollectionKernel3{}, constView3);
+    aV2P::exec<Acc1D>(queue, workDiv, TestZeroCollectionKernel{}, constView1);
+    aV2P::exec<Acc1D>(queue, workDiv, TestZeroMultiCollectionKernel2{}, constView2);
+    aV2P::exec<Acc1D>(queue, workDiv, TestZeroMultiCollectionKernel3{}, constView3);
   }
 
   // Check that the object has been filled with zeroes.
@@ -633,7 +633,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto workDiv = make_workdiv<Acc1D>(1, 32);
 
     // the kernel will actually use a single thread
-    alpaka::exec<Acc1D>(queue, workDiv, TestZeroStructKernel{}, object.data());
+    aV2P::exec<Acc1D>(queue, workDiv, TestZeroStructKernel{}, object.data());
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

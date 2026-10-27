@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Common/interface/Uninitialized.h"
 #include "DataFormats/Portable/interface/PortableDeviceCollection.h"

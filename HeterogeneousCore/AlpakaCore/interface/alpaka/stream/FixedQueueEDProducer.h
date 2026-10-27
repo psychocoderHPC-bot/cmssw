@@ -11,12 +11,12 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/chooseDevice.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::stream {
+namespace AV2P_ACCELERATOR_NAMESPACE::stream {
 
   template <typename... Args>
   class FixedQueueEDProducer : public ProducerBase<edm::stream::EDProducer, Args...> {
     static_assert(not edm::CheckAbility<edm::module::Abilities::kExternalWork, Args...>::kHasIt,
-                  "ALPAKA_ACCELERATOR_NAMESPACE::stream::FixedQueueEDProducer may not be used with ExternalWork "
+                  "AV2P_ACCELERATOR_NAMESPACE::stream::FixedQueueEDProducer may not be used with ExternalWork "
                   "ability. Please request this functionality to the Heterogeneous or Core Software developers.");
     using Base = ProducerBase<edm::stream::EDProducer, Args...>;
 
@@ -56,6 +56,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::stream {
     std::shared_ptr<Queue> queue_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::stream
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::stream
 
 #endif  // HeterogeneousCore_AlpakaCore_interface_alpaka_stream_FixedQueueEDProducer_h

@@ -5,7 +5,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/EventCache.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/HostOnlyTask.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   ESProducer::ESProducer(edm::ParameterSet const& iConfig)
       : moduleLabel_(iConfig.getParameter<std::string>("@module_label")),
         appendToDataLabel_(iConfig.getParameter<std::string>("appendToDataLabel")),
@@ -17,12 +17,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   void ESProducer::asyncWait(Queue& queue, edm::WaitingTaskWithArenaHolder holder) {
     edm::Service<edm::Async> async;
-    auto event = cms::alpakatools::getEventCache<Event>().get(alpaka::getDev(queue));
-    alpaka::enqueue(queue, *event);
+    auto event = cms::alpakatools::getEventCache<Event>().get(aV2P::getDev(queue));
+    aV2P::enqueue(queue, *event);
     async->runAsync(
         std::move(holder),
-        [event = std::move(event)]() mutable { alpaka::wait(*event); },
-        []() { return "Enqueued via " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) "::ESProducer::asyncWait()"; });
+        [event = std::move(event)]() mutable { aV2P::wait(*event); },
+        []() { return "Enqueued via " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) "::ESProducer::asyncWait()"; });
   }
 
   void ESProducer::throwSomeNullException() {
@@ -30,4 +30,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         << "The Alpaka backend has multiple devices. The device-specific produce() function returned a null product "
            "for some of the devices of the backend, but not all. This is not currently supported.";
   }
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

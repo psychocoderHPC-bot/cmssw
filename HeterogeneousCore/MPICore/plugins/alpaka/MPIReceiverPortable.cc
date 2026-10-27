@@ -44,7 +44,7 @@
 #include "HeterogeneousCore/TrivialSerialisation/interface/alpaka/SerialiserFactoryDevice.h"
 #include "HeterogeneousCore/TrivialSerialisation/interface/alpaka/WriterBase.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   // Inherit from ProducerBase. This is so we have access to the EDMetadata,
   // which we need for synchronization
@@ -82,13 +82,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         // Lookup the right serialiser. In order of preference:
         // SerialiserFactoryDevice, SerialiserFactory, ROOT Serialisation.
         //
-        // If type contains "ALPAKA_ACCELERATOR_NAMESPACE::", then this product
+        // If type contains "AV2P_ACCELERATOR_NAMESPACE::", then this product
         // is a device product. Types without this placeholder are resolved as
         // host or ROOT types.
-        static std::string const kAlpakaNamespacePlaceholder = "ALPAKA_ACCELERATOR_NAMESPACE::";
-        static std::string const kAlpakaNamespace = std::string(EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE)) + "::";
+        static std::string const kAlpakaNamespacePlaceholder = "AV2P_ACCELERATOR_NAMESPACE::";
+        static std::string const kAlpakaNamespace = std::string(EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE)) + "::";
 
-        // Name with "ALPAKA_ACCELERATOR_NAMESPACE::" replaced by this backend's
+        // Name with "AV2P_ACCELERATOR_NAMESPACE::" replaced by this backend's
         // namespace. This will be used to look up a device serialiser.
         std::string deviceTypeName = type;
 
@@ -99,7 +99,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           isDeviceType = true;
         }
 
-        // Name with "ALPAKA_ACCELERATOR_NAMESPACE::" removed. This will be used
+        // Name with "AV2P_ACCELERATOR_NAMESPACE::" removed. This will be used
         // to look up a host serialiser or a ROOT dictionary.
         std::string bareType = type;
 
@@ -420,8 +420,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       edm::ParameterSetDescription product;
       product.add<std::string>("type")->setComment(
-          "Type alias of the product. Use \"ALPAKA_ACCELERATOR_NAMESPACE::\" wherever the backend namespace "
-          "appears in the type (e.g. \"ALPAKA_ACCELERATOR_NAMESPACE::sistrip::SiStripClusterDevice\") to indicate "
+          "Type alias of the product. Use \"AV2P_ACCELERATOR_NAMESPACE::\" wherever the backend namespace "
+          "appears in the type (e.g. \"AV2P_ACCELERATOR_NAMESPACE::sistrip::SiStripClusterDevice\") to indicate "
           "that it is a device product; every occurrence of the placeholder is substituted with the backend's "
           "actual namespace at construction time. "
           "For host and ROOT products, use the plain C++ type name with no placeholder.");
@@ -467,6 +467,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     std::shared_ptr<EDMetadata> metadata_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_ALPAKA_MODULE(MPIReceiverPortable);
+DEFINE_FWK_AV2P_MODULE(MPIReceiverPortable);

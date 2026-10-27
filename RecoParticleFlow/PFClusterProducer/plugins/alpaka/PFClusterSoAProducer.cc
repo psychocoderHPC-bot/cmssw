@@ -13,7 +13,7 @@
 
 #include "PFClusterParamsSoA.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   namespace {
     using PFClusterParamsCache =
         cms::alpakatools::MoveToDeviceCache<Device, PortableHostCollection<::reco::PFClusterParamsSoA>>;
@@ -210,7 +210,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
 
       if (synchronise_)
-        alpaka::wait(event.queue());
+        aV2P::wait(event.queue());
 
       event.emplace(outputPFClusterSoA_Token_, std::move(*pfClusters_));
       event.emplace(outputPFRHFractionSoA_Token_, std::move(*pfrhFractions));
@@ -328,7 +328,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     const bool synchronise_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(PFClusterSoAProducer);
+DEFINE_FWK_AV2P_MODULE(PFClusterSoAProducer);

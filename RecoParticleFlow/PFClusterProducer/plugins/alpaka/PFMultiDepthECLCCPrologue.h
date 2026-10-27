@@ -40,7 +40,7 @@
  *   Ensure device shared memory is sufficient for the intended cluster sizes.
  */
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace ::cms::alpakatools;
   using namespace ::cms::alpakaintrinsics;
@@ -85,7 +85,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
  */
   class ECLCCPrologueNaiveKernel {
   public:
-    ALPAKA_FN_ACC void operator()(
+    AV2P_FN_ACC void operator()(
         Acc1D const& acc,
         reco::PFMultiDepthClusteringEdgeVarsDeviceCollection::View pfClusteringEdgeVars,
         const reco::PFMultiDepthClusteringCCLabelsDeviceCollection::ConstView pfClusteringCCLabels) const {
@@ -121,7 +121,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   template <unsigned int max_w_items = 32>
   class ECLCCPrologueKernel {
   public:
-    ALPAKA_FN_ACC void operator()(
+    AV2P_FN_ACC void operator()(
         Acc1D const& acc,
         reco::PFMultiDepthClusteringEdgeVarsDeviceCollection::View pfClusteringEdgeVars,
         const reco::PFMultiDepthClusteringCCLabelsDeviceCollection::ConstView pfClusteringCCLabels) const {
@@ -130,21 +130,21 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       const unsigned int nVertices = pfClusteringCCLabels.size();
 
-      const unsigned int blockDim = alpaka::getWorkDiv<alpaka::Block, alpaka::Threads>(acc)[0u];
+      const unsigned int blockDim = aV2P::getWorkDiv<aV2P::Block, aV2P::Threads>(acc)[0u];
 
-      const unsigned int w_items = alpaka::math::min(acc, (blockDim + (w_extent - 1)) / w_extent, max_w_items);
+      const unsigned int w_items = aV2P::math::min(acc, (blockDim + (w_extent - 1)) / w_extent, max_w_items);
       // warp_local_nlist and blck_local_nlist plays two roles:
       // -- neighbor count per vertex during counting,
       // -- CSR begin-offset per vertex after prefix sums.
-      auto& warp_local_nlist(alpaka::declareSharedVar<unsigned int[max_w_items * w_extent], __COUNTER__>(acc));
-      auto& blck_local_nlist(alpaka::declareSharedVar<unsigned int[max_w_items * w_extent], __COUNTER__>(acc));
+      auto& warp_local_nlist(aV2P::declareSharedVar<unsigned int[max_w_items * w_extent], __COUNTER__>(acc));
+      auto& blck_local_nlist(aV2P::declareSharedVar<unsigned int[max_w_items * w_extent], __COUNTER__>(acc));
 
       // Temporary CSR storage: adjacency_list[0..tot_nnz) built in shared and then copied to global.
       // Note: adjacency_list capacity is 2*nVertices (worst-case assumption for this graph model).
-      auto& adjacency_list(alpaka::declareSharedVar<unsigned int[2 * max_w_items * w_extent], __COUNTER__>(acc));
+      auto& adjacency_list(aV2P::declareSharedVar<unsigned int[2 * max_w_items * w_extent], __COUNTER__>(acc));
 
       // Per-warp total offsets used for coarse-grained scan across warps.
-      auto& subdomain_offsets(alpaka::declareSharedVar<unsigned int[w_extent], __COUNTER__>(acc));
+      auto& subdomain_offsets(aV2P::declareSharedVar<unsigned int[w_extent], __COUNTER__>(acc));
 
       unsigned int dst_vertex_idx = nVertices;
       unsigned int src_vertex_idx = nVertices;
@@ -172,12 +172,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           }
         }
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
         // Next, identify:
         //  - inner (intra-warp) neighbors: vertices within the same warp that share the same base_neighbor
         //  - outer (inter-warp) neighbors: vertices in other warps that point to a base_neighbor in this warp
         for (auto idx : ::cms::alpakatools::uniform_group_elements(acc, group, nVertices)) {
-          const warp::warp_mask_t active_lanes_mask = alpaka::warp::activemask(acc);
+          const warp::warp_mask_t active_lanes_mask = aV2P::warp::activemask(acc);
           // from this point all warp-level operations must be done with active_lanes_mask
           // or derived mask
           const unsigned int warp_idx = idx.local / w_extent;
@@ -236,21 +236,21 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           // For non-local sources we keep the group under the destination index as 'outbound inter-warp' bookkeeping.
 
           if (lane_idx == rep_lane_idx) {
-            const unsigned int neigh_num = alpaka::popcount(acc, control_mask);
+            const unsigned int neigh_num = aV2P::popcount(acc, control_mask);
             if (is_warp_local_src_idx) {  //i.e, src_vertex_idx is warp-local.
               warp_local_nlist[src_vertex_idx] += neigh_num;
             } else {
-              alpaka::atomicAdd(acc, &blck_local_nlist[src_vertex_idx], neigh_num, alpaka::hierarchy::Threads{});
+              aV2P::atomicAdd(acc, &blck_local_nlist[src_vertex_idx], neigh_num, aV2P::hierarchy::Threads{});
             }
           }
         }
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         unsigned int cached_local_warp_offset = 0;
         // For the second stage, we compute local offsets for each lane (vertex) in the warp:
         for (auto idx : ::cms::alpakatools::uniform_group_elements(acc, group, nVertices)) {
-          const warp::warp_mask_t active_lanes_mask = alpaka::warp::activemask(acc);
+          const warp::warp_mask_t active_lanes_mask = aV2P::warp::activemask(acc);
 
           const auto warp_idx = idx.local / w_extent;
           const auto lane_idx = idx.local % w_extent;
@@ -273,7 +273,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           }
         }
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // Constract coarse-grained offset (offsets for each warp):
         for (auto idx : ::cms::alpakatools::uniform_group_elements(acc, group, w_extent)) {
@@ -287,13 +287,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             subdomain_offsets[lane_idx] = block_local_warp_offset;  //NOTE: lane 0 get total (block) nnz
         }
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         const unsigned int block_nnz = subdomain_offsets[0];
 
         // Now we assemble global offsets for each vertex:
         for (auto idx : ::cms::alpakatools::uniform_group_elements(acc, group, nVertices)) {
-          const warp::warp_mask_t active_lanes_mask = alpaka::warp::activemask(acc);
+          const warp::warp_mask_t active_lanes_mask = aV2P::warp::activemask(acc);
 
           const unsigned int warp_idx = idx.local / w_extent;
           const unsigned int lane_idx = idx.local % w_extent;
@@ -339,7 +339,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             }
           }
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // Store tot_nnz in the global buffer (for single-block exec):
         if (::cms::alpakatools::once_per_block(acc)) {
@@ -347,7 +347,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         }
 
         for (auto idx : ::cms::alpakatools::uniform_group_elements(acc, group, nVertices)) {
-          const warp::warp_mask_t active_lanes_mask = alpaka::warp::activemask(acc);
+          const warp::warp_mask_t active_lanes_mask = aV2P::warp::activemask(acc);
 
           const unsigned int warp_idx = idx.local / w_extent;
           const unsigned int lane_idx = idx.local % w_extent;
@@ -369,11 +369,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
             const unsigned int rep_lane_idx = get_ls1b_idx(acc, outer_neigh_mask);
 
-            const unsigned int nnz = static_cast<unsigned int>(alpaka::popcount(acc, outer_neigh_mask));
+            const unsigned int nnz = static_cast<unsigned int>(aV2P::popcount(acc, outer_neigh_mask));
 
             const unsigned int block_adjacency_pos =
                 rep_lane_idx == lane_idx
-                    ? alpaka::atomicAdd(acc, &warp_local_nlist[src_vertex_idx], nnz, alpaka::hierarchy::Threads{})
+                    ? aV2P::atomicAdd(acc, &warp_local_nlist[src_vertex_idx], nnz, aV2P::hierarchy::Threads{})
                     : 2 * nVertices;
 
             const unsigned int src_adjacency_pos =
@@ -385,7 +385,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           }
         }
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         for (auto idx : ::cms::alpakatools::uniform_group_elements(acc, group, nVertices)) {
           for (unsigned int j = idx.local; j < block_nnz; j += nVertices) {
@@ -395,6 +395,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
     }
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

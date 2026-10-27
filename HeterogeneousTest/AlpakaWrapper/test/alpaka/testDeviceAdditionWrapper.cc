@@ -5,7 +5,7 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/devices.h"
@@ -13,12 +13,12 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 #include "HeterogeneousTest/AlpakaWrapper/interface/alpaka/DeviceAdditionWrapper.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 TEST_CASE("HeterogeneousTest/AlpakaWrapper test", "[alpakaTestDeviceAdditionWrapper]") {
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    FAIL("No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    FAIL("No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
         "the test will be skipped.");
   }
 
@@ -47,7 +47,7 @@ TEST_CASE("HeterogeneousTest/AlpakaWrapper test", "[alpakaTestDeviceAdditionWrap
 
   // run the test on all available devices
   for (auto const& device : cms::alpakatools::devices<Platform>()) {
-    SECTION("Test add_vectors_f on " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend") {
+    SECTION("Test add_vectors_f on " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend") {
       REQUIRE_NOTHROW([&]() {
         Queue queue{device};
 
@@ -59,20 +59,20 @@ TEST_CASE("HeterogeneousTest/AlpakaWrapper test", "[alpakaTestDeviceAdditionWrap
         // copy the input data to the device
         // FIXME: pass the explicit size of type uint32_t to avoid compilation error
         // The destination view and the extent are required to have compatible index types!
-        alpaka::memcpy(queue, in1_d, in1_h, size);
-        alpaka::memcpy(queue, in2_d, in2_h, size);
+        aV2P::memcpy(queue, in1_d, in1_h, size);
+        aV2P::memcpy(queue, in2_d, in2_h, size);
 
         // fill the output buffer with zeros
-        alpaka::memset(queue, out_d, 0);
+        aV2P::memset(queue, out_d, 0);
 
         // launch the 1-dimensional kernel for vector addition
         test::wrapper_add_vectors_f(queue, in1_d.data(), in2_d.data(), out_d.data(), size);
 
         // copy the results from the device to the host
-        alpaka::memcpy(queue, out_h, out_d, size);
+        aV2P::memcpy(queue, out_h, out_d, size);
 
         // wait for all the operations to complete
-        alpaka::wait(queue);
+        aV2P::wait(queue);
       }());
 
       // check the results

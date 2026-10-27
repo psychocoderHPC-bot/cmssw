@@ -1,10 +1,10 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Utilities/interface/EDMException.h"
 #include "DataFormats/AlpakaCommon/interface/alpaka/EDMetadata.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
-#ifndef ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+namespace AV2P_ACCELERATOR_NAMESPACE {
+#ifndef AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
   EDMetadata::~EDMetadata() noexcept { synchronize(); }
 
   void EDMetadata::synchronize() const noexcept {
@@ -30,7 +30,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     // This function is called from a destructor, so we want
     // to avoid throwing exceptions. If there was an
     // exception we could not really propagate it anyway.
-    CMS_SA_ALLOW try { alpaka::wait(*event_); } catch (...) {
+    CMS_SA_ALLOW try { aV2P::wait(*event_); } catch (...) {
     }
     eventComplete_ = true;
   }
@@ -83,7 +83,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       return;
     }
 
-    if (alpaka::isComplete(*event_)) {
+    if (aV2P::isComplete(*event_)) {
       eventComplete_ = true;
     } else {
       // Event not yet occurred, so need to add synchronization
@@ -91,7 +91,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       // for an event, so all subsequent work in the queue will run
       // only after the event has "occurred" (i.e. data product
       // became available).
-      alpaka::wait(*consumer.queue_, *event_);
+      aV2P::wait(*consumer.queue_, *event_);
     }
   }
 
@@ -102,4 +102,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     return mayReuseQueue_.compare_exchange_strong(expected, false);
   }
 #endif
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

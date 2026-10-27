@@ -49,11 +49,11 @@ namespace cms::torch::alpakatools::detail {
         dev_buffer_ = cms::alpakatools::make_device_buffer<Ttype[]>(queue, num_elems_);
       // copy data
       auto source_view =
-          alpaka::createView(alpaka::getDev(queue), data_ptr_, alpaka::getExtents(dev_buffer_.value())[0]);
-      alpaka::memcpy(queue, dev_buffer_.value(), source_view);
+          aV2P::createView(aV2P::getDev(queue), data_ptr_, aV2P::getExtents(dev_buffer_.value())[0]);
+      aV2P::memcpy(queue, dev_buffer_.value(), source_view);
     }
 
-    using TDevice = decltype(alpaka::getDev(std::declval<TQueue>()));
+    using TDevice = decltype(aV2P::getDev(std::declval<TQueue>()));
 
     const size_t num_elems_;
     T* data_ptr_;

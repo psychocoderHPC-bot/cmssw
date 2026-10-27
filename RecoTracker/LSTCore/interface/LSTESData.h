@@ -51,9 +51,9 @@ namespace cms::alpakatools {
   template <>
   struct CopyToDevice<lst::LSTESData<alpaka_common::DevHost>> {
     template <typename TQueue>
-    static lst::LSTESData<alpaka::Dev<TQueue>> copyAsync(TQueue& queue,
+    static lst::LSTESData<aV2P::Dev<TQueue>> copyAsync(TQueue& queue,
                                                          lst::LSTESData<alpaka_common::DevHost> const& srcData) {
-      using TDev = alpaka::Dev<TQueue>;
+      using TDev = aV2P::Dev<TQueue>;
       std::shared_ptr<const PortableCollection<TDev, lst::ModulesSoABlocks>> deviceModules;
       std::shared_ptr<const PortableCollection<TDev, lst::EndcapGeometryDevSoA>> deviceEndcapGeometry;
 
@@ -67,7 +67,7 @@ namespace cms::alpakatools {
             CopyToDevice<PortableHostCollection<lst::EndcapGeometryDevSoA>>::copyAsync(queue, *srcData.endcapGeometry));
       }
 
-      return lst::LSTESData<alpaka::Dev<TQueue>>(srcData.nModules,
+      return lst::LSTESData<aV2P::Dev<TQueue>>(srcData.nModules,
                                                  srcData.nLowerModules,
                                                  srcData.nPixels,
                                                  srcData.nEndCapMap,

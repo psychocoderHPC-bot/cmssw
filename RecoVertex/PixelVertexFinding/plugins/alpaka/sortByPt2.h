@@ -6,7 +6,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/VertexSoA/interface/ZVertexSoA.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/HistoContainer.h"
@@ -18,13 +18,13 @@
 
 #include "vertexFinder.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
+namespace AV2P_ACCELERATOR_NAMESPACE::vertexFinder {
 
   using VtxSoAView = ::reco::ZVertexSoAView;
   using TrkSoAView = ::reco::ZVertexTracksSoAView;
   using WsSoAView = ::vertexFinder::PixelVertexWorkSpaceSoAView;
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void sortByPt2(Acc1D const& acc, VtxSoAView& data, TrkSoAView& trkdata, WsSoAView& ws) {
+  AV2P_FN_ACC AV2P_FN_INLINE void sortByPt2(Acc1D const& acc, VtxSoAView& data, TrkSoAView& trkdata, WsSoAView& ws) {
     auto nt = ws.ntrks();
     float const* __restrict__ ptt2 = ws.ptt2().data();
     uint32_t const& nvFinal = data.nvFinal();
@@ -45,16 +45,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
     for (auto i : cms::alpakatools::uniform_elements(acc, nvFinal)) {
       ptv2[i] = 0;
     };
-    alpaka::syncBlockThreads(acc);
+    aV2P::syncBlockThreads(acc);
 
     for (auto i : cms::alpakatools::uniform_elements(acc, nt)) {
       if (iv[i] <= 9990) {
-        alpaka::atomicAdd(acc, &ptv2[iv[i]], ptt2[i], alpaka::hierarchy::Blocks{});
+        aV2P::atomicAdd(acc, &ptv2[iv[i]], ptt2[i], aV2P::hierarchy::Blocks{});
       }
     };
-    alpaka::syncBlockThreads(acc);
+    aV2P::syncBlockThreads(acc);
 
-    const uint32_t threadIdxLocal(alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[0u]);
+    const uint32_t threadIdxLocal(aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc)[0u]);
     if (1 == nvFinal) {
       if (threadIdxLocal == 0)
         sortInd[0] = 0;
@@ -63,7 +63,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
 
     if constexpr (not cms::alpakatools::requires_single_thread_per_block_v<Acc1D>) {
       constexpr int warpSize = cms::alpakatools::warpSize;
-      auto& sws = alpaka::declareSharedVar<uint16_t[warpSize * warpSize], __COUNTER__>(acc);
+      auto& sws = aV2P::declareSharedVar<uint16_t[warpSize * warpSize], __COUNTER__>(acc);
       // sort using only 16 bits
       cms::alpakatools::radixSort<Acc1D, float, 2>(acc, ptv2, sortInd, sws, nvFinal);
     } else {
@@ -75,11 +75,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
 
   class SortByPt2Kernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, VtxSoAView pdata, TrkSoAView ptrkdata, WsSoAView pws) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, VtxSoAView pdata, TrkSoAView ptrkdata, WsSoAView pws) const {
       sortByPt2(acc, pdata, ptrkdata, pws);
     }
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::vertexFinder
 
 #endif  // RecoVertex_PixelVertexFinding_plugins_alpaka_sortByPt2_h

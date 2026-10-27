@@ -7,7 +7,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "DeclsForKernels.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit {
 
   using InputProduct = EcalDigiDeviceCollection;
   using OutputProduct = EcalUncalibratedRecHitDeviceCollection;
@@ -22,6 +22,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
                               ConfigurationParameters const& configParams,
                               uint32_t const totalChannels);
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit
 
 #endif  // RecoLocalCalo_EcalRecProducers_plugins_AmplitudeComputationKernels_h

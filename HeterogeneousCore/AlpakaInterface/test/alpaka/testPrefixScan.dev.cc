@@ -5,7 +5,7 @@
 #include <limits>
 #include <random>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Utilities/interface/stringize.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
@@ -15,9 +15,9 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/warpsize.h"
 
 using namespace cms::alpakatools;
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
-// static constexpr auto s_tag = "[" ALPAKA_TYPE_ALIAS_NAME(alpakaTestPrefixScan) "]";
+// static constexpr auto s_tag = "[" AV2P_TYPE_ALIAS_NAME(alpakaTestPrefixScan) "]";
 
 template <typename T>
 struct format_traits {
@@ -33,26 +33,26 @@ public:
 
 template <typename T>
 struct testPrefixScan {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, unsigned int size) const {
-    // alpaka::warp::getSize(acc) is runtime, but we need a compile-time or constexpr value, so we use cms::alpakatools::warpSize
-    auto& ws = alpaka::declareSharedVar<T[cms::alpakatools::warpSize], __COUNTER__>(acc);
-    auto& c = alpaka::declareSharedVar<T[1024], __COUNTER__>(acc);
-    auto& co = alpaka::declareSharedVar<T[1024], __COUNTER__>(acc);
+  AV2P_FN_ACC void operator()(Acc1D const& acc, unsigned int size) const {
+    // aV2P::warp::getSize(acc) is runtime, but we need a compile-time or constexpr value, so we use cms::alpakatools::warpSize
+    auto& ws = aV2P::declareSharedVar<T[cms::alpakatools::warpSize], __COUNTER__>(acc);
+    auto& c = aV2P::declareSharedVar<T[1024], __COUNTER__>(acc);
+    auto& co = aV2P::declareSharedVar<T[1024], __COUNTER__>(acc);
 
     for (auto i : uniform_elements(acc, size)) {
       c[i] = 1;
     };
 
-    alpaka::syncBlockThreads(acc);
+    aV2P::syncBlockThreads(acc);
 
     blockPrefixScan(acc, c, co, size, ws);
     blockPrefixScan(acc, c, size, ws);
 
-    ALPAKA_ASSERT_ACC(1 == c[0]);
-    ALPAKA_ASSERT_ACC(1 == co[0]);
+    AV2P_ASSERT_ACC(1 == c[0]);
+    AV2P_ASSERT_ACC(1 == co[0]);
 
     // TODO: not needed? Not in multi kernel version, not in CUDA version
-    alpaka::syncBlockThreads(acc);
+    aV2P::syncBlockThreads(acc);
 
     for (auto i : uniform_elements(acc, size)) {
       if (0 == i)
@@ -64,9 +64,9 @@ struct testPrefixScan {
         if (!((c[i] == c[i - 1] + 1) && (c[i] == i + 1) && (c[i] == co[i])))
           printf("c[%d]=%f, co[%d]=%f\n", i, c[i], i, co[i]);
       }
-      ALPAKA_ASSERT_ACC(c[i] == c[i - 1] + 1);
-      ALPAKA_ASSERT_ACC(c[i] == i + 1);
-      ALPAKA_ASSERT_ACC(c[i] == co[i]);
+      AV2P_ASSERT_ACC(c[i] == c[i - 1] + 1);
+      AV2P_ASSERT_ACC(c[i] == i + 1);
+      AV2P_ASSERT_ACC(c[i] == co[i]);
     }
   }
 };
@@ -76,43 +76,43 @@ struct testPrefixScan {
  */
 template <typename T>
 struct testWarpPrefixScan {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, uint32_t size) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, uint32_t size) const {
     if constexpr (not requires_single_thread_per_block_v<Acc1D>) {
-      ALPAKA_ASSERT_ACC(size <= static_cast<uint32_t>(alpaka::warp::getSize(acc)));
-      auto& c = alpaka::declareSharedVar<T[1024], __COUNTER__>(acc);
-      auto& co = alpaka::declareSharedVar<T[1024], __COUNTER__>(acc);
+      AV2P_ASSERT_ACC(size <= static_cast<uint32_t>(aV2P::warp::getSize(acc)));
+      auto& c = aV2P::declareSharedVar<T[1024], __COUNTER__>(acc);
+      auto& co = aV2P::declareSharedVar<T[1024], __COUNTER__>(acc);
 
-      uint32_t const blockDimension = alpaka::getWorkDiv<alpaka::Block, alpaka::Threads>(acc)[0u];
-      uint32_t const blockThreadIdx = alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[0u];
+      uint32_t const blockDimension = aV2P::getWorkDiv<aV2P::Block, aV2P::Threads>(acc)[0u];
+      uint32_t const blockThreadIdx = aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc)[0u];
       auto i = blockThreadIdx;
       c[i] = 1;
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
       // a compile-time constant would be faster, but this is more portable
-      auto laneId = blockThreadIdx % alpaka::warp::getSize(acc);
+      auto laneId = blockThreadIdx % aV2P::warp::getSize(acc);
 
       warpPrefixScan(acc, laneId, c, co, i);
       warpPrefixScan(acc, laneId, c, i);
 
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
 
-      ALPAKA_ASSERT_ACC(1 == c[0]);
-      ALPAKA_ASSERT_ACC(1 == co[0]);
+      AV2P_ASSERT_ACC(1 == c[0]);
+      AV2P_ASSERT_ACC(1 == co[0]);
       if (i != 0) {
         if (c[i] != c[i - 1] + 1)
           printf(format_traits<T>::failed_msg, size, i, blockDimension, c[i], c[i - 1]);
-        ALPAKA_ASSERT_ACC(c[i] == c[i - 1] + 1);
-        ALPAKA_ASSERT_ACC(c[i] == static_cast<T>(i + 1));
-        ALPAKA_ASSERT_ACC(c[i] == co[i]);
+        AV2P_ASSERT_ACC(c[i] == c[i - 1] + 1);
+        AV2P_ASSERT_ACC(c[i] == static_cast<T>(i + 1));
+        AV2P_ASSERT_ACC(c[i] == co[i]);
       }
     } else {
       // This should never be called outsie for the serial CPU backend.
-      ALPAKA_ASSERT_ACC(false);
+      AV2P_ASSERT_ACC(false);
     }
   }
 };
 
 struct init {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, uint32_t* v, uint32_t val, uint32_t n) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, uint32_t* v, uint32_t val, uint32_t n) const {
     for (auto index : uniform_elements(acc, n)) {
       v[index] = val;
 
@@ -123,9 +123,9 @@ struct init {
 };
 
 struct verify {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, uint32_t const* v, uint32_t n) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, uint32_t const* v, uint32_t n) const {
     for (auto index : uniform_elements(acc, n)) {
-      ALPAKA_ASSERT_ACC(v[index] == index + 1);
+      AV2P_ASSERT_ACC(v[index] == index + 1);
 
       if (index == 0)
         printf("verify\n");
@@ -138,15 +138,15 @@ int main() {
   auto const& devices = cms::alpakatools::devices<Platform>();
 
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }
 
   for (auto const& device : devices) {
-    std::cout << "Test prefix scan on " << alpaka::getName(device) << '\n';
+    std::cout << "Test prefix scan on " << aV2P::getName(device) << '\n';
     auto queue = Queue(device);
-    const auto warpSize = alpaka::getPreferredWarpSize(device);
+    const auto warpSize = aV2P::getPreferredWarpSize(device);
     // WARP PREFIXSCAN (OBVIOUSLY GPU-ONLY)
     if constexpr (!requires_single_thread_per_block_v<Acc1D>) {
       std::cout << "warp level" << std::endl;
@@ -156,13 +156,13 @@ int main() {
       const auto workDivWarp = make_workdiv<Acc1D>(blocksPerGrid, threadsPerBlockOrElementsPerThread);
 
       if (warpSize >= 64)
-        alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDivWarp, testWarpPrefixScan<int>(), 64));
+        aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDivWarp, testWarpPrefixScan<int>(), 64));
       if (warpSize >= 32)
-        alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDivWarp, testWarpPrefixScan<int>(), 32));
+        aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDivWarp, testWarpPrefixScan<int>(), 32));
       if (warpSize >= 16)
-        alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDivWarp, testWarpPrefixScan<int>(), 12));
+        aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDivWarp, testWarpPrefixScan<int>(), 12));
       if (warpSize >= 8)
-        alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDivWarp, testWarpPrefixScan<int>(), 5));
+        aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDivWarp, testWarpPrefixScan<int>(), 5));
     }
 
     // PORTABLE BLOCK PREFIXSCAN
@@ -179,8 +179,8 @@ int main() {
 
       // Problem size
       for (int j = 1; j <= 1024; ++j) {
-        alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDivSingleBlock, testPrefixScan<uint16_t>(), j));
-        alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDivSingleBlock, testPrefixScan<float>(), j));
+        aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDivSingleBlock, testPrefixScan<uint16_t>(), j));
+        aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDivSingleBlock, testPrefixScan<float>(), j));
       }
     }
 
@@ -201,17 +201,17 @@ int main() {
       const auto nBlocksInit = divide_up_by(num_items, nThreadsInit);
       const auto workDivMultiBlockInit = make_workdiv<Acc1D>(nBlocksInit, nThreadsInit);
 
-      alpaka::enqueue(queue,
-                      alpaka::createTaskKernel<Acc1D>(workDivMultiBlockInit, init(), input_d.data(), 1, num_items));
-      alpaka::memset(queue, blockCounter_d, 0);
+      aV2P::enqueue(queue,
+                      aV2P::createTaskKernel<Acc1D>(workDivMultiBlockInit, init(), input_d.data(), 1, num_items));
+      aV2P::memset(queue, blockCounter_d, 0);
 
       const auto nThreads = 1024;
       const auto nBlocks = divide_up_by(num_items, nThreads);
       const auto workDivMultiBlock = make_workdiv<Acc1D>(nBlocks, nThreads);
 
       std::cout << "launch multiBlockPrefixScan " << num_items << ' ' << nBlocks << std::endl;
-      alpaka::enqueue(queue,
-                      alpaka::createTaskKernel<Acc1D>(workDivMultiBlock,
+      aV2P::enqueue(queue,
+                      aV2P::createTaskKernel<Acc1D>(workDivMultiBlock,
                                                       multiBlockPrefixScan<uint32_t>(),
                                                       input_d.data(),
                                                       output1_d.data(),
@@ -219,9 +219,9 @@ int main() {
                                                       nBlocks,
                                                       blockCounter_d.data(),
                                                       warpSize));
-      alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDivMultiBlock, verify(), output1_d.data(), num_items));
+      aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDivMultiBlock, verify(), output1_d.data(), num_items));
 
-      alpaka::wait(queue);  // input_d and output1_d end of scope
+      aV2P::wait(queue);  // input_d and output1_d end of scope
     }  // ksize
 
     // ITERATIVE PREFIXSCAN (TWO-KERNEL)
@@ -238,7 +238,7 @@ int main() {
       const auto nBlocks = divide_up_by(num_items, nThreads);
       const auto workDiv = make_workdiv<Acc1D>(nBlocks, nThreads);
 
-      alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDiv, init(), input_d.data(), 1, num_items));
+      aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDiv, init(), input_d.data(), 1, num_items));
 
       // Build the level plan
       auto plan = makePrefixScanLevelPlan(num_items);
@@ -250,11 +250,11 @@ int main() {
       }
 
       iterativePrefixScan<Acc1D>(input_d.data(), output_d.data(), num_items, queue);
-      alpaka::wait(queue);
+      aV2P::wait(queue);
 
-      alpaka::enqueue(queue, alpaka::createTaskKernel<Acc1D>(workDiv, verify(), output_d.data(), num_items));
+      aV2P::enqueue(queue, aV2P::createTaskKernel<Acc1D>(workDiv, verify(), output_d.data(), num_items));
 
-      alpaka::wait(queue);  // input_d and output_d end of scope
+      aV2P::wait(queue);  // input_d and output_d end of scope
     }
   }
 

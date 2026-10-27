@@ -3,19 +3,19 @@
 
 #include <type_traits>
 
-#include "alpaka/alpaka.hpp"
+#include "aV2P/alpaka.hpp"
 #include "PhysicsTools/PyTorch/interface/TorchInterface.h"
 
 namespace cms::torch::alpakatools {
 
   template <typename TDev>
-    requires ::alpaka::concepts::Device<TDev>
+    requires ::aV2P::concepts::Device<TDev>
   inline ::torch::Device getDevice(const TDev& device) {
-#ifdef ALPAKA_ACC_GPU_CUDA_ENABLED
-    if constexpr (std::is_same_v<TDev, alpaka::DevCudaRt>)
+#ifdef AV2P_ACC_GPU_CUDA_ENABLED
+    if constexpr (std::is_same_v<TDev, aV2P::DevCudaRt>)
       return ::torch::Device(c10::DeviceType::CUDA, device.getNativeHandle());
-#elif ALPAKA_ACC_GPU_HIP_ENABLED
-    if constexpr (std::is_same_v<TDev, alpaka::DevHipRt>)
+#elif AV2P_ACC_GPU_HIP_ENABLED
+    if constexpr (std::is_same_v<TDev, aV2P::DevHipRt>)
       return ::torch::Device(c10::DeviceType::CUDA, device.getNativeHandle());
 #else
     // default, omit device index for CPU
@@ -24,9 +24,9 @@ namespace cms::torch::alpakatools {
   }
 
   template <typename TQueue>
-    requires ::alpaka::concepts::Queue<TQueue>
+    requires ::aV2P::concepts::Queue<TQueue>
   inline ::torch::Device getDevice(const TQueue& queue) {
-    return getDevice(alpaka::getDev(queue));
+    return getDevice(aV2P::getDev(queue));
   }
 
 }  // namespace cms::torch::alpakatools

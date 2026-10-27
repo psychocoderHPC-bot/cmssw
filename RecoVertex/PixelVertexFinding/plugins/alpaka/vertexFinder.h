@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/TrackSoA/interface/alpaka/TrackUtilities.h"
 #include "DataFormats/VertexSoA/interface/ZVertexDevice.h"
@@ -15,7 +15,7 @@
 #include "RecoVertex/PixelVertexFinding/interface/PixelVertexWorkSpaceLayout.h"
 #include "RecoVertex/PixelVertexFinding/plugins/alpaka/PixelVertexWorkSpaceSoADeviceAlpaka.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
+namespace AV2P_ACCELERATOR_NAMESPACE::vertexFinder {
 
   using namespace cms::alpakatools;
   using VtxSoAView = ::reco::ZVertexSoAView;
@@ -24,7 +24,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
 
   class Init {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const &acc, VtxSoAView data, WsSoAView ws) const {
+    AV2P_FN_ACC void operator()(Acc1D const &acc, VtxSoAView data, WsSoAView ws) const {
       data.nvFinal() = 0;  // initialization
       ::vertexFinder::init(ws);
     }
@@ -73,6 +73,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder {
     float chi2max;  // max normalized distance to cluster
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::vertexFinder
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::vertexFinder
 
 #endif  // RecoVertex_PixelVertexFinding_plugins_alpaka_vertexFinder_h

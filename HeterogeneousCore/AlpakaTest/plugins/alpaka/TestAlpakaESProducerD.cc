@@ -14,7 +14,7 @@
 
 #include "testESAlgoAsync.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * This class demonstrates an ESProducer that
    * - consumes device ESProducts (that were produced on different Records)
@@ -46,6 +46,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     device::ESGetToken<AlpakaESTestDataADevice, AlpakaESTestRecordA> tokenA_;
     device::ESGetToken<cms::alpakatest::AlpakaESTestDataB<Device>, AlpakaESTestRecordB> tokenB_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(TestAlpakaESProducerD);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(TestAlpakaESProducerD);

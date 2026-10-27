@@ -24,12 +24,12 @@ class EcalPFRecHitThresholdsRcd;
 class PFRecHitECALTopologyRecord;
 
 // This file defines two structs:
-// 1) ALPAKA_ACCELERATOR_NAMESPACE::particleFlowRecHitProducer::HCAL
-// 2) ALPAKA_ACCELERATOR_NAMESPACE::particleFlowRecHitProducer::ECAL
+// 1) AV2P_ACCELERATOR_NAMESPACE::particleFlowRecHitProducer::HCAL
+// 2) AV2P_ACCELERATOR_NAMESPACE::particleFlowRecHitProducer::ECAL
 // These are used as template arguments of the PFRecHitSoAProducer class and
 // related classes. This allows to specialise behaviour for the two calorimeter
 // types.
-namespace ALPAKA_ACCELERATOR_NAMESPACE::particleFlowRecHitProducer {
+namespace AV2P_ACCELERATOR_NAMESPACE::particleFlowRecHitProducer {
 
   // Get subdetector encoded in detId to narrow the range of reference table values to search
   constexpr inline uint32_t getSubdet(uint32_t detId) { return DetId(detId).subdetId(); }
@@ -214,6 +214,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::particleFlowRecHitProducer {
     static constexpr uint32_t kSize = Barrel::kSize + Endcap::kSize;  // maximum possible ECAL denseId (=75848)
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::particleFlowRecHitProducer
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::particleFlowRecHitProducer
 
 #endif  // RecoParticleFlow_PFRecHitProducer_interface_alpaka_CalorimeterDefinitions_h

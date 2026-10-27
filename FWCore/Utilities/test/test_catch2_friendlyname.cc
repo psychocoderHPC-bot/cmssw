@@ -213,18 +213,18 @@ TEST_CASE("friendlyName produces expected results", "[friendlyName]") {
   classToFriendly.insert(Values("bar<foo<int[]>>", "intAsfoobar"));
 
   // Alpaka types
-  classToFriendly.insert(Values("alpaka::DevCpu", "alpakaDevCpu"));
-  classToFriendly.insert(Values("alpaka::DevUniformCudaHipRt<alpaka::ApiCudaRt>", "alpakaDevCudaRt"));
-  classToFriendly.insert(Values("alpaka::DevUniformCudaHipRt<alpaka::ApiHipRt>", "alpakaDevHipRt"));
-  classToFriendly.insert(Values("alpaka::QueueGenericThreadsBlocking<alpaka::DevCpu>", "alpakaQueueCpuBlocking"));
-  classToFriendly.insert(Values("alpaka::QueueGenericThreadsNonBlocking<alpaka::DevCpu>", "alpakaQueueCpuNonBlocking"));
-  classToFriendly.insert(Values("alpaka::uniform_cuda_hip::detail::QueueUniformCudaHipRt<alpaka::ApiCudaRt,true>",
+  classToFriendly.insert(Values("aV2P::DevCpu", "alpakaDevCpu"));
+  classToFriendly.insert(Values("aV2P::DevUniformCudaHipRt<aV2P::ApiCudaRt>", "alpakaDevCudaRt"));
+  classToFriendly.insert(Values("aV2P::DevUniformCudaHipRt<aV2P::ApiHipRt>", "alpakaDevHipRt"));
+  classToFriendly.insert(Values("aV2P::QueueGenericThreadsBlocking<aV2P::DevCpu>", "alpakaQueueCpuBlocking"));
+  classToFriendly.insert(Values("aV2P::QueueGenericThreadsNonBlocking<aV2P::DevCpu>", "alpakaQueueCpuNonBlocking"));
+  classToFriendly.insert(Values("aV2P::uniform_cuda_hip::detail::QueueUniformCudaHipRt<aV2P::ApiCudaRt,true>",
                                 "alpakaQueueCudaRtBlocking"));
-  classToFriendly.insert(Values("alpaka::uniform_cuda_hip::detail::QueueUniformCudaHipRt<alpaka::ApiCudaRt,false>",
+  classToFriendly.insert(Values("aV2P::uniform_cuda_hip::detail::QueueUniformCudaHipRt<aV2P::ApiCudaRt,false>",
                                 "alpakaQueueCudaRtNonBlocking"));
-  classToFriendly.insert(Values("alpaka::uniform_cuda_hip::detail::QueueUniformCudaHipRt<alpaka::ApiHipRt,true>",
+  classToFriendly.insert(Values("aV2P::uniform_cuda_hip::detail::QueueUniformCudaHipRt<aV2P::ApiHipRt,true>",
                                 "alpakaQueueHipRtBlocking"));
-  classToFriendly.insert(Values("alpaka::uniform_cuda_hip::detail::QueueUniformCudaHipRt<alpaka::ApiHipRt,false>",
+  classToFriendly.insert(Values("aV2P::uniform_cuda_hip::detail::QueueUniformCudaHipRt<aV2P::ApiHipRt,false>",
                                 "alpakaQueueHipRtNonBlocking"));
 
   for (std::map<std::string, std::string>::iterator itInfo = classToFriendly.begin(), itInfoEnd = classToFriendly.end();

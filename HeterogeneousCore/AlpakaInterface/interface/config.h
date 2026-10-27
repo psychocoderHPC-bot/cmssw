@@ -3,7 +3,7 @@
 
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/Backend.h"
 #include "FWCore/Utilities/interface/stringize.h"
@@ -15,206 +15,156 @@ namespace alpaka_common {
   using Extent = uint32_t;
   using Offsets = Extent;
 
-  using Dim0D = alpaka::DimInt<0u>;
-  using Dim1D = alpaka::DimInt<1u>;
-  using Dim2D = alpaka::DimInt<2u>;
-  using Dim3D = alpaka::DimInt<3u>;
+  using Dim0D = aV2P::DimInt<0u>;
+  using Dim1D = aV2P::DimInt<1u>;
+  using Dim2D = aV2P::DimInt<2u>;
+  using Dim3D = aV2P::DimInt<3u>;
 
   template <typename TDim>
-  using Vec = alpaka::Vec<TDim, Idx>;
+  using Vec = aV2P::Vec<TDim, Idx>;
   using Vec1D = Vec<Dim1D>;
   using Vec2D = Vec<Dim2D>;
   using Vec3D = Vec<Dim3D>;
   using Scalar = Vec<Dim0D>;
 
   template <typename TDim>
-  using WorkDiv = alpaka::WorkDivMembers<TDim, Idx>;
+  using WorkDiv = aV2P::WorkDivMembers<TDim, Idx>;
   using WorkDiv1D = WorkDiv<Dim1D>;
   using WorkDiv2D = WorkDiv<Dim2D>;
   using WorkDiv3D = WorkDiv<Dim3D>;
 
   // host types
-  using DevHost = alpaka::DevCpu;
-  using PlatformHost = alpaka::Platform<DevHost>;
+  using DevHost = aV2P::DevCpu;
+  using PlatformHost = aV2P::Platform<DevHost>;
 
 }  // namespace alpaka_common
 
-#ifdef ALPAKA_ACC_GPU_CUDA_ENABLED
+#ifdef AV2P_ACC_GPU_CUDA_ENABLED
 namespace alpaka_cuda_async {
   using namespace alpaka_common;
 
-  using Platform = alpaka::PlatformCudaRt;
-  using Device = alpaka::DevCudaRt;
-  using Queue = alpaka::QueueCudaRtNonBlocking;
-  using Event = alpaka::EventCudaRt;
+  using Platform = aV2P::PlatformCudaRt;
+  using Device = aV2P::DevCudaRt;
+  using Queue = aV2P::QueueCudaRtNonBlocking;
+  using Event = aV2P::EventCudaRt;
 
   template <typename TDim>
-  using Acc = alpaka::AccGpuCudaRt<TDim, Idx>;
+  using Acc = aV2P::AccGpuCudaRt<TDim, Idx>;
   using Acc1D = Acc<Dim1D>;
   using Acc2D = Acc<Dim2D>;
   using Acc3D = Acc<Dim3D>;
 
 }  // namespace alpaka_cuda_async
 
-#ifdef ALPAKA_HOST_ONLY
-
-namespace alpaka {
-
-  template <typename TApi,
-            typename TAcc,
-            typename TDim,
-            typename TIdx,
-            typename TKernelFnObj,
-            bool TCooperative,
-            typename... TArgs>
-  class TaskKernelGpuUniformCudaHipRt final {
-    static_assert(std::is_same_v<TApi, alpaka::ApiCudaRt> and ALPAKA_LANG_CUDA,
-                  "You should move this files to a .dev.cc file under the alpaka/ subdirectory.");
-
-  public:
-    template <typename TWorkDiv>
-    ALPAKA_FN_HOST TaskKernelGpuUniformCudaHipRt(TWorkDiv&& workDiv, TKernelFnObj const& kernelFnObj, TArgs&&... args) {
-    }
-  };
-
-}  // namespace alpaka
-
-#endif  // ALPAKA_HOST_ONLY
-
-#ifdef ALPAKA_ACCELERATOR_NAMESPACE
-#define ALPAKA_DUPLICATE_NAMESPACE
+#ifdef AV2P_ACCELERATOR_NAMESPACE
+#define AV2P_DUPLICATE_NAMESPACE
 #else
-#define ALPAKA_ACCELERATOR_NAMESPACE alpaka_cuda_async
-#define ALPAKA_TYPE_SUFFIX CudaAsync
+#define AV2P_ACCELERATOR_NAMESPACE alpaka_cuda_async
+#define AV2P_TYPE_SUFFIX CudaAsync
 #endif
 
-#endif  // ALPAKA_ACC_GPU_CUDA_ENABLED
+#endif  // AV2P_ACC_GPU_CUDA_ENABLED
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef AV2P_ACC_GPU_HIP_ENABLED
 namespace alpaka_rocm_async {
   using namespace alpaka_common;
 
-  using Platform = alpaka::PlatformHipRt;
-  using Device = alpaka::DevHipRt;
-  using Queue = alpaka::QueueHipRtNonBlocking;
-  using Event = alpaka::EventHipRt;
+  using Platform = aV2P::PlatformHipRt;
+  using Device = aV2P::DevHipRt;
+  using Queue = aV2P::QueueHipRtNonBlocking;
+  using Event = aV2P::EventHipRt;
 
   template <typename TDim>
-  using Acc = alpaka::AccGpuHipRt<TDim, Idx>;
+  using Acc = aV2P::AccGpuHipRt<TDim, Idx>;
   using Acc1D = Acc<Dim1D>;
   using Acc2D = Acc<Dim2D>;
   using Acc3D = Acc<Dim3D>;
 
 }  // namespace alpaka_rocm_async
 
-#ifdef ALPAKA_HOST_ONLY
-
-namespace alpaka {
-
-  template <typename TApi,
-            typename TAcc,
-            typename TDim,
-            typename TIdx,
-            typename TKernelFnObj,
-            bool TCooperative,
-            typename... TArgs>
-  class TaskKernelGpuUniformCudaHipRt final {
-    static_assert(std::is_same_v<TApi, alpaka::ApiHipRt> and ALPAKA_LANG_HIP,
-                  "You should move this files to a .dev.cc file under the alpaka/ subdirectory.");
-
-  public:
-    template <typename TWorkDiv>
-    ALPAKA_FN_HOST TaskKernelGpuUniformCudaHipRt(TWorkDiv&& workDiv, TKernelFnObj const& kernelFnObj, TArgs&&... args) {
-    }
-  };
-
-}  // namespace alpaka
-
-#endif  // ALPAKA_HOST_ONLY
-
-#ifdef ALPAKA_ACCELERATOR_NAMESPACE
-#define ALPAKA_DUPLICATE_NAMESPACE
+#ifdef AV2P_ACCELERATOR_NAMESPACE
+#define AV2P_DUPLICATE_NAMESPACE
 #else
-#define ALPAKA_ACCELERATOR_NAMESPACE alpaka_rocm_async
-#define ALPAKA_TYPE_SUFFIX ROCmAsync
+#define AV2P_ACCELERATOR_NAMESPACE alpaka_rocm_async
+#define AV2P_TYPE_SUFFIX ROCmAsync
 #endif
 
-#endif  // ALPAKA_ACC_GPU_HIP_ENABLED
+#endif  // AV2P_ACC_GPU_HIP_ENABLED
 
-#ifdef ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+#ifdef AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
 namespace alpaka_serial_sync {
   using namespace alpaka_common;
 
-  using Platform = alpaka::PlatformCpu;
-  using Device = alpaka::DevCpu;
-  using Queue = alpaka::QueueCpuBlocking;
-  using Event = alpaka::EventCpu;
+  using Platform = aV2P::PlatformCpu;
+  using Device = aV2P::DevCpu;
+  using Queue = aV2P::QueueCpuBlocking;
+  using Event = aV2P::EventCpu;
 
   template <typename TDim>
-  using Acc = alpaka::AccCpuSerial<TDim, Idx>;
+  using Acc = aV2P::AccCpuSerial<TDim, Idx>;
   using Acc1D = Acc<Dim1D>;
   using Acc2D = Acc<Dim2D>;
   using Acc3D = Acc<Dim3D>;
 
 }  // namespace alpaka_serial_sync
 
-#ifdef ALPAKA_ACCELERATOR_NAMESPACE
-#define ALPAKA_DUPLICATE_NAMESPACE
+#ifdef AV2P_ACCELERATOR_NAMESPACE
+#define AV2P_DUPLICATE_NAMESPACE
 #else
-#define ALPAKA_ACCELERATOR_NAMESPACE alpaka_serial_sync
-#define ALPAKA_TYPE_SUFFIX SerialSync
+#define AV2P_ACCELERATOR_NAMESPACE alpaka_serial_sync
+#define AV2P_TYPE_SUFFIX SerialSync
 #endif
 
-#endif  // ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+#endif  // AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
 
-#ifdef ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLED
+#ifdef AV2P_ACC_CPU_B_TBB_T_SEQ_ENABLED
 namespace alpaka_tbb_async {
   using namespace alpaka_common;
 
-  using Platform = alpaka::PlatformCpu;
-  using Device = alpaka::DevCpu;
-  using Queue = alpaka::QueueCpuNonBlocking;
-  using Event = alpaka::EventCpu;
+  using Platform = aV2P::PlatformCpu;
+  using Device = aV2P::DevCpu;
+  using Queue = aV2P::QueueCpuNonBlocking;
+  using Event = aV2P::EventCpu;
 
   template <typename TDim>
-  using Acc = alpaka::AccCpuTbbBlocks<TDim, Idx>;
+  using Acc = aV2P::AccCpuTbbBlocks<TDim, Idx>;
   using Acc1D = Acc<Dim1D>;
   using Acc2D = Acc<Dim2D>;
   using Acc3D = Acc<Dim3D>;
 
 }  // namespace alpaka_tbb_async
 
-#ifdef ALPAKA_ACCELERATOR_NAMESPACE
-#define ALPAKA_DUPLICATE_NAMESPACE
+#ifdef AV2P_ACCELERATOR_NAMESPACE
+#define AV2P_DUPLICATE_NAMESPACE
 #else
-#define ALPAKA_ACCELERATOR_NAMESPACE alpaka_tbb_async
-#define ALPAKA_TYPE_SUFFIX TbbAsync
+#define AV2P_ACCELERATOR_NAMESPACE alpaka_tbb_async
+#define AV2P_TYPE_SUFFIX TbbAsync
 #endif
 
-#endif  // ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLED
+#endif  // AV2P_ACC_CPU_B_TBB_T_SEQ_ENABLED
 
-#if defined ALPAKA_DUPLICATE_NAMESPACE
-#error Only one alpaka backend symbol can be defined at the same time: ALPAKA_ACC_GPU_CUDA_ENABLED, ALPAKA_ACC_GPU_HIP_ENABLED, ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED, ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLED.
+#if defined AV2P_DUPLICATE_NAMESPACE
+#error Only one alpaka backend symbol can be defined at the same time: AV2P_ACC_GPU_CUDA_ENABLED, AV2P_ACC_GPU_HIP_ENABLED, AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED, AV2P_ACC_CPU_B_TBB_T_SEQ_ENABLED.
 #endif
 
-#if defined ALPAKA_ACCELERATOR_NAMESPACE
+#if defined AV2P_ACCELERATOR_NAMESPACE
 
 // create a new backend-specific identifier based on the original type name and a backend-specific suffix
-#define ALPAKA_TYPE_ALIAS__(TYPE, SUFFIX) TYPE##SUFFIX
-#define ALPAKA_TYPE_ALIAS_(TYPE, SUFFIX) ALPAKA_TYPE_ALIAS__(TYPE, SUFFIX)
-#define ALPAKA_TYPE_ALIAS(TYPE) ALPAKA_TYPE_ALIAS_(TYPE, ALPAKA_TYPE_SUFFIX)
+#define AV2P_TYPE_ALIAS__(TYPE, SUFFIX) TYPE##SUFFIX
+#define AV2P_TYPE_ALIAS_(TYPE, SUFFIX) AV2P_TYPE_ALIAS__(TYPE, SUFFIX)
+#define AV2P_TYPE_ALIAS(TYPE) AV2P_TYPE_ALIAS_(TYPE, AV2P_TYPE_SUFFIX)
 
 // declare the backend-specific identifier as an alias for the namespace-based type name
-#define DECLARE_ALPAKA_TYPE_ALIAS(TYPE) using ALPAKA_TYPE_ALIAS(TYPE) = ALPAKA_ACCELERATOR_NAMESPACE::TYPE
+#define DECLARE_AV2P_TYPE_ALIAS(TYPE) using AV2P_TYPE_ALIAS(TYPE) = AV2P_ACCELERATOR_NAMESPACE::TYPE
 
 // define a null-terminated string containing the backend-specific identifier
-#define ALPAKA_TYPE_ALIAS_NAME(TYPE) EDM_STRINGIZE(ALPAKA_TYPE_ALIAS(TYPE))
+#define AV2P_TYPE_ALIAS_NAME(TYPE) EDM_STRINGIZE(AV2P_TYPE_ALIAS(TYPE))
 
 // Ensure the enumeration names are consistent with type suffix
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
-  inline constexpr const cms::alpakatools::Backend kBackend = cms::alpakatools::Backend::ALPAKA_TYPE_SUFFIX;
+namespace AV2P_ACCELERATOR_NAMESPACE {
+  inline constexpr const cms::alpakatools::Backend kBackend = cms::alpakatools::Backend::AV2P_TYPE_SUFFIX;
 }
 
-#endif  // ALPAKA_ACCELERATOR_NAMESPACE
+#endif  // AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // HeterogeneousCore_AlpakaInterface_interface_config_h

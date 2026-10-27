@@ -20,7 +20,7 @@ namespace ngt::detail {
   [[noreturn]] void throwHostProductTypeIDError();
 }
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
+namespace AV2P_ACCELERATOR_NAMESPACE::ngt {
 
   template <typename T, typename TQueue>
   concept HasCopyToHost = requires(TQueue& q, T const& t) {
@@ -169,6 +169,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
     }
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ngt
 
 #endif  // HeterogeneousCore_TrivialSerialisation_interface_alpaka_Serialiser_h

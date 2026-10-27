@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Common/interface/Uninitialized.h"
 #include "DataFormats/Portable/interface/PortableDeviceCollection.h"
@@ -57,7 +57,7 @@ namespace ngt {
     }
 
     template <typename TQueue>
-      requires(alpaka::concepts::Queue<TQueue>)
+      requires(aV2P::concepts::Queue<TQueue>)
     static void initialize(TQueue& queue, value_type& object, Properties const& prop) {
       // Replace the default-constructed empty object with one where the buffer
       // has been allocated in device global memory.
@@ -67,13 +67,13 @@ namespace ngt {
 
     static std::vector<std::span<std::byte>> regions(value_type& object) {
       std::byte* address = reinterpret_cast<std::byte*>(object.buffer().data());
-      size_t size = alpaka::getExtentProduct(object.buffer());
+      size_t size = aV2P::getExtentProduct(object.buffer());
       return {{address, size}};
     }
 
     static std::vector<std::span<const std::byte>> regions(value_type const& object) {
       const std::byte* address = reinterpret_cast<const std::byte*>(object.buffer().data());
-      size_t size = alpaka::getExtentProduct(object.buffer());
+      size_t size = aV2P::getExtentProduct(object.buffer());
       return {{address, size}};
     }
   };

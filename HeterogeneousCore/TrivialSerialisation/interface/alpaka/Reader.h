@@ -12,7 +12,7 @@
 #include "HeterogeneousCore/TrivialSerialisation/interface/Common.h"
 #include "HeterogeneousCore/TrivialSerialisation/interface/alpaka/ReaderBase.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
+namespace AV2P_ACCELERATOR_NAMESPACE::ngt {
 
   // Reader for device products.
   template <typename T>
@@ -36,6 +36,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
     T const* productPtr_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ngt
 
 #endif  // HeterogeneousCore_TrivialSerialisation_interface_alpaka_Reader_h

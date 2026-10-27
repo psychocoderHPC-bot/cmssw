@@ -14,7 +14,7 @@
 
 #include "DeclsForKernels.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::rechit {
 
   using InputProduct = EcalUncalibratedRecHitDeviceCollection;
   using OutputProduct = EcalRecHitDeviceCollection;
@@ -31,6 +31,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit {
                           ConfigurationParameters const& configParams,
                           bool const isPhase2);
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::rechit
 
 #endif  // RecoLocalCalo_EcalRecProducers_plugins_alpaka_EcalRecHitBuilder_h

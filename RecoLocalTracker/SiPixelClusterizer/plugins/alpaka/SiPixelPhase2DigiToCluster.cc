@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Common/interface/DetSetVector.h"
 #include "DataFormats/SiPixelClusterSoA/interface/alpaka/SiPixelClustersSoACollection.h"
@@ -32,7 +32,7 @@
 
 #include "SiPixelRawToClusterKernel.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class SiPixelPhase2DigiToCluster : public stream::SynchronizingEDProducer<edm::stream::WatchRuns> {
   public:
@@ -167,7 +167,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     }
     assert(nDigis == nDigis_);
 
-    alpaka::memcpy(iEvent.queue(), digis_d_->buffer(), digis_h.buffer());
+    aV2P::memcpy(iEvent.queue(), digis_d_->buffer(), digis_h.buffer());
     algo_.makePhase2ClustersAsync(iEvent.queue(), clusterThresholds_, digis_d_->view(), nDigis_, offsetBPIX2_);
   }
 
@@ -180,8 +180,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     digis_d_.reset();
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 // define as framework plugin
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(SiPixelPhase2DigiToCluster);
+DEFINE_FWK_AV2P_MODULE(SiPixelPhase2DigiToCluster);

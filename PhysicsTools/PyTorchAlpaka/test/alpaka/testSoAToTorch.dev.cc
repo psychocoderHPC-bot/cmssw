@@ -9,11 +9,11 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 #include "PhysicsTools/PyTorchAlpaka/interface/alpaka/AlpakaModel.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
+namespace AV2P_ACCELERATOR_NAMESPACE::torchtest {
 
   constexpr auto modelPath = "PhysicsTools/PyTorchAlpaka/data/linear_dnn.pt";
 
-  using namespace ALPAKA_ACCELERATOR_NAMESPACE::torch;
+  using namespace AV2P_ACCELERATOR_NAMESPACE::torch;
 
   // Input SOA
   GENERATE_SOA_LAYOUT(SoAPositionTemplate, SOA_COLUMN(float, x), SOA_COLUMN(float, y), SOA_COLUMN(float, z))
@@ -42,8 +42,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
 
   class FillKernel {
   public:
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC void operator()(TAcc const& acc, PositionDeviceCollectionView view) const {
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC void operator()(TAcc const& acc, PositionDeviceCollectionView view) const {
       float input[4][3] = {{1.f, 2.f, 1.f}, {2.f, 4.f, 3.f}, {3.f, 4.f, 1.f}, {2.f, 3.f, 2.f}};
       for (auto i : cms::alpakatools::uniform_elements(acc, view.metadata().size())) {
         view.x()[i] = input[i][0];
@@ -55,13 +55,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
 
   class TestVerifyKernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, ResultDeviceCollectionView view) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, ResultDeviceCollectionView view) const {
       float result_check[4][2] = {{2.3f, -0.5f}, {6.6f, 3.0f}, {2.5f, -4.9f}, {4.4f, 1.3f}};
       for (auto i : cms::alpakatools::uniform_elements(acc, view.metadata().size())) {
-        ALPAKA_ASSERT_ACC(view.x()[i] - result_check[i][0] < 1.0e-05);
-        ALPAKA_ASSERT_ACC(view.x()[i] - result_check[i][0] > -1.0e-05);
-        ALPAKA_ASSERT_ACC(view.y()[i] - result_check[i][1] < 1.0e-05);
-        ALPAKA_ASSERT_ACC(view.y()[i] - result_check[i][1] > -1.0e-05);
+        AV2P_ASSERT_ACC(view.x()[i] - result_check[i][0] < 1.0e-05);
+        AV2P_ASSERT_ACC(view.x()[i] - result_check[i][0] > -1.0e-05);
+        AV2P_ASSERT_ACC(view.y()[i] - result_check[i][1] < 1.0e-05);
+        AV2P_ASSERT_ACC(view.y()[i] - result_check[i][1] > -1.0e-05);
       }
     }
   };
@@ -70,20 +70,20 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
     uint32_t items = 64;
     auto groups = cms::alpakatools::divide_up_by(collection->metadata().size(), items);
     auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(groups, items);
-    alpaka::exec<Acc1D>(queue, workDiv, FillKernel{}, collection.view());
+    aV2P::exec<Acc1D>(queue, workDiv, FillKernel{}, collection.view());
   }
 
   void check(Queue& queue, ResultDeviceCollection& collection) {
     uint32_t items = 64;
     auto groups = cms::alpakatools::divide_up_by(collection->metadata().size(), items);
     auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(groups, items);
-    alpaka::exec<Acc1D>(queue, workDiv, TestVerifyKernel{}, collection.view());
+    aV2P::exec<Acc1D>(queue, workDiv, TestVerifyKernel{}, collection.view());
   }
 
   void testSOAToTorch::test() {
     Platform platform;
-    std::vector<Device> alpakaDevices = ::alpaka::getDevs(platform);
-    const auto& alpakaHost = ::alpaka::getDevByIdx(alpaka_common::PlatformHost(), 0u);
+    std::vector<Device> alpakaDevices = ::aV2P::getDevs(platform);
+    const auto& alpakaHost = ::aV2P::getDevByIdx(alpaka_common::PlatformHost(), 0u);
     CPPUNIT_ASSERT(alpakaDevices.size());
     const auto& alpakaDevice = alpakaDevices[0];
     Queue queue{alpakaDevice};
@@ -115,4 +115,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
     check(queue, resultCollection);
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::torchtest

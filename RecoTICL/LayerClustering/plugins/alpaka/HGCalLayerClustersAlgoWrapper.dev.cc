@@ -1,6 +1,6 @@
-// Check that ALPAKA_HOST_ONLY is not defined during device compilation:
-#ifdef ALPAKA_HOST_ONLY
-#error ALPAKA_HOST_ONLY defined in device compilation
+// Check that AV2P_HOST_ONLY is not defined during device compilation:
+#ifdef AV2P_HOST_ONLY
+#error AV2P_HOST_ONLY defined in device compilation
 #endif
 
 #include "RecoTICL/LayerClustering/interface/HGCalTilesConstants.h"
@@ -10,7 +10,7 @@
 
 #include "CLUEAlgoAlpaka.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
   using namespace hgcal::constants;
@@ -22,7 +22,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                           const float outlierDeltaFactor,
                                           const HGCalSoARecHitsDeviceCollection::ConstView inputs,
                                           HGCalSoARecHitsExtraDeviceCollection::View outputs) const {
-    CLUEAlgoAlpaka<ALPAKA_ACCELERATOR_NAMESPACE::Acc1D, Queue, HGCalSiliconTilesConstants, kHGCalLayers> algoStandalone(
+    CLUEAlgoAlpaka<AV2P_ACCELERATOR_NAMESPACE::Acc1D, Queue, HGCalSiliconTilesConstants, kHGCalLayers> algoStandalone(
         queue, dc, kappa, outlierDeltaFactor, false);
 
     algoStandalone.makeClustersCMSSW(size,
@@ -40,4 +40,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                      &outputs.numberOfClustersScalar());
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

@@ -23,7 +23,7 @@
 
 #include "CalorimeterDefinitions.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   using namespace particleFlowRecHitProducer;
 
   template <typename CAL>
@@ -247,8 +247,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   using PFRecHitECALTopologyESProducer = PFRecHitTopologyESProducer<ECAL>;
   using PFRecHitHCALTopologyESProducer = PFRecHitTopologyESProducer<HCAL>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/ModuleFactory.h"
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(PFRecHitECALTopologyESProducer);
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(PFRecHitHCALTopologyESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(PFRecHitECALTopologyESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(PFRecHitHCALTopologyESProducer);

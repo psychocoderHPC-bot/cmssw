@@ -9,7 +9,7 @@
 
 #include "TestAlgo.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * This class demonstrates a stream EDProducer that
    * - produces a device EDProduct (that can get transferred to host automatically)
@@ -22,7 +22,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         : SynchronizingEDProducer<>(iConfig),
           putToken_{produces()},
           size_{iConfig.getParameter<edm::ParameterSet>("size").getParameter<int32_t>(
-              EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE))} {}
+              EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE))} {}
 
     void acquire(device::Event const& iEvent, device::EventSetup const& iSetup) override {
       deviceProduct_ = std::make_unique<portabletest::TestDeviceCollection>(iEvent.queue(), size_);
@@ -57,7 +57,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     std::unique_ptr<portabletest::TestDeviceCollection> deviceProduct_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(TestAlpakaStreamSynchronizingProducerToDevice);
+DEFINE_FWK_AV2P_MODULE(TestAlpakaStreamSynchronizingProducerToDevice);

@@ -6,7 +6,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
@@ -20,7 +20,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 using namespace Catch::Matchers;
 
 constexpr int maxViews = 5;
@@ -55,7 +55,7 @@ using SoAView = SoA::View;
 using SoAConstView = SoA::ConstView;
 
 struct checkPositionMultiView {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, SoAPositionMultiView view, float* output) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, SoAPositionMultiView view, float* output) const {
     for (auto i : cms::alpakatools::uniform_elements(acc, view.size())) {
       // For s1 we take the sum of all s1 values in the view, for s2 we take the value from the first view
       int s1 = 0;
@@ -71,7 +71,7 @@ struct checkPositionMultiView {
 };
 
 struct checkPCAMultiView {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, SoAPCAMultiView view, float* output) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, SoAPCAMultiView view, float* output) const {
     for (auto i : cms::alpakatools::uniform_elements(acc, view.size())) {
       auto si = view[i];
       output[i] = si.vector_1() * si.vector_1() + si.vector_2() * si.vector_2() + si.vector_3() * si.vector_3() +
@@ -83,13 +83,13 @@ struct checkPCAMultiView {
 TEST_CASE("PortableSoAConstMultiView") {
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cout << "No devices available for the " << EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE)
+    std::cout << "No devices available for the " << EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE)
               << " backend, skipping.\n";
     return;
   }
 
   for (auto const& device : devices) {
-    std::cout << "Running on " << alpaka::getName(device) << std::endl;
+    std::cout << "Running on " << aV2P::getName(device) << std::endl;
     Queue queue(device);
 
     for (int nCollections = 1; nCollections <= maxViews; ++nCollections) {
@@ -153,7 +153,7 @@ TEST_CASE("PortableSoAConstMultiView") {
 
       for (int i = 0; i < nCollections; ++i) {
         deviceCollections.emplace_back(queue, sizesPositionLayout[i], sizesPCALayout[i]);
-        alpaka::memcpy(queue, deviceCollections[i].buffer(), hostCollections[i].buffer());
+        aV2P::memcpy(queue, deviceCollections[i].buffer(), hostCollections[i].buffer());
       }
 
       SoAPositionMultiView positionMultiView(
@@ -177,7 +177,7 @@ TEST_CASE("PortableSoAConstMultiView") {
       auto resultPCA_d = cms::alpakatools::make_device_buffer<float[]>(queue, pcaMultiView.size());
       auto resultPosition_h = cms::alpakatools::make_host_buffer<float[]>(queue, positionMultiView.size());
       auto resultPCA_h = cms::alpakatools::make_host_buffer<float[]>(queue, pcaMultiView.size());
-      alpaka::wait(queue);
+      aV2P::wait(queue);
 
       const std::size_t blockSize = 64;
 
@@ -186,15 +186,15 @@ TEST_CASE("PortableSoAConstMultiView") {
       const std::size_t nBlocksPCAKernel = cms::alpakatools::divide_up_by(pcaMultiView.size(), blockSize);
       const auto workDivPCAKernel = cms::alpakatools::make_workdiv<Acc1D>(nBlocksPCAKernel, blockSize);
 
-      alpaka::exec<Acc1D>(
+      aV2P::exec<Acc1D>(
           queue, workDivPositionKernel, checkPositionMultiView{}, positionMultiView, resultPosition_d.data());
-      alpaka::exec<Acc1D>(queue, workDivPCAKernel, checkPCAMultiView{}, pcaMultiView, resultPCA_d.data());
-      alpaka::wait(queue);
+      aV2P::exec<Acc1D>(queue, workDivPCAKernel, checkPCAMultiView{}, pcaMultiView, resultPCA_d.data());
+      aV2P::wait(queue);
 
-      alpaka::memcpy(queue, resultPosition_h, resultPosition_d);
-      alpaka::memcpy(queue, resultPCA_h, resultPCA_d);
+      aV2P::memcpy(queue, resultPosition_h, resultPosition_d);
+      aV2P::memcpy(queue, resultPCA_h, resultPCA_d);
 
-      alpaka::wait(queue);
+      aV2P::wait(queue);
 
       // check results
       for (cms::soa::size_type i = 0; i < hostPositionMultiView.size(); ++i) {

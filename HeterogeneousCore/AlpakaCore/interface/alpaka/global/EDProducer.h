@@ -8,13 +8,13 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/ProducerBase.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   namespace global {
     template <typename... Args>
     class EDProducer : public ProducerBase<edm::global::EDProducer, Args...> {
       static_assert(not edm::CheckAbility<edm::module::Abilities::kExternalWork, Args...>::kHasIt,
-                    "ALPAKA_ACCELERATOR_NAMESPACE::global::EDProducer may not be used with ExternalWork ability. "
-                    "Please use ALPAKA_ACCELERATOR_NAMESPACE::stream::SynchronizingEDProducer instead.");
+                    "AV2P_ACCELERATOR_NAMESPACE::global::EDProducer may not be used with ExternalWork ability. "
+                    "Please use AV2P_ACCELERATOR_NAMESPACE::stream::SynchronizingEDProducer instead.");
       using Base = ProducerBase<edm::global::EDProducer, Args...>;
 
     protected:
@@ -33,6 +33,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       virtual void produce(edm::StreamID sid, device::Event& iEvent, device::EventSetup const& iSetup) const = 0;
     };
   }  // namespace global
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

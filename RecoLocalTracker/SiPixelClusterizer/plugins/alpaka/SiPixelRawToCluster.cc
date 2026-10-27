@@ -47,7 +47,7 @@
 #include "SiPixelMorphingConfig.h"
 #include "SiPixelRawToClusterKernel.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   template <typename TrackerTraits>
   class SiPixelRawToCluster : public stream::SynchronizingEDProducer<> {
@@ -299,7 +299,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             cms::alpakatools::make_device_buffer<uint32_t[]>(iEvent.queue(), morphingModulesHost.size());
         auto morphingModules_h =
             cms::alpakatools::make_host_view(morphingModulesHost.data(), morphingModulesHost.size());
-        alpaka::memcpy(iEvent.queue(), *morphingModulesDevice_, morphingModules_h);
+        aV2P::memcpy(iEvent.queue(), *morphingModulesDevice_, morphingModules_h);
       } else {
         morphingModulesDevice_ = cms::alpakatools::make_device_buffer<uint32_t[]>(iEvent.queue(), 0);
       }
@@ -440,9 +440,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   using SiPixelRawToClusterPhase1 = SiPixelRawToCluster<pixelTopology::Phase1>;
   using SiPixelRawToClusterHIonPhase1 = SiPixelRawToCluster<pixelTopology::HIonPhase1>;
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 // define as framework plugin
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(SiPixelRawToClusterPhase1);
-DEFINE_FWK_ALPAKA_MODULE(SiPixelRawToClusterHIonPhase1);
+DEFINE_FWK_AV2P_MODULE(SiPixelRawToClusterPhase1);
+DEFINE_FWK_AV2P_MODULE(SiPixelRawToClusterHIonPhase1);

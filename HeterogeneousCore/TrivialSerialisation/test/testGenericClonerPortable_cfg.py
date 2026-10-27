@@ -56,19 +56,19 @@ process.clonePortableObjectsDtoD = cms.EDProducer("ngt::GenericClonerPortable@al
     products = cms.VPSet(
         cms.PSet(
             src = cms.InputTag("clonePortableObjectsHtoH"),
-            type = cms.string("ALPAKA_ACCELERATOR_NAMESPACE::portabletest::TestDeviceObject")
+            type = cms.string("AV2P_ACCELERATOR_NAMESPACE::portabletest::TestDeviceObject")
         ),
         cms.PSet(
             src = cms.InputTag("clonePortableObjectsHtoH"),
-            type = cms.string("ALPAKA_ACCELERATOR_NAMESPACE::portabletest::TestDeviceCollection")
+            type = cms.string("AV2P_ACCELERATOR_NAMESPACE::portabletest::TestDeviceCollection")
         ),
         cms.PSet(
             src = cms.InputTag("clonePortableObjectsHtoH"),
-            type = cms.string("ALPAKA_ACCELERATOR_NAMESPACE::portabletest::TestDeviceCollection2")
+            type = cms.string("AV2P_ACCELERATOR_NAMESPACE::portabletest::TestDeviceCollection2")
         ),
         cms.PSet(
             src = cms.InputTag("clonePortableObjectsHtoH"),
-            type = cms.string("ALPAKA_ACCELERATOR_NAMESPACE::portabletest::TestDeviceCollection3")
+            type = cms.string("AV2P_ACCELERATOR_NAMESPACE::portabletest::TestDeviceCollection3")
         ),
     ),
     verbose = cms.untracked.bool(True),

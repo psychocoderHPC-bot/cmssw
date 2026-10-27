@@ -13,7 +13,7 @@
 
 #include "TestAlgo.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * This class is primarily for consuming AlpakaESTestDataEDevice
    * ESProduct. It also demonstrates a proof-of-concept for
@@ -26,7 +26,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           esToken_(esConsumes()),
           deviceToken_{produces()},
           x_(config.getParameter<edm::ParameterSet>("xvalue").getParameter<double>(
-              EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE))) {}
+              EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE))) {}
 
     void produce(edm::StreamID, device::Event& iEvent, device::EventSetup const& iSetup) const override {
       auto const& esData = iSetup.getData(esToken_);
@@ -63,7 +63,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     double const x_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(TestAlpakaGlobalProducerOffset);
+DEFINE_FWK_AV2P_MODULE(TestAlpakaGlobalProducerOffset);

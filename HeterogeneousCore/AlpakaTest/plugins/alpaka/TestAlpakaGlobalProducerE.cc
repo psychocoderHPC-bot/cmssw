@@ -12,7 +12,7 @@
 
 #include "TestAlgo.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   /**
    * This class demonstrates a global EDProducer that
    * - consumes a device ESProduct
@@ -68,7 +68,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     TestAlgo algo_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(TestAlpakaGlobalProducerE);
+DEFINE_FWK_AV2P_MODULE(TestAlpakaGlobalProducerE);

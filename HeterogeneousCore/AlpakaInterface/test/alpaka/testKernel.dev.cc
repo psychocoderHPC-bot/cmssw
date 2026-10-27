@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <random>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
@@ -12,11 +12,11 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
 // each test binary is built for a single Alpaka backend
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 struct VectorAddKernel {
   template <typename T>
-  ALPAKA_FN_ACC void operator()(
+  AV2P_FN_ACC void operator()(
       Acc1D const& acc, T const* __restrict__ in1, T const* __restrict__ in2, T* __restrict__ out, size_t size) const {
     for (auto index : cms::alpakatools::uniform_elements(acc, size)) {
       out[index] = in1[index] + in2[index];
@@ -26,7 +26,7 @@ struct VectorAddKernel {
 
 struct VectorAddKernelSkip {
   template <typename T>
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+  AV2P_FN_ACC void operator()(Acc1D const& acc,
                                 T const* __restrict__ in1,
                                 T const* __restrict__ in2,
                                 T* __restrict__ out,
@@ -40,7 +40,7 @@ struct VectorAddKernelSkip {
 
 struct VectorAddKernel1D {
   template <typename T>
-  ALPAKA_FN_ACC void operator()(
+  AV2P_FN_ACC void operator()(
       Acc1D const& acc, T const* __restrict__ in1, T const* __restrict__ in2, T* __restrict__ out, Vec1D size) const {
     for (auto ndindex : cms::alpakatools::uniform_elements_nd(acc, size)) {
       auto index = ndindex[0];
@@ -51,7 +51,7 @@ struct VectorAddKernel1D {
 
 struct VectorAddKernel2D {
   template <typename T>
-  ALPAKA_FN_ACC void operator()(
+  AV2P_FN_ACC void operator()(
       Acc2D const& acc, T const* __restrict__ in1, T const* __restrict__ in2, T* __restrict__ out, Vec2D size) const {
     for (auto ndindex : cms::alpakatools::uniform_elements_nd(acc, size)) {
       auto index = ndindex[0] * size[1] + ndindex[1];
@@ -62,7 +62,7 @@ struct VectorAddKernel2D {
 
 struct VectorAddKernel3D {
   template <typename T>
-  ALPAKA_FN_ACC void operator()(
+  AV2P_FN_ACC void operator()(
       Acc3D const& acc, T const* __restrict__ in1, T const* __restrict__ in2, T* __restrict__ out, Vec3D size) const {
     for (auto ndindex : cms::alpakatools::uniform_elements_nd(acc, size)) {
       auto index = (ndindex[0] * size[1] + ndindex[1]) * size[2] + ndindex[2];
@@ -77,12 +77,12 @@ struct VectorAddKernel3D {
 
 struct VectorAddBlockKernel {
   template <typename T>
-  ALPAKA_FN_ACC void operator()(
+  AV2P_FN_ACC void operator()(
       Acc1D const& acc, T const* __restrict__ in1, T const* __restrict__ in2, T* __restrict__ out, size_t size) const {
     // block size
-    auto const blockSize = alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[0u];
+    auto const blockSize = aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[0u];
     // get the dynamic shared memory buffer
-    T* buffer = alpaka::getDynSharedMem<T>(acc);
+    T* buffer = aV2P::getDynSharedMem<T>(acc);
     // the outer loop is needed to repeat the "block" as many times as needed to cover the whole problem space
     // the inner loop is needed for backends that use more than one element per thread
     for (auto block : cms::alpakatools::uniform_groups(acc, size)) {
@@ -93,19 +93,19 @@ struct VectorAddBlockKernel {
           buffer[local] = 0.;
       }
       // synchronise all threads in the block
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
       // read the first set of data into shared memory
       for (auto index : cms::alpakatools::uniform_group_elements(acc, block, size)) {
         buffer[index.local] = in1[index.global];
       }
       // synchronise all threads in the block
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
       // add the second set of data into shared memory
       for (auto index : cms::alpakatools::uniform_group_elements(acc, block, size)) {
         buffer[index.local] += in2[index.global];
       }
       // synchronise all threads in the block
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
       // store the results into global memory
       for (auto index : cms::alpakatools::uniform_group_elements(acc, block, size)) {
         out[index.global] = buffer[index.local];
@@ -120,7 +120,7 @@ struct VectorAddBlockKernel {
 
 struct VectorAddKernelSerial {
   template <typename T>
-  ALPAKA_FN_ACC void operator()(
+  AV2P_FN_ACC void operator()(
       Acc1D const& acc, T const* __restrict__ in1, T const* __restrict__ in2, T* __restrict__ out, size_t size) const {
     // the operations are performed by a single thread
     if (cms::alpakatools::once_per_grid(acc)) {
@@ -138,10 +138,10 @@ struct VectorAddKernelSerial {
 
 struct VectorAddKernelBlockSerial {
   template <typename T>
-  ALPAKA_FN_ACC void operator()(
+  AV2P_FN_ACC void operator()(
       Acc1D const& acc, T const* __restrict__ in1, T const* __restrict__ in2, T* __restrict__ out, size_t size) const {
     // block size
-    auto const blockSize = alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[0u];
+    auto const blockSize = aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[0u];
     // the loop is used to repeat the "block" as many times as needed to cover the whole problem space
     for (auto block : cms::alpakatools::uniform_groups(acc, size)) {
       // the operations are performed by a single thread in each "logical" block
@@ -157,14 +157,14 @@ struct VectorAddKernelBlockSerial {
   }
 };
 
-namespace alpaka::trait {
+namespace aV2P::trait {
   // specialize the BlockSharedMemDynSizeBytes trait to specify the amount of
   // block shared dynamic memory for the VectorAddBlockKernel kernel
   template <>
   struct BlockSharedMemDynSizeBytes<VectorAddBlockKernel, Acc1D> {
     // the size in bytes of the shared memory allocated for a block
     template <typename T>
-    ALPAKA_FN_HOST_ACC static std::size_t getBlockSharedMemDynSizeBytes(VectorAddBlockKernel const& /* kernel */,
+    AV2P_FN_HOST_ACC static std::size_t getBlockSharedMemDynSizeBytes(VectorAddBlockKernel const& /* kernel */,
                                                                         Vec1D threads,
                                                                         Vec1D elements,
                                                                         T const* __restrict__ /* in1 */,
@@ -174,7 +174,7 @@ namespace alpaka::trait {
       return static_cast<std::size_t>(threads[0] * elements[0] * sizeof(T));
     }
   };
-}  // namespace alpaka::trait
+}  // namespace aV2P::trait
 
 // test the 1-dimensional kernel on all devices
 template <typename TKernel>
@@ -204,7 +204,7 @@ void testVectorAddKernel(std::size_t problem_size, std::size_t grid_size, std::s
 
   // run the test on each device
   for (auto const& device : cms::alpakatools::devices<Platform>()) {
-    std::cout << "Test 1D vector addition on " << alpaka::getName(device) << " over " << problem_size << " values with "
+    std::cout << "Test 1D vector addition on " << aV2P::getName(device) << " over " << problem_size << " values with "
               << grid_size << " blocks of " << block_size << " elements\n";
     auto queue = Queue(device);
 
@@ -214,21 +214,21 @@ void testVectorAddKernel(std::size_t problem_size, std::size_t grid_size, std::s
     auto out_d = cms::alpakatools::make_device_buffer<float[]>(queue, size);
 
     // copy the input data to the device; the size is known from the buffer objects
-    alpaka::memcpy(queue, in1_d, in1_h);
-    alpaka::memcpy(queue, in2_d, in2_h);
+    aV2P::memcpy(queue, in1_d, in1_h);
+    aV2P::memcpy(queue, in2_d, in2_h);
 
     // fill the output buffer with zeros; the size is known from the buffer objects
-    alpaka::memset(queue, out_d, 0.);
+    aV2P::memset(queue, out_d, 0.);
 
     // launch the 1-dimensional kernel with scalar size
     auto div = cms::alpakatools::make_workdiv<Acc1D>(grid_size, block_size);
-    alpaka::exec<Acc1D>(queue, div, kernel, in1_d.data(), in2_d.data(), out_d.data(), size);
+    aV2P::exec<Acc1D>(queue, div, kernel, in1_d.data(), in2_d.data(), out_d.data(), size);
 
     // copy the results from the device to the host
-    alpaka::memcpy(queue, out_h, out_d);
+    aV2P::memcpy(queue, out_h, out_d);
 
     // wait for all the operations to complete
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
     // check the results
     for (size_t i = 0; i < size; ++i) {
@@ -271,7 +271,7 @@ void testVectorAddKernelSkip(std::size_t skip_elements,
 
   // run the test on each device
   for (auto const& device : cms::alpakatools::devices<Platform>()) {
-    std::cout << "Test 1D vector addition on " << alpaka::getName(device) << " skipping " << skip_elements << " over "
+    std::cout << "Test 1D vector addition on " << aV2P::getName(device) << " skipping " << skip_elements << " over "
               << problem_size << " values with " << grid_size << " blocks of " << block_size << " elements\n";
     auto queue = Queue(device);
 
@@ -281,21 +281,21 @@ void testVectorAddKernelSkip(std::size_t skip_elements,
     auto out_d = cms::alpakatools::make_device_buffer<float[]>(queue, size);
 
     // copy the input data to the device; the size is known from the buffer objects
-    alpaka::memcpy(queue, in1_d, in1_h);
-    alpaka::memcpy(queue, in2_d, in2_h);
+    aV2P::memcpy(queue, in1_d, in1_h);
+    aV2P::memcpy(queue, in2_d, in2_h);
 
     // fill the output buffer with zeros; the size is known from the buffer objects
-    alpaka::memset(queue, out_d, 0.);
+    aV2P::memset(queue, out_d, 0.);
 
     // launch the 1-dimensional kernel with scalar size
     auto div = cms::alpakatools::make_workdiv<Acc1D>(grid_size, block_size);
-    alpaka::exec<Acc1D>(queue, div, kernel, in1_d.data(), in2_d.data(), out_d.data(), skip_elements, size);
+    aV2P::exec<Acc1D>(queue, div, kernel, in1_d.data(), in2_d.data(), out_d.data(), skip_elements, size);
 
     // copy the results from the device to the host
-    alpaka::memcpy(queue, out_h, out_d);
+    aV2P::memcpy(queue, out_h, out_d);
 
     // wait for all the operations to complete
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
     // check the results
     for (size_t i = 0; i < skip_elements; ++i) {
@@ -337,7 +337,7 @@ void testVectorAddKernelND(Vec<TDim> problem_size, Vec<TDim> grid_size, Vec<TDim
 
   // run the test on each device
   for (auto const& device : cms::alpakatools::devices<Platform>()) {
-    std::cout << "Test " << TDim::value << "D vector addition on " << alpaka::getName(device) << " over "
+    std::cout << "Test " << TDim::value << "D vector addition on " << aV2P::getName(device) << " over "
               << problem_size << " values with " << grid_size << " blocks of " << block_size << " elements\n";
     auto queue = Queue(device);
 
@@ -347,22 +347,22 @@ void testVectorAddKernelND(Vec<TDim> problem_size, Vec<TDim> grid_size, Vec<TDim
     auto out_d = cms::alpakatools::make_device_buffer<float[]>(queue, size);
 
     // copy the input data to the device; the size is known from the buffer objects
-    alpaka::memcpy(queue, in1_d, in1_h);
-    alpaka::memcpy(queue, in2_d, in2_h);
+    aV2P::memcpy(queue, in1_d, in1_h);
+    aV2P::memcpy(queue, in2_d, in2_h);
 
     // fill the output buffer with zeros; the size is known from the buffer objects
-    alpaka::memset(queue, out_d, 0.);
+    aV2P::memset(queue, out_d, 0.);
 
     // launch the 3-dimensional kernel
     using AccND = Acc<TDim>;
     auto div = cms::alpakatools::make_workdiv<AccND>(grid_size, block_size);
-    alpaka::exec<AccND>(queue, div, kernel, in1_d.data(), in2_d.data(), out_d.data(), problem_size);
+    aV2P::exec<AccND>(queue, div, kernel, in1_d.data(), in2_d.data(), out_d.data(), problem_size);
 
     // copy the results from the device to the host
-    alpaka::memcpy(queue, out_h, out_d);
+    aV2P::memcpy(queue, out_h, out_d);
 
     // wait for all the operations to complete
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
     // check the results
     for (size_t i = 0; i < size; ++i) {
@@ -373,13 +373,13 @@ void testVectorAddKernelND(Vec<TDim> problem_size, Vec<TDim> grid_size, Vec<TDim
   }
 }
 
-TEST_CASE("Test alpaka kernels for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend",
-          "[" EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) "]") {
+TEST_CASE("Test alpaka kernels for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend",
+          "[" EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) "]") {
   SECTION("Alpaka N-dimensional kernels") {
     // get the list of devices on the current platform
     auto const& devices = cms::alpakatools::devices<Platform>();
     if (devices.empty()) {
-      FAIL("No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+      FAIL("No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
            "the test will be skipped.");
     }
 

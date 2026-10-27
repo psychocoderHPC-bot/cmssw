@@ -5,12 +5,12 @@
 #include "DataFormats/HcalDigi/interface/HcalDigiSoA.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   namespace hcal {
 
     // make the names from the top-level hcal namespace visible for unqualified lookup
-    // inside the ALPAKA_ACCELERATOR_NAMESPACE::hcal namespace
+    // inside the AV2P_ACCELERATOR_NAMESPACE::hcal namespace
     using namespace ::hcal;
 
     // HcalDigiSoA in device global memory
@@ -18,6 +18,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     using Phase0DigiDeviceCollection = PortableCollection<HcalPhase0DigiSoA>;
 
   }  // namespace hcal
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

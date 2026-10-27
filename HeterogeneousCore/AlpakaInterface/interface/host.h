@@ -1,17 +1,17 @@
 #ifndef HeterogeneousCore_AlpakaInterface_interface_host_h
 #define HeterogeneousCore_AlpakaInterface_interface_host_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/devices.h"
 
 namespace cms::alpakatools {
 
   // returns the alpaka host platform
-  inline alpaka::PlatformCpu const& host_platform() { return platform<alpaka::PlatformCpu>(); }
+  inline aV2P::PlatformCpu const& host_platform() { return platform<aV2P::PlatformCpu>(); }
 
   // returns the alpaka host device
-  inline alpaka::DevCpu const& host() { return devices<alpaka::PlatformCpu>()[0]; }
+  inline aV2P::DevCpu const& host() { return devices<aV2P::PlatformCpu>()[0]; }
 
 }  // namespace cms::alpakatools
 

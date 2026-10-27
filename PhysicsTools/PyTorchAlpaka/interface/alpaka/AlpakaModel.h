@@ -1,7 +1,7 @@
 #ifndef PhysicsTools_PyTorchAlpaka_interface_alpaka_AlpakaModel_h
 #define PhysicsTools_PyTorchAlpaka_interface_alpaka_AlpakaModel_h
 
-#include "alpaka/alpaka.hpp"
+#include "aV2P/alpaka.hpp"
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "PhysicsTools/PyTorch/interface/Model.h"
@@ -10,7 +10,7 @@
 #include "PhysicsTools/PyTorchAlpaka/interface/SoAConversion.h"
 #include "PhysicsTools/PyTorchAlpaka/interface/alpaka/QueueGuard.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::torch {
+namespace AV2P_ACCELERATOR_NAMESPACE::torch {
 
   class AlpakaModel : public cms::torch::Model {
   public:
@@ -56,7 +56,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torch {
     // Move model to specified device memory space and with the specified dtype. Async load (in default stream if not overridden by the caller)
     // The caller should ensure the QueueGuard is instantiated and PyTorch stream context is properly set.
     void to(const Device &dev, std::optional<::torch::Dtype> dtype = std::nullopt) {
-      if constexpr (std::is_same_v<::alpaka::Dev<Device>, ::alpaka::DevCpu>) {
+      if constexpr (std::is_same_v<::aV2P::Dev<Device>, ::aV2P::DevCpu>) {
         this->Model::to(cms::torch::alpakatools::getDevice(dev), false, dtype);
         return;
       }
@@ -66,10 +66,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torch {
 
     // Overload for Queue to simplify the interface for the common case of async execution.
     void to(const Queue &queue, std::optional<::torch::Dtype> dtype = std::nullopt) {
-      this->AlpakaModel::to(::alpaka::getDev(queue), dtype);
+      this->AlpakaModel::to(::aV2P::getDev(queue), dtype);
     }
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::torch
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::torch
 
 #endif  // PhysicsTools_PyTorchAlpaka_interface_alpaka_AlpakaModel_h

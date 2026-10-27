@@ -6,12 +6,12 @@
 #include "DataFormats/SiStripDigiSoA/interface/SiStripDigiSoA.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip {
+namespace AV2P_ACCELERATOR_NAMESPACE::sistrip {
   // make the names from the top-level sistrip namespace visible for unqualified lookup
-  // inside the ALPAKA_ACCELERATOR_NAMESPACE::sistrip namespace
+  // inside the AV2P_ACCELERATOR_NAMESPACE::sistrip namespace
   using namespace ::sistrip;
   using SiStripDigiDevice = PortableCollection<SiStripDigiSoA>;
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::sistrip
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::sistrip
 
 ASSERT_DEVICE_MATCHES_HOST_COLLECTION(sistrip::SiStripDigiDevice, sistrip::SiStripDigiHost);
 

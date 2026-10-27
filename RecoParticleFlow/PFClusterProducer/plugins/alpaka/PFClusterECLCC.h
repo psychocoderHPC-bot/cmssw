@@ -59,11 +59,11 @@
  neighbors.
 */
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   /* intermediate pointer jumping */
 
-  ALPAKA_FN_ACC inline int representative(const int idx,
+  AV2P_FN_ACC inline int representative(const int idx,
                                           reco::PFClusteringVarsDeviceCollection::View pfClusteringVars) {
     int curr = pfClusteringVars[idx].pfrh_topoId();
     if (curr != idx) {
@@ -80,7 +80,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   // Initial step of ECL-CC. Uses ID of first neighbour in edgeList with a smaller ID
   class ECLCCInit {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   reco::PFRecHitDeviceCollection::ConstView pfRecHits,
                                   reco::PFClusteringVarsDeviceCollection::View pfClusteringVars,
                                   reco::PFClusteringEdgeVarsDeviceCollection::View pfClusteringEdgeVars) const {
@@ -103,7 +103,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   // Processes vertices
   class ECLCCCompute1 {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   reco::PFRecHitDeviceCollection::ConstView pfRecHits,
                                   reco::PFClusteringVarsDeviceCollection::View pfClusteringVars,
                                   reco::PFClusteringEdgeVarsDeviceCollection::View pfClusteringEdgeVars) const {
@@ -125,12 +125,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 if (vstat != ostat) {
                   int ret;
                   if (vstat < ostat) {
-                    if ((ret = alpaka::atomicCas(acc, &pfClusteringVars[ostat].pfrh_topoId(), ostat, vstat)) != ostat) {
+                    if ((ret = aV2P::atomicCas(acc, &pfClusteringVars[ostat].pfrh_topoId(), ostat, vstat)) != ostat) {
                       ostat = ret;
                       repeat = true;
                     }
                   } else {
-                    if ((ret = alpaka::atomicCas(acc, &pfClusteringVars[vstat].pfrh_topoId(), vstat, ostat)) != vstat) {
+                    if ((ret = aV2P::atomicCas(acc, &pfClusteringVars[vstat].pfrh_topoId(), vstat, ostat)) != vstat) {
                       vstat = ret;
                       repeat = true;
                     }
@@ -147,7 +147,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   /* link all vertices to sink */
   class ECLCCFlatten {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   reco::PFRecHitDeviceCollection::ConstView pfRecHits,
                                   reco::PFClusteringVarsDeviceCollection::View pfClusteringVars,
                                   reco::PFClusteringEdgeVarsDeviceCollection::View pfClusteringEdgeVars) const {
@@ -167,6 +167,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   // ECL-CC ends
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/TrackSoA/interface/TrackDefinitions.h"
 #include "DataFormats/TrackSoA/interface/TracksHost.h"
@@ -23,7 +23,7 @@
 #include "CAPixelDoublets.h"
 #include "CAStructures.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace ::caStructures;
 
@@ -249,6 +249,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     uint32_t maxNumberOfDoublets_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // RecoTracker_PixelSeeding_plugins_alpaka_CAHitNtupletGeneratorKernels_h

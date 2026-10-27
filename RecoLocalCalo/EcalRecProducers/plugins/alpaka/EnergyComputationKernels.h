@@ -1,7 +1,7 @@
 #ifndef RecoLocalCalo_EcalRecProducers_plugins_alpaka_EnergyComputationKernels_h
 #define RecoLocalCalo_EcalRecProducers_plugins_alpaka_EnergyComputationKernels_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "CondFormats/EcalObjects/interface/EcalRecHitParameters.h"
 #include "CondFormats/EcalObjects/interface/alpaka/EcalRecHitConditionsDevice.h"
@@ -16,19 +16,19 @@
 #include "KernelHelpers.h"
 
 //#define DEBUG
-//#define ECAL_RECO_ALPAKA_DEBUG
+//#define ECAL_RECO_AV2P_DEBUG
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::rechit {
 
   HOST_DEVICE_CONSTANT float ip10[] = {1.e5f, 1.e4f, 1.e3f, 1.e2f, 1.e1f, 1.e0f, 1.e-1f, 1.e-2f, 1.e-3f, 1.e-4};
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE bool checkUncalibRecHitFlag(uint32_t const flags, EcalUncalibratedRecHit::Flags flag) {
+  AV2P_FN_ACC AV2P_FN_INLINE bool checkUncalibRecHitFlag(uint32_t const flags, EcalUncalibratedRecHit::Flags flag) {
     return flags & (0x1 << flag);
   }
 
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void setFlag(uint32_t& flags, EcalRecHit::Flags flag) { flags |= (0x1 << flag); }
+  AV2P_FN_ACC AV2P_FN_INLINE void setFlag(uint32_t& flags, EcalRecHit::Flags flag) { flags |= (0x1 << flag); }
 
-  ALPAKA_FN_ACC void makeRecHit(int const inputCh,
+  AV2P_FN_ACC void makeRecHit(int const inputCh,
                                 uint32_t const* didCh,
                                 float const* amplitude,
                                 float const* amplitudeError,
@@ -57,7 +57,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit {
 
   class KernelCreateEcalRechitPhase2 {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   EcalUncalibratedRecHitDeviceCollection::ConstView uncalibRecHits,
                                   EcalRecHitDeviceCollection::View recHits,
                                   EcalRecHitConditionsDevice::ConstView conditionsDev,
@@ -104,7 +104,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit {
 
   class KernelCreateEcalRechit {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   EcalUncalibratedRecHitDeviceCollection::ConstView ebUncalibRecHits,
                                   EcalUncalibratedRecHitDeviceCollection::ConstView eeUncalibRecHits,
                                   EcalRecHitDeviceCollection::View ebRecHits,
@@ -181,6 +181,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit {
     }
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::rechit
 
 #endif  // RecoLocalCalo_EcalRecProducers_plugins_alpaka_EnergyComputationKernels_h

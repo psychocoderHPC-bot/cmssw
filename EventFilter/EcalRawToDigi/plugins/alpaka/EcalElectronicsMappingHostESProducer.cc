@@ -1,4 +1,4 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Framework/interface/ESTransientHandle.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -13,7 +13,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/host.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   class EcalElectronicsMappingHostESProducer : public ESProducer {
   public:
     EcalElectronicsMappingHostESProducer(edm::ParameterSet const& iConfig) : ESProducer(iConfig) {
@@ -35,8 +35,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       auto product = std::make_unique<EcalElectronicsMappingHost>(cms::alpakatools::host(), size);
 
       // fill the whole collection with null detids
-      alpaka::QueueCpuBlocking queue{cms::alpakatools::host()};
-      alpaka::memset(queue, product->buffer(), 0x00);
+      aV2P::QueueCpuBlocking queue{cms::alpakatools::host()};
+      aV2P::memset(queue, product->buffer(), 0x00);
 
       // fill in eb
       auto const& barrelValues = mapping.barrelItems();
@@ -59,6 +59,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   private:
     edm::ESGetToken<EcalMappingElectronics, EcalMappingElectronicsRcd> token_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(EcalElectronicsMappingHostESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(EcalElectronicsMappingHostESProducer);

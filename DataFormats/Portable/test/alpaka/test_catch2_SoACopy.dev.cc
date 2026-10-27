@@ -1,7 +1,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
@@ -12,7 +12,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 using namespace Catch::Matchers;
 
 using Vector5f = Eigen::Matrix<float, 5, 1>;
@@ -49,7 +49,7 @@ namespace {
 
 struct SumScalar {
   template <typename T>
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, T* result, const T* v1, const T* v2) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, T* result, const T* v1, const T* v2) const {
     *result = *v1 + *v2;
   }
 };
@@ -57,13 +57,13 @@ struct SumScalar {
 TEST_CASE("test merge soa alpaka", "[SoAMerge][Alpaka]") {
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cout << "No devices available for the " << EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE)
+    std::cout << "No devices available for the " << EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE)
               << " backend, skipping.\n";
     return;
   }
 
   for (auto const& device : devices) {
-    std::cout << "Running on " << alpaka::getName(device) << std::endl;
+    std::cout << "Running on " << aV2P::getName(device) << std::endl;
     Queue queue(device);
 
     constexpr int n1 = 10;
@@ -104,11 +104,11 @@ TEST_CASE("test merge soa alpaka", "[SoAMerge][Alpaka]") {
 
     PortableCollection<Device, SoA> deviceCollection1(queue, hostCollection1.size());
     auto d_view1 = deviceCollection1.view();
-    alpaka::memcpy(queue, deviceCollection1.buffer(), hostCollection1.buffer());
+    aV2P::memcpy(queue, deviceCollection1.buffer(), hostCollection1.buffer());
 
     PortableCollection<Device, SoA> deviceCollection2(queue, hostCollection2.size());
     auto d_view2 = deviceCollection2.view();
-    alpaka::memcpy(queue, deviceCollection2.buffer(), hostCollection2.buffer());
+    aV2P::memcpy(queue, deviceCollection2.buffer(), hostCollection2.buffer());
 
     const int nTk1 = h_view1.nTracks();
     const int nTk2 = h_view2.nTracks();
@@ -117,7 +117,7 @@ TEST_CASE("test merge soa alpaka", "[SoAMerge][Alpaka]") {
     PortableCollection<Device, SoA> outputDevice(queue, nTk1 + nTk2);
     auto d_viewOut = outputDevice.view();
 
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
     auto outDesc = SoA::Descriptor(d_viewOut);
     auto inDesc1 = SoA::ConstDescriptor(d_view1);
@@ -129,7 +129,7 @@ TEST_CASE("test merge soa alpaka", "[SoAMerge][Alpaka]") {
       const auto& inCol2 = std::get<columnIndex>(inDesc2.buff);
 
       if constexpr (std::get<columnIndex>(outDesc.columnTypes) == cms::soa::SoAColumnType::scalar) {
-        alpaka::exec<Acc1D>(queue,
+        aV2P::exec<Acc1D>(queue,
                             cms::alpakatools::make_workdiv<Acc1D>(1, 1),
                             SumScalar{},
                             outCol.data(),
@@ -147,32 +147,32 @@ TEST_CASE("test merge soa alpaka", "[SoAMerge][Alpaka]") {
           const auto offsetOutput = i * strideOutput;
           const auto offsetIn1 = i * strideInput1;
           const auto offsetIn2 = i * strideInput2;
-          alpaka::memcpy(queue,
+          aV2P::memcpy(queue,
                          cms::alpakatools::make_device_view(queue, outCol.data() + offsetOutput, nTk1),
                          cms::alpakatools::make_device_view(queue, inCol1.data() + offsetIn1, nTk1));
           // copy second collection with offset of first collection size
-          alpaka::memcpy(queue,
+          aV2P::memcpy(queue,
                          cms::alpakatools::make_device_view(queue, outCol.data() + nTk1 + offsetOutput, nTk2),
                          cms::alpakatools::make_device_view(queue, inCol2.data() + offsetIn2, nTk2));
         }
       } else {
-        alpaka::memcpy(queue,
+        aV2P::memcpy(queue,
                        cms::alpakatools::make_device_view(queue, outCol.data(), nTk1),
                        cms::alpakatools::make_device_view(queue, inCol1.data(), nTk1));
         // copy second collection with offset of first collection size
-        alpaka::memcpy(queue,
+        aV2P::memcpy(queue,
                        cms::alpakatools::make_device_view(queue, outCol.data() + nTk1, nTk2),
                        cms::alpakatools::make_device_view(queue, inCol2.data(), nTk2));
       }
     });
 
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
     PortableHostCollection<SoA> outputHost(cms::alpakatools::host(), nTk1 + nTk2);
     auto h_viewOut = outputHost.view();
-    alpaka::memcpy(queue, outputHost.buffer(), outputDevice.buffer());
+    aV2P::memcpy(queue, outputHost.buffer(), outputDevice.buffer());
 
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
     REQUIRE(h_viewOut.nTracks() == nTotal);
 

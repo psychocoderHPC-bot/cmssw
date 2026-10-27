@@ -98,11 +98,11 @@ namespace pixelDetails {
     uint32_t col;
   };
 
-  ALPAKA_FN_HOST_ACC ALPAKA_FN_INLINE constexpr pixelchannelidentifierimpl::Packing packing() {
+  AV2P_FN_HOST_ACC AV2P_FN_INLINE constexpr pixelchannelidentifierimpl::Packing packing() {
     return PixelChannelIdentifier::thePacking;
   }
 
-  ALPAKA_FN_HOST_ACC ALPAKA_FN_INLINE constexpr uint32_t pack(uint32_t row,
+  AV2P_FN_HOST_ACC AV2P_FN_INLINE constexpr uint32_t pack(uint32_t row,
                                                               uint32_t col,
                                                               uint32_t adc,
                                                               uint32_t flag = 0) {
@@ -119,7 +119,7 @@ namespace pixelDetails {
 
 }  // namespace pixelDetails
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   namespace pixelDetails {
 
     class WordFedAppender {
@@ -204,6 +204,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     };
 
   }  // namespace pixelDetails
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // plugin_SiPixelClusterizer_alpaka_SiPixelRawToClusterKernel_h

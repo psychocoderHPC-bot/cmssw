@@ -21,7 +21,7 @@ namespace hcal {
       constexpr ConstView(RecoParamConstView recoView, PulseShapeConstView psView)
           : recoParamView_{recoView}, pulseShapeView_{psView} {};
 
-      ALPAKA_FN_ACC PulseShapeConstElement getPulseShape(uint32_t const hashedId) const {
+      AV2P_FN_ACC PulseShapeConstElement getPulseShape(uint32_t const hashedId) const {
         auto const recoPulseShapeId = recoParamView_[hashedId].ids();
         return pulseShapeView_[recoPulseShapeId];
       }
@@ -35,7 +35,7 @@ namespace hcal {
 
     HcalRecoParamWithPulseShapeT(size_t recoSize, size_t pulseSize, TDev const& dev)
         : recoParam_(dev, recoSize), pulseShape_(dev, pulseSize) {}
-    template <typename TQueue, typename = std::enable_if_t<alpaka::concepts::Queue<TQueue>>>
+    template <typename TQueue, typename = std::enable_if_t<aV2P::concepts::Queue<TQueue>>>
     HcalRecoParamWithPulseShapeT(size_t recoSize, size_t pulseSize, TQueue const& queue)
         : recoParam_(queue, recoSize), pulseShape_(queue, pulseSize) {}
     HcalRecoParamWithPulseShapeT(RecoParamCollection reco, PulseShapeCollection pulse)

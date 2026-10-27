@@ -40,7 +40,7 @@
 // flag to assist the computational performance test
 // #define HGCAL_PERF_TEST
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
 
@@ -163,18 +163,18 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     LogDebug("HGCalRecHitsProducer") << "\n\nINFO -- calling calibrate method";  //<< std::endl;
 
 #ifdef EDM_ML_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     auto start = std::chrono::steady_clock::now();
 #endif
 
     LogDebug("HGCalRecHitsProducer") << "\n\nINFO -- Copying the calib to the device\n\n" << std::endl;
     HGCalCalibParamDevice deviceCalibParam(queue, hostCalibParam.view().metadata().size());
-    alpaka::memcpy(queue, deviceCalibParam.buffer(), hostCalibParam.const_buffer());
+    aV2P::memcpy(queue, deviceCalibParam.buffer(), hostCalibParam.const_buffer());
 
 #ifdef HGCAL_PERF_TEST
     auto tmpRecHits = calibrator_.calibrate(queue, hostDigis, deviceCalibParam);
     recHits_ = HGCalSoARecHitsDeviceCollection(oldSize, queue);
-    alpaka::memcpy(queue, recHits.buffer(), tmpRecHits.const_buffer(), oldSize);
+    aV2P::memcpy(queue, recHits.buffer(), tmpRecHits.const_buffer(), oldSize);
 #else
     *nsel_ = 0;
     ndigis_ = hostDigis.view().metadata().size();
@@ -191,7 +191,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 #endif
 
 #ifdef EDM_ML_DEBUG
-    alpaka::wait(queue);
+    aV2P::wait(queue);
     auto stop = std::chrono::steady_clock::now();
     std::chrono::duration<float> elapsed = stop - start;
     LogDebug("HGCalRecHitsProducer") << "Time spent calibrating " << hostDigis.view().metadata().size()
@@ -207,8 +207,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     iEvent.emplace(recHitsToken_, std::move(recHits));
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 // define this as a plug-in
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(HGCalRecHitsProducer);
+DEFINE_FWK_AV2P_MODULE(HGCalRecHitsProducer);

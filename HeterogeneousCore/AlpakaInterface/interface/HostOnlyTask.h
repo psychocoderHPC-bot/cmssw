@@ -6,9 +6,9 @@
 
 #include <fmt/format.h>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
-namespace alpaka {
+namespace aV2P {
 
   //! A task that is guaranted not to call any GPU-ralated APIs
   //!
@@ -26,7 +26,7 @@ namespace alpaka {
 
   namespace trait {
 
-#ifdef ALPAKA_ACC_GPU_CUDA_ENABLED
+#ifdef AV2P_ACC_GPU_CUDA_ENABLED
     //! The CUDA async queue enqueue trait specialization for "safe tasks"
     template <>
     struct Enqueue<QueueCudaRtNonBlocking, HostOnlyTask> {
@@ -50,15 +50,15 @@ namespace alpaka {
         }
       }
 
-      ALPAKA_FN_HOST static auto enqueue(QueueCudaRtNonBlocking& queue, HostOnlyTask task) -> void {
+      AV2P_FN_HOST static auto enqueue(QueueCudaRtNonBlocking& queue, HostOnlyTask task) -> void {
         auto pTask = std::make_unique<HostOnlyTask>(std::move(task));
-        ALPAKA_UNIFORM_CUDA_HIP_RT_CHECK(
-            cudaStreamAddCallback(alpaka::getNativeHandle(queue), callback, static_cast<void*>(pTask.release()), 0u));
+        AV2P_UNIFORM_CUDA_HIP_RT_CHECK(
+            cudaStreamAddCallback(aV2P::getNativeHandle(queue), callback, static_cast<void*>(pTask.release()), 0u));
       }
     };
-#endif  // ALPAKA_ACC_GPU_CUDA_ENABLED
+#endif  // AV2P_ACC_GPU_CUDA_ENABLED
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef AV2P_ACC_GPU_HIP_ENABLED
     //! The HIP async queue enqueue trait specialization for "safe tasks"
     template <>
     struct Enqueue<QueueHipRtNonBlocking, HostOnlyTask> {
@@ -82,16 +82,16 @@ namespace alpaka {
         }
       }
 
-      ALPAKA_FN_HOST static auto enqueue(QueueHipRtNonBlocking& queue, HostOnlyTask task) -> void {
+      AV2P_FN_HOST static auto enqueue(QueueHipRtNonBlocking& queue, HostOnlyTask task) -> void {
         auto pTask = std::make_unique<HostOnlyTask>(std::move(task));
-        ALPAKA_UNIFORM_CUDA_HIP_RT_CHECK(
-            hipStreamAddCallback(alpaka::getNativeHandle(queue), callback, static_cast<void*>(pTask.release()), 0u));
+        AV2P_UNIFORM_CUDA_HIP_RT_CHECK(
+            hipStreamAddCallback(aV2P::getNativeHandle(queue), callback, static_cast<void*>(pTask.release()), 0u));
       }
     };
-#endif  // ALPAKA_ACC_GPU_HIP_ENABLED
+#endif  // AV2P_ACC_GPU_HIP_ENABLED
 
   }  // namespace trait
 
-}  // namespace alpaka
+}  // namespace aV2P
 
 #endif  // HeterogeneousCore_AlpakaInterface_interface_HostOnlyTask_h

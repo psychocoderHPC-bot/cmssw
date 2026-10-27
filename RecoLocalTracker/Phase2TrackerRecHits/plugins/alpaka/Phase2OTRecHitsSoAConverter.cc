@@ -26,7 +26,7 @@
 
 //#define HITS_DEBUG
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class Phase2OTRecHitsSoAConverter : public stream::EDProducer<edm::stream::WatchRuns> {
     using Hits = ::reco::TrackingRecHitHost;
@@ -261,7 +261,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     iEvent.emplace(stripSoA_, std::move(stripHitsSoA));
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(Phase2OTRecHitsSoAConverter);
+DEFINE_FWK_AV2P_MODULE(Phase2OTRecHitsSoAConverter);

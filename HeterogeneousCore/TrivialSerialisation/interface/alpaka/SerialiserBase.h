@@ -12,7 +12,7 @@
 #include "HeterogeneousCore/TrivialSerialisation/interface/alpaka/ReaderBase.h"
 #include "HeterogeneousCore/TrivialSerialisation/interface/alpaka/WriterBase.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
+namespace AV2P_ACCELERATOR_NAMESPACE::ngt {
 
   // Abstract interface for creating Readers and Writers for device products.
   class SerialiserBase {
@@ -42,6 +42,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
 
     virtual ~SerialiserBase() = default;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ngt
 
 #endif  // HeterogeneousCore_TrivialSerialisation_interface_alpaka_SerialiserBase_h

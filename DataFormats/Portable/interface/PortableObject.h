@@ -3,7 +3,7 @@
 
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Portable/interface/PortableDeviceObject.h"
 #include "DataFormats/Portable/interface/PortableHostObject.h"
@@ -14,7 +14,7 @@
 namespace traits {
 
   // trait for a generic struct-based product
-  template <typename TDev, typename T, typename = std::enable_if_t<alpaka::concepts::Device<TDev>>>
+  template <typename TDev, typename T, typename = std::enable_if_t<aV2P::concepts::Device<TDev>>>
   struct PortableObjectTrait {
     using ProductType = PortableDeviceObject<TDev, T>;
   };
@@ -28,19 +28,19 @@ namespace traits {
 }  // namespace traits
 
 // type alias for a generic struct-based product
-template <typename TDev, typename T, typename = std::enable_if_t<alpaka::concepts::Device<TDev>>>
+template <typename TDev, typename T, typename = std::enable_if_t<aV2P::concepts::Device<TDev>>>
 using PortableObject = typename traits::PortableObjectTrait<TDev, T>::ProductType;
 
 // define how to copy PortableObject between host and device
 namespace cms::alpakatools {
   template <typename TDevice, typename TProduct>
-    requires alpaka::concepts::Device<TDevice>
+    requires aV2P::concepts::Device<TDevice>
   struct CopyToHost<PortableDeviceObject<TDevice, TProduct>> {
     template <typename TQueue>
-      requires alpaka::concepts::Queue<TQueue>
+      requires aV2P::concepts::Queue<TQueue>
     static auto copyAsync(TQueue& queue, PortableDeviceObject<TDevice, TProduct> const& srcData) {
       PortableHostObject<TProduct> dstData(queue);
-      alpaka::memcpy(queue, dstData.buffer(), srcData.buffer());
+      aV2P::memcpy(queue, dstData.buffer(), srcData.buffer());
       return dstData;
     }
   };
@@ -49,9 +49,9 @@ namespace cms::alpakatools {
   struct CopyToDevice<PortableHostObject<TProduct>> {
     template <cms::alpakatools::NonCPUQueue TQueue>
     static auto copyAsync(TQueue& queue, PortableHostObject<TProduct> const& srcData) {
-      using TDevice = typename alpaka::trait::DevType<TQueue>::type;
+      using TDevice = typename aV2P::trait::DevType<TQueue>::type;
       PortableDeviceObject<TDevice, TProduct> dstData(queue);
-      alpaka::memcpy(queue, dstData.buffer(), srcData.buffer());
+      aV2P::memcpy(queue, dstData.buffer(), srcData.buffer());
       return dstData;
     }
   };

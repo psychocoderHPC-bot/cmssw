@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Common/interface/Uninitialized.h"
 #include "DataFormats/Portable/interface/PortableDeviceCollection.h"
@@ -52,11 +52,11 @@ namespace reco {
       auto clusters_m = cms::alpakatools::make_device_view(queue, clusters.view().clusModuleStart(), nModules);
       auto hits_m = cms::alpakatools::make_device_view(queue, modsView.moduleStart(), nModules);
 
-      alpaka::memcpy(queue, hits_m, clusters_m);
+      aV2P::memcpy(queue, hits_m, clusters_m);
 
       auto off_h = cms::alpakatools::make_host_view(offsetBPIX2_);
       auto off_d = cms::alpakatools::make_device_view(queue, hitsView.offsetBPIX2());
-      alpaka::memcpy(queue, off_d, off_h);
+      aV2P::memcpy(queue, off_d, off_h);
     }
 
     uint32_t nHits() const { return static_cast<uint32_t>(this->view().trackingHits().metadata().size()); }
@@ -69,7 +69,7 @@ namespace reco {
     void updateFromDevice(TQueue queue) {
       auto off_h = cms::alpakatools::make_host_view(offsetBPIX2_);
       auto off_d = cms::alpakatools::make_device_view(queue, this->view().trackingHits().offsetBPIX2());
-      alpaka::memcpy(queue, off_h, off_d);
+      aV2P::memcpy(queue, off_h, off_d);
     }
 
   private:
@@ -92,7 +92,7 @@ namespace ngt {
     static Properties properties(value_type const& object) { return {object.nHits(), object.nModules()}; }
 
     template <typename TQueue>
-      requires(alpaka::concepts::Queue<TQueue>)
+      requires(aV2P::concepts::Queue<TQueue>)
     static void initialize(TQueue& queue, value_type& object, Properties const& prop) {
       // Replace the default-constructed empty object with one where the buffer
       // has been allocated in device global memory.
@@ -101,13 +101,13 @@ namespace ngt {
 
     static std::vector<std::span<std::byte>> regions(value_type& object) {
       std::byte* address = reinterpret_cast<std::byte*>(object.buffer().data());
-      size_t size = alpaka::getExtentProduct(object.buffer());
+      size_t size = aV2P::getExtentProduct(object.buffer());
       return {{address, size}};
     }
 
     static std::vector<std::span<const std::byte>> regions(value_type const& object) {
       const std::byte* address = reinterpret_cast<const std::byte*>(object.buffer().data());
-      size_t size = alpaka::getExtentProduct(object.buffer());
+      size_t size = aV2P::getExtentProduct(object.buffer());
       return {{address, size}};
     }
   };

@@ -5,7 +5,7 @@
 #include <tuple>
 #include "LSTEvent.h"
 
-using LSTEvent = ALPAKA_ACCELERATOR_NAMESPACE::lst::LSTEvent;
+using LSTEvent = AV2P_ACCELERATOR_NAMESPACE::lst::LSTEvent;
 
 // ----* Hit *----
 std::tuple<std::vector<unsigned int>, std::vector<lst::HitType>> convertHitsToHitIdxsAndHitTypes(

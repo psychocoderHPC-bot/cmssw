@@ -7,9 +7,9 @@ namespace cms::alpakaintrinsics {
   namespace warp {
 
 #if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
-#if defined(ALPAKA_ACC_GPU_CUDA_ENABLED)
+#if defined(AV2P_ACC_GPU_CUDA_ENABLED)
     using warp_mask_t = std::uint32_t;  // 32-bit masks on NVIDIA
-#elif defined(ALPAKA_ACC_GPU_HIP_ENABLED)
+#elif defined(AV2P_ACC_GPU_HIP_ENABLED)
     using warp_mask_t = std::uint64_t;  // 64-bit masks on AMD (!)
 #endif
 

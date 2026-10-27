@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/AtomicPairCounter.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/FlexiStorage.h"
@@ -45,99 +45,99 @@ namespace cms::alpakatools {
     static constexpr size_type ctCapacity() { return SIZE; }
     constexpr size_type capacity() const { return content.capacity(); }
 
-    ALPAKA_FN_HOST_ACC void initStorage(View view) {
-      ALPAKA_ASSERT_ACC(view.assoc == this);
+    AV2P_FN_HOST_ACC void initStorage(View view) {
+      AV2P_ASSERT_ACC(view.assoc == this);
       if constexpr (ctCapacity() == kDynamicSize) {
-        ALPAKA_ASSERT_ACC(view.contentStorage);
-        ALPAKA_ASSERT_ACC(view.contentSize > 0);
+        AV2P_ASSERT_ACC(view.contentStorage);
+        AV2P_ASSERT_ACC(view.contentSize > 0);
         content.init(view.contentStorage, view.contentSize);
       }
       if constexpr (ctNOnes() == kDynamicSize) {
-        ALPAKA_ASSERT_ACC(view.offStorage);
-        ALPAKA_ASSERT_ACC(view.offSize > 0);
+        AV2P_ASSERT_ACC(view.offStorage);
+        AV2P_ASSERT_ACC(view.offSize > 0);
         off.init(view.offStorage, view.offSize);
       }
     }
 
-    ALPAKA_FN_HOST_ACC void zero() {
+    AV2P_FN_HOST_ACC void zero() {
       for (size_type i = 0; i < totOnes(); ++i) {
         off[i] = 0;
       }
     }
 
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void add(const TAcc &acc, CountersOnly const &co) {
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE void add(const TAcc &acc, CountersOnly const &co) {
       for (size_type i = 0; i < totOnes(); ++i) {
-        alpaka::atomicAdd(acc, off.data() + i, co.off[i], alpaka::hierarchy::Blocks{});
+        aV2P::atomicAdd(acc, off.data() + i, co.off[i], aV2P::hierarchy::Blocks{});
       }
     }
 
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE static Counter atomicIncrement(const TAcc &acc, Counter &x) {
-      return alpaka::atomicAdd(acc, &x, static_cast<Counter>(1), alpaka::hierarchy::Blocks{});
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE static Counter atomicIncrement(const TAcc &acc, Counter &x) {
+      return aV2P::atomicAdd(acc, &x, static_cast<Counter>(1), aV2P::hierarchy::Blocks{});
     }
 
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE static Counter atomicDecrement(const TAcc &acc, Counter &x) {
-      return alpaka::atomicSub(acc, &x, static_cast<Counter>(1), alpaka::hierarchy::Blocks{});
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE static Counter atomicDecrement(const TAcc &acc, Counter &x) {
+      return aV2P::atomicSub(acc, &x, static_cast<Counter>(1), aV2P::hierarchy::Blocks{});
     }
 
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void count(const TAcc &acc, size_type b) {
-      ALPAKA_ASSERT_ACC(b < nOnes());
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE void count(const TAcc &acc, size_type b) {
+      AV2P_ASSERT_ACC(b < nOnes());
       atomicIncrement(acc, off[b]);
     }
 
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void fill(const TAcc &acc, size_type b, value_type j) {
-      ALPAKA_ASSERT_ACC(b < nOnes());
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE void fill(const TAcc &acc, size_type b, value_type j) {
+      AV2P_ASSERT_ACC(b < nOnes());
       auto w = atomicDecrement(acc, off[b]);
-      ALPAKA_ASSERT_ACC(w > 0);
+      AV2P_ASSERT_ACC(w > 0);
       content[w - 1] = j;
     }
 
     // this MUST BE DONE in a single block (or in two kernels!)
     struct zeroAndInit {
-      template <alpaka::concepts::Acc TAcc>
-      ALPAKA_FN_ACC void operator()(const TAcc &acc, View view) const {
-        ALPAKA_ASSERT_ACC((1 == alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[0]));
-        ALPAKA_ASSERT_ACC((0 == alpaka::getIdx<alpaka::Grid, alpaka::Blocks>(acc)[0]));
+      template <aV2P::concepts::Acc TAcc>
+      AV2P_FN_ACC void operator()(const TAcc &acc, View view) const {
+        AV2P_ASSERT_ACC((1 == aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[0]));
+        AV2P_ASSERT_ACC((0 == aV2P::getIdx<aV2P::Grid, aV2P::Blocks>(acc)[0]));
         auto h = view.assoc;
         if (cms::alpakatools::once_per_block(acc)) {
           h->psws = 0;
           h->initStorage(view);
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
         for (size_type i : cms::alpakatools::independent_group_elements(acc, h->totOnes())) {
           h->off[i] = 0;
         }
       }
     };
 
-    template <alpaka::concepts::Acc TAcc, typename TQueue>
-    ALPAKA_FN_INLINE static void launchZero(OneToManyAssocBase *h, TQueue &queue) {
+    template <aV2P::concepts::Acc TAcc, typename TQueue>
+    AV2P_FN_INLINE static void launchZero(OneToManyAssocBase *h, TQueue &queue) {
       View view = {h, nullptr, nullptr, kDynamicSize, kDynamicSize};
       launchZero<TAcc>(view, queue);
     }
 
-    template <alpaka::concepts::Acc TAcc, typename TQueue>
-    ALPAKA_FN_INLINE static void launchZero(View view, TQueue &queue) {
+    template <aV2P::concepts::Acc TAcc, typename TQueue>
+    AV2P_FN_INLINE static void launchZero(View view, TQueue &queue) {
       if constexpr (ctCapacity() == kDynamicSize) {
-        ALPAKA_ASSERT_ACC(view.contentStorage);
-        ALPAKA_ASSERT_ACC(view.contentSize > 0);
+        AV2P_ASSERT_ACC(view.contentStorage);
+        AV2P_ASSERT_ACC(view.contentSize > 0);
       }
       if constexpr (ctNOnes() == kDynamicSize) {
-        ALPAKA_ASSERT_ACC(view.offStorage);
-        ALPAKA_ASSERT_ACC(view.offSize > 0);
+        AV2P_ASSERT_ACC(view.offStorage);
+        AV2P_ASSERT_ACC(view.offSize > 0);
       }
       if constexpr (!requires_single_thread_per_block_v<TAcc>) {
         auto nthreads = 1024;
         auto nblocks = 1;  // MUST BE ONE as memory is initialize in thread 0 (alternative is two kernels);
         auto workDiv = cms::alpakatools::make_workdiv<TAcc>(nblocks, nthreads);
-        alpaka::exec<TAcc>(queue, workDiv, zeroAndInit{}, view);
+        aV2P::exec<TAcc>(queue, workDiv, zeroAndInit{}, view);
       } else {
         auto h = view.assoc;
-        ALPAKA_ASSERT_ACC(h);
+        AV2P_ASSERT_ACC(h);
         h->initStorage(view);
         h->zero();
         h->psws = 0;
@@ -170,8 +170,8 @@ namespace cms::alpakatools {
     using size_type = typename OneToManyAssocBase<I, ONES, SIZE>::size_type;
     using value_type = typename OneToManyAssocBase<I, ONES, SIZE>::value_type;
 
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_HOST_ACC ALPAKA_FN_INLINE size_type
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_HOST_ACC AV2P_FN_INLINE size_type
     bulkFill(const TAcc &acc, AtomicPairCounter &apc, value_type const *v, size_type n) {
       auto c = apc.inc_add(acc, n);
       if (c.first >= this->nOnes())  // overflow!
@@ -182,27 +182,27 @@ namespace cms::alpakatools {
       return c.first;
     }
 
-    ALPAKA_FN_HOST_ACC ALPAKA_FN_INLINE void bulkFinalize(AtomicPairCounter const &apc) {
+    AV2P_FN_HOST_ACC AV2P_FN_INLINE void bulkFinalize(AtomicPairCounter const &apc) {
       this->off[apc.get().first] = apc.get().second;
     }
 
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_HOST_ACC ALPAKA_FN_INLINE void bulkFinalizeFill(const TAcc &acc, AtomicPairCounter const &apc) {
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_HOST_ACC AV2P_FN_INLINE void bulkFinalizeFill(const TAcc &acc, AtomicPairCounter const &apc) {
       size_type f = apc.get().first;
       auto s = apc.get().second;
       if (f >= this->nOnes()) {  // overflow!
         this->off[this->nOnes()] = this->off[this->nOnes() - 1];
         return;
       }
-      auto first = f + alpaka::getIdx<alpaka::Grid, alpaka::Threads>(acc)[0];
-      for (size_type i = first; i < this->totOnes(); i += alpaka::getWorkDiv<alpaka::Grid, alpaka::Threads>(acc)[0]) {
+      auto first = f + aV2P::getIdx<aV2P::Grid, aV2P::Threads>(acc)[0];
+      for (size_type i = first; i < this->totOnes(); i += aV2P::getWorkDiv<aV2P::Grid, aV2P::Threads>(acc)[0]) {
         this->off[i] = s;
       }
     }
 
     struct finalizeBulk {
-      template <alpaka::concepts::Acc TAcc>
-      ALPAKA_FN_ACC void operator()(const TAcc &acc,
+      template <aV2P::concepts::Acc TAcc>
+      AV2P_FN_ACC void operator()(const TAcc &acc,
                                     AtomicPairCounter const *apc,
                                     OneToManyAssocSequential *__restrict__ assoc) const {
         assoc->bulkFinalizeFill(acc, *apc);
@@ -224,46 +224,46 @@ namespace cms::alpakatools {
     using size_type = typename OneToManyAssocBase<I, ONES, SIZE>::size_type;
     using value_type = typename OneToManyAssocBase<I, ONES, SIZE>::value_type;
 
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_HOST_ACC ALPAKA_FN_INLINE void finalize(const TAcc &acc, Counter *ws = nullptr) {
-      ALPAKA_ASSERT_ACC(this->off[this->totOnes() - 1] == 0);
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_HOST_ACC AV2P_FN_INLINE void finalize(const TAcc &acc, Counter *ws = nullptr) {
+      AV2P_ASSERT_ACC(this->off[this->totOnes() - 1] == 0);
       blockPrefixScan(acc, this->off.data(), this->totOnes(), ws);
-      ALPAKA_ASSERT_ACC(this->off[this->totOnes() - 1] == this->off[this->totOnes() - 2]);
+      AV2P_ASSERT_ACC(this->off[this->totOnes() - 1] == this->off[this->totOnes() - 2]);
     }
 
-    ALPAKA_FN_HOST_ACC ALPAKA_FN_INLINE void finalize() {
+    AV2P_FN_HOST_ACC AV2P_FN_INLINE void finalize() {
       // Single thread finalize.
       for (size_type i = 1; i < this->totOnes(); ++i)
         this->off[i] += this->off[i - 1];
     }
 
-    template <alpaka::concepts::Acc TAcc, typename TQueue>
-    ALPAKA_FN_INLINE static void launchFinalize(OneToManyAssocRandomAccess *h, TQueue &queue) {
+    template <aV2P::concepts::Acc TAcc, typename TQueue>
+    AV2P_FN_INLINE static void launchFinalize(OneToManyAssocRandomAccess *h, TQueue &queue) {
       View view = {h, nullptr, nullptr, kDynamicSize, kDynamicSize};
       launchFinalize<TAcc>(view, queue);
     }
 
-    template <alpaka::concepts::Acc TAcc, typename TQueue>
-    ALPAKA_FN_INLINE static void launchFinalize(View view, TQueue &queue) {
+    template <aV2P::concepts::Acc TAcc, typename TQueue>
+    AV2P_FN_INLINE static void launchFinalize(View view, TQueue &queue) {
       // View stores a base pointer, we need to upcast back...
       auto h = static_cast<OneToManyAssocRandomAccess *>(view.assoc);
-      ALPAKA_ASSERT_ACC(h);
+      AV2P_ASSERT_ACC(h);
       if constexpr (!requires_single_thread_per_block_v<TAcc>) {
         Counter *poff = (Counter *)((char *)(h) + offsetof(OneToManyAssocRandomAccess, off));
         auto nOnes = OneToManyAssocRandomAccess::ctNOnes();
         if constexpr (OneToManyAssocRandomAccess::ctNOnes() == kDynamicSize) {
-          ALPAKA_ASSERT_ACC(view.offStorage);
-          ALPAKA_ASSERT_ACC(view.offSize > 0);
+          AV2P_ASSERT_ACC(view.offStorage);
+          AV2P_ASSERT_ACC(view.offSize > 0);
           nOnes = view.offSize;
           poff = view.offStorage;
         }
-        ALPAKA_ASSERT_ACC(nOnes > 0);
+        AV2P_ASSERT_ACC(nOnes > 0);
         int32_t *ppsws = (int32_t *)((char *)(h) + offsetof(OneToManyAssocRandomAccess, psws));
         auto nthreads = 1024;
         auto nblocks = (nOnes + nthreads - 1) / nthreads;
         auto workDiv = cms::alpakatools::make_workdiv<TAcc>(nblocks, nthreads);
-        cms::alpakatools::checkSharedMemoryPrefixScan<TAcc>(nOnes, nblocks, alpaka::getDev(queue));
-        alpaka::exec<TAcc>(queue,
+        cms::alpakatools::checkSharedMemoryPrefixScan<TAcc>(nOnes, nblocks, aV2P::getDev(queue));
+        aV2P::exec<TAcc>(queue,
                            workDiv,
                            multiBlockPrefixScan<Counter>(),
                            poff,
@@ -271,7 +271,7 @@ namespace cms::alpakatools {
                            nOnes,
                            nblocks,
                            ppsws,
-                           alpaka::getPreferredWarpSize(alpaka::getDev(queue)));
+                           aV2P::getPreferredWarpSize(aV2P::getDev(queue)));
       } else {
         h->finalize();
       }

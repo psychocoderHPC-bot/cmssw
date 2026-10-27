@@ -30,7 +30,7 @@ namespace cms::alpakatest {
     ConstBuffer const_buffer() const { return buffer_; }
 
     int const* data() const { return buffer_.data(); }
-    auto size() const { return alpaka::getExtentProduct(buffer_); }
+    auto size() const { return aV2P::getExtentProduct(buffer_); }
 
   private:
     Buffer buffer_;
@@ -96,8 +96,8 @@ namespace cms::alpakatools {
       // the device-side release gets associated to the complemention
       // of that activity (which has nothing to do with the memory here).
       auto dstBuffer = cms::alpakatools::make_device_buffer<int[]>(queue, srcData.size());
-      alpaka::memcpy(queue, dstBuffer, srcData.buffer());
-      return cms::alpakatest::AlpakaESTestDataB<alpaka::Dev<TQueue>>(std::move(dstBuffer));
+      aV2P::memcpy(queue, dstBuffer, srcData.buffer());
+      return cms::alpakatest::AlpakaESTestDataB<aV2P::Dev<TQueue>>(std::move(dstBuffer));
     }
   };
 
@@ -107,7 +107,7 @@ namespace cms::alpakatools {
     static auto copyAsync(TQueue& queue, cms::alpakatest::AlpakaESTestDataEHost const& srcData) {
       using ECopy = CopyToDevice<cms::alpakatest::AlpakaESTestDataEHost::ECollection>;
       using EDataCopy = CopyToDevice<cms::alpakatest::AlpakaESTestDataEHost::EDataCollection>;
-      using TDevice = alpaka::Dev<TQueue>;
+      using TDevice = aV2P::Dev<TQueue>;
       return cms::alpakatest::AlpakaESTestDataE<TDevice>(ECopy::copyAsync(queue, srcData.e()),
                                                          EDataCopy::copyAsync(queue, srcData.data()));
     }

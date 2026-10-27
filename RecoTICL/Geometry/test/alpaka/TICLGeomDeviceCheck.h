@@ -7,7 +7,7 @@
 #include "CondFormats/HGCalObjects/interface/TICLGeomSoA.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   namespace ticlgeomtest {
 
@@ -19,6 +19,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   }  // namespace ticlgeomtest
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // RecoHGCal_TICL_test_alpaka_TICLGeomDeviceCheck_h

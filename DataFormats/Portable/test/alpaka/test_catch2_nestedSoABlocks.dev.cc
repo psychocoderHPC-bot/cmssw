@@ -1,7 +1,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
@@ -17,7 +17,7 @@
 // TODO remove
 #include <iostream>
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 using namespace Catch::Matchers;
 
 GENERATE_SOA_LAYOUT(SoALayout1, SOA_COLUMN(int, column), SOA_EIGEN_COLUMN(Eigen::Vector3d, vector), SOA_SCALAR(int, id))
@@ -42,7 +42,7 @@ using ConstView = BlockSoA::ConstView;
 
 // Fill SoAs
 struct FillSoAs {
-  ALPAKA_FN_ACC void operator()(Acc1D const& acc, View view) const {
+  AV2P_FN_ACC void operator()(Acc1D const& acc, View view) const {
     // Fill elements of SoALayout1
     if (cms::alpakatools::once_per_grid(acc)) {
       view.blocks().blocks().first().id() = view.metadata().size()[0];
@@ -118,13 +118,13 @@ void checkNestedSoABlocks(const ConstView& view) {
 TEST_CASE("NestedSoABlocks minimal test") {
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cout << "No devices available for the " << EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE)
+    std::cout << "No devices available for the " << EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE)
               << " backend, skipping.\n";
     return;
   }
 
   for (auto const& device : devices) {
-    std::cout << "Running on " << alpaka::getName(device) << std::endl;
+    std::cout << "Running on " << aV2P::getName(device) << std::endl;
     Queue queue(device);
 
     std::array<BlockSoA::size_type, 4> sizes = {2, 1189, 33, 3333};
@@ -149,13 +149,13 @@ TEST_CASE("NestedSoABlocks minimal test") {
     const auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(nBlocks, blockSize);
 
     // Fill: all layouts
-    alpaka::exec<Acc1D>(queue, workDiv, FillSoAs{}, view);
-    alpaka::wait(queue);
+    aV2P::exec<Acc1D>(queue, workDiv, FillSoAs{}, view);
+    aV2P::wait(queue);
 
     // Check results on host
     PortableHostCollection<BlockSoA> nestedBlocksHostCollection(cms::alpakatools::host(), sizes);
-    alpaka::memcpy(queue, nestedBlocksHostCollection.buffer(), nestedBlocksCollection.buffer());
-    alpaka::wait(queue);
+    aV2P::memcpy(queue, nestedBlocksHostCollection.buffer(), nestedBlocksCollection.buffer());
+    aV2P::wait(queue);
 
     ConstView constHostView = nestedBlocksHostCollection.const_view();
     checkNestedSoABlocks(constHostView);

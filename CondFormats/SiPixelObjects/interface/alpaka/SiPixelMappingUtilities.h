@@ -4,7 +4,7 @@
 #include <set>
 #include <vector>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "CondFormats/SiPixelObjects/interface/CablingPathToDetUnit.h"
 #include "CondFormats/SiPixelObjects/interface/PixelROC.h"
@@ -15,14 +15,14 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   struct SiPixelMappingUtilities {
-    ALPAKA_FN_HOST_ACC ALPAKA_FN_ACC ALPAKA_FN_INLINE static bool hasQuality(const SiPixelMappingSoAConstView& view) {
+    AV2P_FN_HOST_ACC AV2P_FN_ACC AV2P_FN_INLINE static bool hasQuality(const SiPixelMappingSoAConstView& view) {
       return view.hasQuality();
     }
 
-    ALPAKA_FN_HOST_ACC ALPAKA_FN_ACC ALPAKA_FN_INLINE static cms::alpakatools::device_buffer<Device, unsigned char[]>
+    AV2P_FN_HOST_ACC AV2P_FN_ACC AV2P_FN_INLINE static cms::alpakatools::device_buffer<Device, unsigned char[]>
     getModToUnpRegionalAsync(std::set<unsigned int> const& modules,
                              const SiPixelFedCablingTree* cabling,
                              std::vector<unsigned int> const& fedIds,
@@ -51,10 +51,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         }
       }
 
-      alpaka::memcpy(queue, modToUnpDevice, modToUnpHost);
+      aV2P::memcpy(queue, modToUnpDevice, modToUnpHost);
 
       return modToUnpDevice;
     }
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 #endif  //CondFormats_SiPixelObjects_interface_alpaka_SiPixelMappingUtilities_h

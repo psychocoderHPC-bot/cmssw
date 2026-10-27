@@ -12,7 +12,7 @@ namespace edm {
   class ParameterSet;
 }  // namespace edm
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class AlpakaService {
   public:
@@ -28,8 +28,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     bool verbose_ = false;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DECLARE_ALPAKA_TYPE_ALIAS(AlpakaService);
+DECLARE_AV2P_TYPE_ALIAS(AlpakaService);
 
 #endif  // HeterogeneousCore_AlpakaServices_interface_AlpakaService_h

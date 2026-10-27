@@ -5,12 +5,12 @@
 #include "DataFormats/HGCalDigi/interface/HGCalDigiTriggerSoA.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   namespace hgcaldigi {
 
     // make the names from the top-level hgcaldigi namespace visible for unqualified lookup
-    // inside the ALPAKA_ACCELERATOR_NAMESPACE::hgcaldigi namespace
+    // inside the AV2P_ACCELERATOR_NAMESPACE::hgcaldigi namespace
     using namespace ::hgcaldigi;
 
     // SoA in device global memory
@@ -18,6 +18,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   }  // namespace hgcaldigi
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // DataFormats_HGCalDigi_interface_alpaka_HGCalDigiTriggerDevice_h

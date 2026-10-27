@@ -750,7 +750,7 @@ TVector3 calculateR3FromPCA(const TVector3& p3, const float dxy, const float dz)
 float addInputsToEventPreLoad(LSTEvent* event,
                               lst::LSTInputHostCollection* lstInputHC,
                               LSTInputDeviceCollection* lstInputDC,
-                              ALPAKA_ACCELERATOR_NAMESPACE::Queue& queue) {
+                              AV2P_ACCELERATOR_NAMESPACE::Queue& queue) {
   TStopwatch my_timer;
 
   if (ana.verbose >= 2)
@@ -760,8 +760,8 @@ float addInputsToEventPreLoad(LSTEvent* event,
   my_timer.Start();
 
   // We can't use CopyToDevice because the device can be DevHost
-  alpaka::memcpy(queue, lstInputDC->buffer(), lstInputHC->buffer());
-  alpaka::wait(queue);
+  aV2P::memcpy(queue, lstInputDC->buffer(), lstInputHC->buffer());
+  aV2P::wait(queue);
 
   event->addInputToEvent(lstInputDC);
   event->addHitToEvent();

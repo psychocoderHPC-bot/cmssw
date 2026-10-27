@@ -6,7 +6,7 @@
 #include <Eigen/Dense>
 #include <iostream>
 #include <cstdlib>
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 #include "DataFormats/HcalDetId/interface/HcalDetId.h"
@@ -137,7 +137,7 @@ static inline reco::PFRecHit makePFRecHit(
   return reco::PFRecHit{makeBoxCellGeo(x, y, z), detId.rawId(), layer, energy, flags};
 }
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class EpilogueTest {
     const int nStreams;
@@ -164,7 +164,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                            const std::vector<reco::PFClusterDeviceCollection> &pfClusters,
                            const std::vector<reco::PFRecHitFractionDeviceCollection> &pfRecHitFracs,
                            const std::vector<reco::PFRecHitDeviceCollection> &pfRecHit) const {
-    uint32_t items = std::is_same_v<Device, alpaka::DevCpu> ? 1 : threads;
+    uint32_t items = std::is_same_v<Device, aV2P::DevCpu> ? 1 : threads;
 
     auto n = static_cast<uint32_t>(mdpfClusteringVars[0]->metadata().size());
     uint32_t groups = cms::alpakatools::divide_up_by(n, items);
@@ -189,7 +189,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     for (int s = 0; s < nStreams; s++) {
       devClusteringEpilogueArgs.emplace_back(reco::PFMultiDepthECLCCEpilogueArgsDeviceCollection(queues[s], n));
-      alpaka::wait(queues[s]);
+      aV2P::wait(queues[s]);
     }
 
     double wall_time = 0.0;
@@ -200,14 +200,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         for (int s = 0; s < nStreams; s++) {
           devClusteringEpilogueArgs[s].zeroInitialise(queues[s]);
 
-          alpaka::exec<Acc1D>(queues[s],
+          aV2P::exec<Acc1D>(queues[s],
                               workDiv,
                               ECLCCEpilogueRecHitFracOffsetsKernel{},
                               devClusteringEpilogueArgs[s].view(),
                               mdpfClusteringVars[s].view(),
                               pfClusters[s].view());
 
-          alpaka::exec<Acc1D>(queues[s],
+          aV2P::exec<Acc1D>(queues[s],
                               workDiv,
                               ECLCCEpilogueCCOffsetsKernel{},
                               outPFCluster[s].view(),
@@ -215,7 +215,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                               mdpfClusteringVars[s].view(),
                               pfClusters[s].view());
 
-          alpaka::exec<Acc1D>(queues[s],
+          aV2P::exec<Acc1D>(queues[s],
                               workDiv,
                               ECLCCFinalizeEpilogueKernel<32, cooperative>{},
                               outPFCluster[s].view(),
@@ -226,13 +226,13 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                               pfRecHitFracs[s].view(),
                               pfRecHit[s].view());
 
-          alpaka::exec<Acc1D>(
+          aV2P::exec<Acc1D>(
               queues[s], workDiv, ECLCCLoadSeedsKernel{}, outPFCluster[s].view(), devClusteringEpilogueArgs[s].view());
         }  //nStreams
       } else {
-        if constexpr (std::is_same_v<Device, alpaka::DevCpu>) {
+        if constexpr (std::is_same_v<Device, aV2P::DevCpu>) {
           for (int s = 0; s < nStreams; s++) {
-            alpaka::exec<Acc1D>(queues[s],
+            aV2P::exec<Acc1D>(queues[s],
                                 workDiv,
                                 ECLCCEpilogueNaiveKernel{},
                                 outPFCluster[s].view(),
@@ -244,7 +244,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           }
         } else {
           for (int s = 0; s < nStreams; s++) {
-            alpaka::exec<Acc1D>(queues[s],
+            aV2P::exec<Acc1D>(queues[s],
                                 workDiv,
                                 ECLCCEpilogueKernel<32, cooperative>{},
                                 outPFCluster[s].view(),
@@ -258,7 +258,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }  //end multi-block
 
       for (int s = 0; s < nStreams; s++)
-        alpaka::wait(queues[s]);
+        aV2P::wait(queues[s]);
 
       auto wall_stop = std::chrono::high_resolution_clock::now();
       //
@@ -319,10 +319,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       auto dev_rhfrac = reco::PFRecHitFractionDeviceCollection{queues[s], nFracs};
       auto dev_clustering_vars = reco::PFMultiDepthClusteringCCLabelsDeviceCollection{queues[s], nClusters};
       //
-      alpaka::memcpy(queues[s], dev_clusters.buffer(), hostClusters[s].buffer());
-      alpaka::memcpy(queues[s], dev_hits.buffer(), hostRecHits[s].buffer());
-      alpaka::memcpy(queues[s], dev_rhfrac.buffer(), hostRecHitFracs[s].buffer());
-      alpaka::memcpy(queues[s], dev_clustering_vars.buffer(), hostClusteringVars[s].buffer());
+      aV2P::memcpy(queues[s], dev_clusters.buffer(), hostClusters[s].buffer());
+      aV2P::memcpy(queues[s], dev_hits.buffer(), hostRecHits[s].buffer());
+      aV2P::memcpy(queues[s], dev_rhfrac.buffer(), hostRecHitFracs[s].buffer());
+      aV2P::memcpy(queues[s], dev_clustering_vars.buffer(), hostClusteringVars[s].buffer());
 
       devClusters.emplace_back(std::move(dev_clusters));
       devRecHits.emplace_back(std::move(dev_hits));
@@ -338,16 +338,16 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         queues, outDevClusters, outDevRecHitFracs, devClusteringVars, devClusters, devRecHitFracs, devRecHits);
     printf("...done.\n");
 
-    alpaka::memcpy(queues[0], outClusters[0].buffer(), outDevClusters[0].buffer());
-    alpaka::memcpy(queues[0], outRecHitFracs[0].buffer(), outDevRecHitFracs[0].buffer());
+    aV2P::memcpy(queues[0], outClusters[0].buffer(), outDevClusters[0].buffer());
+    aV2P::memcpy(queues[0], outRecHitFracs[0].buffer(), outDevRecHitFracs[0].buffer());
 
     for (int s = 0; s < nStreams; s++)
-      alpaka::wait(queues[s]);
+      aV2P::wait(queues[s]);
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 struct Fraction {  // content is same as for SoA
   int pfrhIdx;     // index into hits[]
@@ -829,7 +829,7 @@ int main(int argc, char **argv) {
   // Get the list of devices on the current platform
   auto const &devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
                  "the test will be skipped.\n";
     return EXIT_FAILURE;  // Prefer returning over raw exit() in main
   }

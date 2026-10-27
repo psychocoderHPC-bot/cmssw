@@ -6,7 +6,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaTest/interface/alpaka/AlpakaESTestData.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class TestAlgo {
   public:
@@ -47,6 +47,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     void checkZero(Queue& queue, portabletest::TestDeviceObject const& object) const;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // HeterogeneousCore_AlpakaTest_plugins_alpaka_TestAlgo_h

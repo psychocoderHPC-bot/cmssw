@@ -1,4 +1,4 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "FWCore/ParameterSet/interface/FileInPath.h"
@@ -7,11 +7,11 @@
 #include "PhysicsTools/PyTorchAlpaka/interface/GetDevice.h"
 #include "PhysicsTools/PyTorchAlpaka/interface/alpaka/AlpakaModel.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
+namespace AV2P_ACCELERATOR_NAMESPACE::torchtest {
 
   constexpr auto modelPath = "PhysicsTools/PyTorchAlpaka/data/linear_dnn.pt";
 
-  using namespace ALPAKA_ACCELERATOR_NAMESPACE::torch;
+  using namespace AV2P_ACCELERATOR_NAMESPACE::torch;
 
   class TestAlpakaModel : public CppUnit::TestFixture {
   public:
@@ -106,4 +106,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest {
     });
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::torchtest
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::torchtest

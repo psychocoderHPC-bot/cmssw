@@ -16,7 +16,7 @@ Options:
   -v, --version              print version information and exit
 
 
-Resolve each C++ type name in "types" to its actual definition based on its ROOT dictionary, taking into account type aliases and the use of ALPAKA_ACCELERATOR_NAMESPACE.
+Resolve each C++ type name in "types" to its actual definition based on its ROOT dictionary, taking into account type aliases and the use of AV2P_ACCELERATOR_NAMESPACE.
 For each type print the full c++ name, the friendly class name, and the mangled name.
 """)
 
@@ -44,9 +44,9 @@ if '-v' in sys.argv[1:] or '--version' in sys.argv[1:]:
     sys.exit(0)
 
 for name in sys.argv[1:]:
-    if 'ALPAKA_ACCELERATOR_NAMESPACE' in name:
+    if 'AV2P_ACCELERATOR_NAMESPACE' in name:
         for ns in 'alpaka_serial_sync', 'alpaka_cuda_async', 'alpaka_rocm_async':
-            ns_name = name.replace('ALPAKA_ACCELERATOR_NAMESPACE', ns)
+            ns_name = name.replace('AV2P_ACCELERATOR_NAMESPACE', ns)
             resolve(ns_name)
     else:
         resolve(name)

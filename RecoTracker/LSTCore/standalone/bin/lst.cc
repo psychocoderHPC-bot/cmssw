@@ -5,8 +5,8 @@
 
 #include <boost/core/demangle.hpp>
 
-using LSTEvent = ALPAKA_ACCELERATOR_NAMESPACE::lst::LSTEvent;
-using LSTInputDeviceCollection = ALPAKA_ACCELERATOR_NAMESPACE::lst::LSTInputDeviceCollection;
+using LSTEvent = AV2P_ACCELERATOR_NAMESPACE::lst::LSTEvent;
+using LSTInputDeviceCollection = AV2P_ACCELERATOR_NAMESPACE::lst::LSTInputDeviceCollection;
 using namespace ::lst;
 
 //___________________________________________________________________________________________________________________________________________________________________________________________
@@ -319,7 +319,7 @@ int main(int argc, char **argv) {
 
   // Printing out the option settings overview
   std::cout << "=========================================================" << std::endl;
-  std::cout << " Running for Acc = " << alpaka::getAccName<ALPAKA_ACCELERATOR_NAMESPACE::Acc3D>() << std::endl;
+  std::cout << " Running for Acc = " << aV2P::getAccName<AV2P_ACCELERATOR_NAMESPACE::Acc3D>() << std::endl;
   std::cout << " Setting of the analysis job based on provided arguments " << std::endl;
   std::cout << "---------------------------------------------------------" << std::endl;
   std::cout << " ana.input_file_list_tstring: " << ana.input_file_list_tstring << std::endl;
@@ -365,10 +365,10 @@ int main(int argc, char **argv) {
 
 //___________________________________________________________________________________________________________________________________________________________________________________________
 void run_lst() {
-  ALPAKA_ACCELERATOR_NAMESPACE::Device devAcc = alpaka::getDevByIdx(ALPAKA_ACCELERATOR_NAMESPACE::Platform{}, 0u);
-  std::vector<ALPAKA_ACCELERATOR_NAMESPACE::Queue> queues;
+  AV2P_ACCELERATOR_NAMESPACE::Device devAcc = aV2P::getDevByIdx(AV2P_ACCELERATOR_NAMESPACE::Platform{}, 0u);
+  std::vector<AV2P_ACCELERATOR_NAMESPACE::Queue> queues;
   for (int s = 0; s < ana.streams; s++) {
-    queues.push_back(ALPAKA_ACCELERATOR_NAMESPACE::Queue(devAcc));
+    queues.push_back(AV2P_ACCELERATOR_NAMESPACE::Queue(devAcc));
   }
 
   // Load various maps used in the lst reconstruction
@@ -444,7 +444,7 @@ void run_lst() {
   full_timer.Reset();
   full_timer.Start();
   std::vector<LSTEvent *> events;
-  std::vector<ALPAKA_ACCELERATOR_NAMESPACE::Queue *> event_queues;
+  std::vector<AV2P_ACCELERATOR_NAMESPACE::Queue *> event_queues;
   for (int s = 0; s < ana.streams; s++) {
     LSTEvent *event = new LSTEvent(
         ana.verbose >= 2, ana.ptCut, ana.clustSizeCut, queues[s], &deviceESData, ana.reduce_mem_by_full_precompute);

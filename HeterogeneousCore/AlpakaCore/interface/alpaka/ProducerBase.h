@@ -24,7 +24,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   template <typename Producer, edm::Transition Tr>
   class ProducerBaseAdaptor;
 
@@ -47,7 +47,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   template <template <typename...> class BaseT, typename... Args>
   class ProducerBase : public BaseT<Args..., edm::Transformer> {
     static_assert(not edm::CheckAbility<edm::module::Abilities::kTransformer>::kHasIt,
-                  "ALPAKA_ACCELERATOR_NAMESPACE::ProducerBase can not be used with Transformer ability (as it is "
+                  "AV2P_ACCELERATOR_NAMESPACE::ProducerBase can not be used with Transformer ability (as it is "
                   "used internally)");
     using Base = BaseT<Args..., edm::Transformer>;
 
@@ -314,6 +314,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     TProducer& producer_;
     std::string const label_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

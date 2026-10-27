@@ -4,7 +4,7 @@
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 // Alpaka imports
-//#include <alpaka/alpaka.hpp>
+//#include <aV2P/alpaka.hpp>
 #include "HeterogeneousCore/AlpakaInterface/interface/traits.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
@@ -12,13 +12,13 @@
 #include "RecoLocalCalo/HGCalRecAlgos/interface/alpaka/HGCalRecHitCalibrationAlgorithms.h"
 #include "DataFormats/HGCalDigi/interface/HGCalRawDataDefinitions.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
 
   // @short set RecHit flags based on DIGI flags (data corruption, zero-suppression)
   struct HGCalRecHitCalibrationKernel_flagRecHits {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   HGCalSoARecHitsDeviceCollection::View recHits,
                                   HGCalDigiDevice::ConstView digis,
                                   HGCalCalibParamDevice::ConstView calibs) const {
@@ -37,7 +37,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   // @short subtract pedestals, linearize ADC & TOT to charge (fC), and convert to energy (GeV)
   struct HGCalRecHitCalibrationKernel_adcToEnergy {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   HGCalSoARecHitsDeviceCollection::View recHits,
                                   HGCalDigiDevice::ConstView digis,
                                   HGCalCalibParamDevice::ConstView calibs) const {
@@ -89,7 +89,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   // @short apply INL and timewalk corrections, and convert TOA to time (ps)
   struct HGCalRecHitCalibrationKernel_toaToTime {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   HGCalSoARecHitsDeviceCollection::View recHits,
                                   HGCalDigiDevice::ConstView digis,
                                   HGCalCalibParamDevice::ConstView calibs) const {
@@ -131,7 +131,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   // @short sum the energy of the RecHits in the calibration and surrounding cells
   // see https://github.com/cms-sw/cmssw/pull/47829
   struct HGCalRecHitCalibrationKernel_handleCalibCell {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   HGCalSoARecHitsDeviceCollection::View recHits,
                                   HGCalDigiDevice::ConstView digis,
                                   HGCalCalibParamDevice::ConstView calibs,
@@ -196,7 +196,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   // add metadata to rechits
   struct HGCalRecHitCalibrationKernel_metaData {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   HGCalSoARecHitsDeviceCollection::View recHits,
                                   HGCalMappingModuleParamDevice::ConstView mapmod,
                                   HGCalDenseIndexInfoDevice::ConstView index) const {
@@ -221,7 +221,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   // @short print RecHits for debugging
   struct HGCalRecHitCalibrationKernel_printRecHits {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, HGCalSoARecHitsDeviceCollection::ConstView view, int size) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, HGCalSoARecHitsDeviceCollection::ConstView view, int size) const {
       for (int i = 0; i < size; ++i) {
         auto const& recHit = view[i];
         printf(
@@ -245,7 +245,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   //
   struct HGCalRecHitCalibrationKernel_countRecHits {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   int32_t* __restrict__ nsel,
                                   int32_t* __restrict__ sidx,
                                   HGCalSoARecHitsDeviceCollection::ConstView recHits,
@@ -257,14 +257,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         auto cellIndex = index[idx].cellInfoIdx();
         if (!recHits[idx].flags() && recHits[idx].energy() > k_noise * recHits[idx].sigmaNoise() &&
             cell_maps[cellIndex].t() > 0)
-          sidx[alpaka::atomicAdd(acc, nsel, 1)] = idx;
+          sidx[aV2P::atomicAdd(acc, nsel, 1)] = idx;
       }
     }
   };
 
   //
   struct HGCalRecHitCalibrationKernel_copyRecHits {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   HGCalSoARecHitsDeviceCollection::View output,
                                   HGCalSoARecHitsDeviceCollection::ConstView recHits,
                                   int32_t const* __restrict__ sidx) const {
@@ -289,7 +289,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     LogDebug("HGCalRecHitCalibrationAlgorithms") << "\n\nINFO -- Copying the digis to the device\n\n" << std::endl;
     auto const ndigis = host_digis.view().metadata().size();
     HGCalDigiDevice device_digis(queue, ndigis);
-    alpaka::memcpy(queue, device_digis.buffer(), host_digis.const_buffer());
+    aV2P::memcpy(queue, device_digis.buffer(), host_digis.const_buffer());
 
     LogDebug("HGCalRecHitCalibrationAlgorithms")
         << "\n\nINFO -- Allocating rechits buffer and initiating values" << std::endl;
@@ -305,25 +305,25 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto grid = make_workdiv<Acc1D>(groups, items);
     LogDebug("HGCalRecHitCalibrationAlgorithms") << "N groups: " << groups << "\tN items: " << items << std::endl;
 
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         grid,
                         HGCalRecHitCalibrationKernel_flagRecHits{},
                         device_recHits.view(),
                         device_digis.const_view(),
                         device_calib.const_view());
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         grid,
                         HGCalRecHitCalibrationKernel_adcToEnergy{},
                         device_recHits.view(),
                         device_digis.const_view(),
                         device_calib.const_view());
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         grid,
                         HGCalRecHitCalibrationKernel_toaToTime{},
                         device_recHits.view(),
                         device_digis.const_view(),
                         device_calib.const_view());
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         grid,
                         HGCalRecHitCalibrationKernel_handleCalibCell{},
                         device_recHits.view(),
@@ -331,7 +331,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         device_calib.const_view(),
                         device_cell_mapping.const_view(),
                         device_index.const_view());
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         grid,
                         HGCalRecHitCalibrationKernel_metaData{},
                         device_recHits.view(),
@@ -339,7 +339,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         device_index.const_view());
 
     // select rec hits
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         grid,
                         HGCalRecHitCalibrationKernel_countRecHits{},
                         nsel,
@@ -369,7 +369,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     auto grid = make_workdiv<Acc1D>(groups, items);
 
     HGCalSoARecHitsDeviceCollection device_selRecHits(queue, *nsel);
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         grid,
                         HGCalRecHitCalibrationKernel_copyRecHits{},
                         device_selRecHits.view(),
@@ -408,10 +408,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                                              int max) const {
     auto grid = make_workdiv<Acc1D>(1, 1);
     auto size = max > 0 ? max : recHits.metadata().size();
-    alpaka::exec<Acc1D>(queue, grid, HGCalRecHitCalibrationKernel_printRecHits{}, recHits, size);
+    aV2P::exec<Acc1D>(queue, grid, HGCalRecHitCalibrationKernel_printRecHits{}, recHits, size);
 
     // ensure that the print operations are complete before returning
-    alpaka::wait(queue);
+    aV2P::wait(queue);
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE

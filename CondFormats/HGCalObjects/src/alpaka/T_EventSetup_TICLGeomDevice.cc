@@ -3,6 +3,6 @@
 #include "CondFormats/HGCalObjects/interface/alpaka/TICLGeomLookupDevice.h"
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/typelookup.h"
 
-TYPELOOKUP_ALPAKA_DATA_REG(TICLGeomDevice);
-TYPELOOKUP_ALPAKA_DATA_REG(TICLGeomLookupDevice);
-TYPELOOKUP_ALPAKA_DATA_REG(TICLGeomLayersDevice);
+TYPELOOKUP_AV2P_DATA_REG(TICLGeomDevice);
+TYPELOOKUP_AV2P_DATA_REG(TICLGeomLookupDevice);
+TYPELOOKUP_AV2P_DATA_REG(TICLGeomLayersDevice);

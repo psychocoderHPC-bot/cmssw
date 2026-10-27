@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 #include <limits>
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "CondFormats/EcalObjects/interface/alpaka/EcalMultifitConditionsDevice.h"
 #include "DataFormats/EcalDigi/interface/alpaka/EcalDigiDeviceCollection.h"
@@ -19,7 +19,7 @@
 #include "DeclsForKernels.h"
 #include "KernelHelpers.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit {
 
   ///
   /// assume kernel launch configuration is
@@ -28,7 +28,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
   ///
   class Kernel_prep_1d_and_initialize {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   EcalDigiDeviceCollection::ConstView digisDevEB,
                                   EcalDigiDeviceCollection::ConstView digisDevEE,
                                   EcalUncalibratedRecHitDeviceCollection::View uncalibRecHitsEB,
@@ -54,9 +54,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
       auto const nchannels = nchannelsEB + nchannelsEE;
       auto const totalElements = nchannels * nsamples;
 
-      auto const elemsPerBlock = alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[0u];
+      auto const elemsPerBlock = aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[0u];
 
-      char* shared_mem = alpaka::getDynSharedMem<char>(acc);
+      char* shared_mem = aV2P::getDynSharedMem<char>(acc);
       auto* shr_hasSwitchToGain6 = reinterpret_cast<bool*>(shared_mem);
       auto* shr_hasSwitchToGain1 = shr_hasSwitchToGain6 + elemsPerBlock;
       auto* shr_hasSwitchToGain0 = shr_hasSwitchToGain1 + elemsPerBlock;
@@ -91,7 +91,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
           shr_counts[idx.local] = 0;
         }
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         for (auto idx : cms::alpakatools::uniform_group_elements(acc, block, totalElements)) {
           auto const sample = idx.local % nsamples;
@@ -118,7 +118,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
           }
         }
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         for (auto idx : cms::alpakatools::uniform_group_elements(acc, block, totalElements)) {
           auto const sample = idx.local % nsamples;
@@ -141,7 +141,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
           }
         }
 
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         for (auto idx : cms::alpakatools::uniform_group_elements(acc, block, totalElements)) {
           auto const ch = idx.global / nsamples;
@@ -164,7 +164,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
         // TODO: w/o this sync, there is a race
         // if (idx.local == sample_max) below uses max sample thread, not for 0 sample
         // check if we can remove it
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         for (auto idx : cms::alpakatools::uniform_group_elements(acc, block, totalElements)) {
           auto const ch = idx.global / nsamples;
@@ -222,7 +222,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
             amplitude = (static_cast<::ecal::multifit::SampleVector::Scalar>(adc) - pedestal) * gainratio;
           amplitudes[ch][sample] = amplitude;
 
-#ifdef ECAL_RECO_ALPAKA_DEBUG
+#ifdef ECAL_RECO_AV2P_DEBUG
           printf("%d %d %d %d %f %f %f\n", idx.global, ch, sample, adc, amplitude, pedestal, gainratio);
           if (adc == 0)
             printf("adc is zero\n");
@@ -332,7 +332,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
   ///
   class Kernel_prep_2d {
   public:
-    ALPAKA_FN_ACC void operator()(Acc2D const& acc,
+    AV2P_FN_ACC void operator()(Acc2D const& acc,
                                   EcalDigiDeviceCollection::ConstView digisDevEB,
                                   EcalDigiDeviceCollection::ConstView digisDevEE,
                                   EcalMultifitConditionsDevice::ConstView conditionsDev,
@@ -352,9 +352,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
       // pulse matrix
       auto const* pulse_shapes = reinterpret_cast<const EcalPulseShape*>(conditionsDev.pulseShapes().data()->data());
 
-      auto const blockDimX = alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[1u];
-      auto const elemsPerBlockX = alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[1u];
-      auto const elemsPerBlockY = alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[0u];
+      auto const blockDimX = aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[1u];
+      auto const elemsPerBlockX = aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[1u];
+      auto const elemsPerBlockY = aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[0u];
       Vec2D const size_2d = {elemsPerBlockY, blockDimX * elemsPerBlockX};  // {y, x} coordinates
 
       for (auto ndindex : cms::alpakatools::uniform_elements_nd(acc, size_2d)) {
@@ -466,18 +466,18 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
     }
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit
 
-namespace alpaka::trait {
-  using namespace ALPAKA_ACCELERATOR_NAMESPACE;
-  using namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit;
+namespace aV2P::trait {
+  using namespace AV2P_ACCELERATOR_NAMESPACE;
+  using namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit;
 
   //! The trait for getting the size of the block shared dynamic memory for Kernel_prep_1d_and_initialize.
   template <>
   struct BlockSharedMemDynSizeBytes<Kernel_prep_1d_and_initialize, Acc1D> {
     //! \return The size of the shared memory allocated for a block.
     template <typename TVec, typename... TArgs>
-    ALPAKA_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_prep_1d_and_initialize const&,
+    AV2P_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_prep_1d_and_initialize const&,
                                                                  TVec const& threadsPerBlock,
                                                                  TVec const& elemsPerThread,
                                                                  TArgs const&...) -> std::size_t {
@@ -486,6 +486,6 @@ namespace alpaka::trait {
       return bytes;
     }
   };
-}  // namespace alpaka::trait
+}  // namespace aV2P::trait
 
 #endif  // RecoLocalCalo_EcalRecProducers_plugins_AmplitudeComputationCommonKernels_h

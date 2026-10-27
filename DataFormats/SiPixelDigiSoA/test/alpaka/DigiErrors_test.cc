@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <unistd.h>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/SiPixelDigiSoA/interface/SiPixelDigiErrorsDevice.h"
 #include "DataFormats/SiPixelDigiSoA/interface/SiPixelDigiErrorsHost.h"
@@ -15,13 +15,13 @@
 
 #include "DigiErrors_test.h"
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 int main() {
   // Get the list of devices on the current platform
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }
@@ -40,7 +40,7 @@ int main() {
       // Instantate tracks on host. This is where the data will be
       // copied to from device.
       SiPixelDigiErrorsHost digiErrors_h(queue, digiErrors_d.view().metadata().size());
-      alpaka::memcpy(queue, digiErrors_h.buffer(), digiErrors_d.const_buffer());
+      aV2P::memcpy(queue, digiErrors_h.buffer(), digiErrors_d.const_buffer());
       std::cout << "digiErrors_h.view().metadata().size(): " << digiErrors_h.view().metadata().size() << std::endl;
       std::cout << "digiErrors_h.view()[100].pixelErrors().rawId: " << digiErrors_h.view()[100].pixelErrors().rawId
                 << std::endl;
@@ -50,7 +50,7 @@ int main() {
                 << digiErrors_h.view()[100].pixelErrors().errorType << std::endl;
       std::cout << "digiErrors_h.view()[100].pixelErrors().fedId: " << digiErrors_h.view()[100].pixelErrors().fedId
                 << std::endl;
-      alpaka::wait(queue);
+      aV2P::wait(queue);
     }
   }
 

@@ -1,7 +1,7 @@
 #ifndef RecoTracker_PixelTrackFitting_interface_alpaka_FitUtils_h
 #define RecoTracker_PixelTrackFitting_interface_alpaka_FitUtils_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include <Eigen/Core>
 
@@ -10,11 +10,11 @@
 #include "RecoTracker/PixelTrackFitting/interface/FitResult.h"
 #include "RecoTracker/PixelTrackFitting/interface/FitUtils.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::riemannFit {
+namespace AV2P_ACCELERATOR_NAMESPACE::riemannFit {
   using namespace ::riemannFit;
 
   template <typename C>
-  ALPAKA_FN_ACC void printIt(C* m, const char* prefix = "") {
+  AV2P_FN_ACC void printIt(C* m, const char* prefix = "") {
 #ifdef RFIT_DEBUG
     for (uint r = 0; r < m->rows(); ++r) {
       for (uint c = 0; c < m->cols(); ++c) {
@@ -39,8 +39,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::riemannFit {
     \param b second 2D vector in the product.
     \return z component of the cross product.
    */
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE double cross2D(const TAcc& acc, const Vector2d& a, const Vector2d& b) {
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE double cross2D(const TAcc& acc, const Vector2d& a, const Vector2d& b) {
     return a.x() * b.y() - a.y() * b.x();
   }
 
@@ -48,8 +48,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::riemannFit {
    *  load error in CMSSW format to our formalism
    *  
    */
-  template <alpaka::concepts::Acc TAcc, typename M6xNf, typename M2Nd>
-  ALPAKA_FN_ACC void loadCovariance2D(const TAcc& acc, M6xNf const& ge, M2Nd& hits_cov) {
+  template <aV2P::concepts::Acc TAcc, typename M6xNf, typename M2Nd>
+  AV2P_FN_ACC void loadCovariance2D(const TAcc& acc, M6xNf const& ge, M2Nd& hits_cov) {
     // Index numerology:
     // i: index of the hits/point (0,..,3)
     // j: index of space component (x,y,z)
@@ -80,8 +80,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::riemannFit {
     }
   }
 
-  template <alpaka::concepts::Acc TAcc, typename M6xNf, typename M3xNd>
-  ALPAKA_FN_ACC void loadCovariance(const TAcc& acc, M6xNf const& ge, M3xNd& hits_cov) {
+  template <aV2P::concepts::Acc TAcc, typename M6xNf, typename M3xNd>
+  AV2P_FN_ACC void loadCovariance(const TAcc& acc, M6xNf const& ge, M3xNd& hits_cov) {
     // Index numerology:
     // i: index of the hits/point (0,..,3)
     // j: index of space component (x,y,z)
@@ -134,15 +134,15 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::riemannFit {
     \param B magnetic field in Gev/cm/c unit.
     \param error flag for errors computation.
   */
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void par_uvrtopak(const TAcc& acc,
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE void par_uvrtopak(const TAcc& acc,
                                                    CircleFit& circle,
                                                    const double B,
                                                    const bool error) {
     Vector3d par_pak;
     const double temp0 = circle.par.head(2).squaredNorm();
-    const double temp1 = alpaka::math::sqrt(acc, temp0);
-    par_pak << alpaka::math::atan2(acc, circle.qCharge * circle.par(0), -circle.qCharge * circle.par(1)),
+    const double temp1 = aV2P::math::sqrt(acc, temp0);
+    par_pak << aV2P::math::atan2(acc, circle.qCharge * circle.par(0), -circle.qCharge * circle.par(1)),
         circle.qCharge * (temp1 - circle.par(2)), circle.par(2) * B;
     if (error) {
       const double temp2 = sqr(circle.par(0)) * 1. / temp0;
@@ -161,12 +161,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::riemannFit {
     \param circle_uvr parameter (X0,Y0,R), covariance matrix to
     be transformed and particle charge.
   */
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void fromCircleToPerigee(const TAcc& acc, CircleFit& circle) {
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE void fromCircleToPerigee(const TAcc& acc, CircleFit& circle) {
     Vector3d par_pak;
     const double temp0 = circle.par.head(2).squaredNorm();
-    const double temp1 = alpaka::math::sqrt(acc, temp0);
-    par_pak << alpaka::math::atan2(acc, circle.qCharge * circle.par(0), -circle.qCharge * circle.par(1)),
+    const double temp1 = aV2P::math::sqrt(acc, temp0);
+    par_pak << aV2P::math::atan2(acc, circle.qCharge * circle.par(0), -circle.qCharge * circle.par(1)),
         circle.qCharge * (temp1 - circle.par(2)), circle.qCharge / circle.par(2);
 
     const double temp2 = sqr(circle.par(0)) * 1. / temp0;
@@ -179,6 +179,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::riemannFit {
     circle.par = par_pak;
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::riemannFit
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::riemannFit
 
 #endif  // RecoTracker_PixelTrackFitting_interface_alpaka_FitUtils_h

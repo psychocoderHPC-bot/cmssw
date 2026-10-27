@@ -16,7 +16,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/host.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/memory.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   class HcalRecoParamWithPulseShapeESProducer : public ESProducer {
   public:
     HcalRecoParamWithPulseShapeESProducer(edm::ParameterSet const& iConfig) : ESProducer(iConfig) {
@@ -108,6 +108,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   private:
     edm::ESGetToken<HcalRecoParams, HcalRecoParamsRcd> recoParamsToken_;
   };
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-DEFINE_FWK_EVENTSETUP_ALPAKA_MODULE(HcalRecoParamWithPulseShapeESProducer);
+DEFINE_FWK_EVENTSETUP_AV2P_MODULE(HcalRecoParamWithPulseShapeESProducer);

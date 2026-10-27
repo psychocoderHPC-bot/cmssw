@@ -1,5 +1,5 @@
 #include <iostream>
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 #include <Eigen/Dense>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
@@ -19,13 +19,13 @@
 #define DETID_TO_DEBUG 1125647428
 #endif
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
   namespace hcal::reconstruction {
     namespace mahi {
 
-      ALPAKA_FN_HOST_ACC ALPAKA_FN_INLINE uint32_t float_as_uint(float val) {
+      AV2P_FN_HOST_ACC AV2P_FN_INLINE uint32_t float_as_uint(float val) {
 #if defined(__CUDA_ARCH__) or defined(__HIP_DEVICE_COMPILE__)
         return __float_as_uint(val);
 #else
@@ -33,7 +33,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 #endif
       }
 
-      ALPAKA_FN_ACC ALPAKA_FN_INLINE float compute_time_slew_delay(float const fC,
+      AV2P_FN_ACC AV2P_FN_INLINE float compute_time_slew_delay(float const fC,
                                                                    float const tzero,
                                                                    float const slope,
                                                                    float const tmax) {
@@ -79,7 +79,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       constexpr int32_t IPHI_MAX = 72;
 
-      ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t did2linearIndexHB(
+      AV2P_FN_ACC AV2P_FN_INLINE uint32_t did2linearIndexHB(
           uint32_t const didraw, int const maxDepthHB, int const firstHBRing, int const lastHBRing, int const nEtaHB) {
         HcalDetId did{didraw};
         uint32_t const value = (did.depth() - 1) + maxDepthHB * (did.iphi() - 1);
@@ -87,7 +87,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                    ? value + maxDepthHB * hcal::reconstruction::mahi::IPHI_MAX * (did.ieta() - firstHBRing)
                    : value + maxDepthHB * hcal::reconstruction::mahi::IPHI_MAX * (did.ieta() + lastHBRing + nEtaHB);
       }
-      ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t did2linearIndexHE(uint32_t const didraw,
+      AV2P_FN_ACC AV2P_FN_INLINE uint32_t did2linearIndexHE(uint32_t const didraw,
                                                                 int const maxDepthHE,
                                                                 int const maxPhiHE,
                                                                 int const firstHERing,
@@ -98,11 +98,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         return did.ieta() > 0 ? value + maxDepthHE * maxPhiHE * (did.ieta() - firstHERing)
                               : value + maxDepthHE * maxPhiHE * (did.ieta() + lastHERing + nEtaHE);
       }
-      ALPAKA_FN_ACC ALPAKA_FN_INLINE uint32_t get_qiecoder_index(uint32_t const capid, uint32_t const range) {
+      AV2P_FN_ACC AV2P_FN_INLINE uint32_t get_qiecoder_index(uint32_t const capid, uint32_t const range) {
         return capid * 4 + range;
       }
 
-      ALPAKA_FN_ACC ALPAKA_FN_INLINE float compute_reco_correction_factor(float const par1,
+      AV2P_FN_ACC AV2P_FN_INLINE float compute_reco_correction_factor(float const par1,
                                                                           float const par2,
                                                                           float const par3,
                                                                           float const x) {
@@ -110,7 +110,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       }
 
       // compute the charge using the adc, qie type and the appropriate qie shape array
-      ALPAKA_FN_ACC ALPAKA_FN_INLINE float compute_coder_charge(
+      AV2P_FN_ACC AV2P_FN_INLINE float compute_coder_charge(
           int const qieType, uint8_t const adc, uint8_t const capid, float const* qieOffsets, float const* qieSlopes) {
         auto const range = qieType == 0 ? (adc >> 5) & 0x3 : (adc >> 6) & 0x3;
         auto const* qieShapeToUse = qieType == 0 ? qie8shape : qie11shape;
@@ -124,7 +124,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       // this is from
       //  https://github.com/cms-sw/cmssw/blob/master/RecoLocalCalo/HcalRecProducers/src/HBHEPhase1Reconstructor.cc#L140
 
-      ALPAKA_FN_ACC ALPAKA_FN_INLINE float compute_diff_charge_gain(int const qieType,
+      AV2P_FN_ACC AV2P_FN_INLINE float compute_diff_charge_gain(int const qieType,
                                                                     uint8_t adc,
                                                                     uint8_t const capid,
                                                                     float const* qieOffsets,
@@ -164,7 +164,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       using PulseShapeConstElement = typename HcalPulseShapeSoA::ConstView::const_element;
       // TODO: remove what's not needed
       // originally from from RecoLocalCalo/HcalRecAlgos/src/PulseShapeFunctor.cc
-      ALPAKA_FN_ACC ALPAKA_FN_INLINE float compute_pulse_shape_value(PulseShapeConstElement const& pulseShape,
+      AV2P_FN_ACC AV2P_FN_INLINE float compute_pulse_shape_value(PulseShapeConstElement const& pulseShape,
                                                                      float const pulse_time,
                                                                      int const sample,
                                                                      int const shift) {
@@ -220,7 +220,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       constexpr float deltaChi2Threashold = 1e-3;
 
       // from RecoLocalCalo/HcalRecProducers/src/HBHEPhase1Reconstructor.cc
-      ALPAKA_FN_ACC float get_raw_charge(double const charge,
+      AV2P_FN_ACC float get_raw_charge(double const charge,
                                          double const pedestal,
                                          float const* shrChargeMinusPedestal,
                                          float const parLin1,
@@ -261,7 +261,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       class Kernel_prep1d_sameNumberOfSamples {
       public:
-        ALPAKA_FN_ACC void operator()(Acc2D const& acc,
+        AV2P_FN_ACC void operator()(Acc2D const& acc,
                                       OProductType::View outputGPU,
                                       IProductTypef01::ConstView f01HEDigis,
                                       IProductTypef5::ConstView f5HBDigis,
@@ -284,12 +284,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           auto const nchannels = f01HEDigis.size() + f5HBDigis.size() + f3HBDigis.size();
 
           //first index = groups of channel
-          auto const nchannels_per_block(alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[0u]);
+          auto const nchannels_per_block(aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[0u]);
           //2nd index = groups of sample
-          auto const nsamplesForCompute(alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[1u]);
+          auto const nsamplesForCompute(aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[1u]);
 
           // configure shared mem
-          float* shrEnergyM0PerTS = alpaka::getDynSharedMem<float>(acc);
+          float* shrEnergyM0PerTS = aV2P::getDynSharedMem<float>(acc);
           float* shrChargeMinusPedestal = shrEnergyM0PerTS + nsamplesForCompute * nchannels_per_block;
           float* shrMethod0EnergyAccum = shrChargeMinusPedestal + nsamplesForCompute * nchannels_per_block;
           float* shrEnergyM0TotalAccum = shrMethod0EnergyAccum + nchannels_per_block;
@@ -374,7 +374,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 shrChargeMinusPedestal[linearThPerBlock] = charge - pedestal;
               }
             }
-            alpaka::syncBlockThreads(acc);
+            aV2P::syncBlockThreads(acc);
 
             //Loop over each channel, compute input for multifit using shrChargeMinusPedestal
             for (auto channel : uniform_group_elements_y(acc, group, nchannels)) {
@@ -407,7 +407,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                         ? compute_nsamples<Flavor1>(stride)
                         : (gch < nchannelsf015 ? compute_nsamples<Flavor5>(stride) : compute_nsamples<Flavor3>(stride));
 
-                ALPAKA_ASSERT_ACC(nsamples == nsamplesForCompute || nsamples - startingSample == nsamplesForCompute);
+                AV2P_ASSERT_ACC(nsamples == nsamplesForCompute || nsamples - startingSample == nsamplesForCompute);
 
                 auto const id = gch < f01HEDigis.size()
                                     ? f01HEDigis[gch].ids()
@@ -542,8 +542,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 // store to shared mem
                 shrEnergyM0PerTS[lch * nsamplesForCompute + sampleWithinWindow] = energym0_per_ts;
 
-                alpaka::atomicAdd(
-                    acc, &shrEnergyM0TotalAccum[lch], energym0_per_ts_gain0, alpaka::hierarchy::Threads{});
+                aV2P::atomicAdd(
+                    acc, &shrEnergyM0TotalAccum[lch], energym0_per_ts_gain0, aV2P::hierarchy::Threads{});
 
 #ifdef HCAL_MAHI_GPUDEBUG
                 printf(
@@ -573,7 +573,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 if (sampleWithinWindow >= static_cast<unsigned>(startSample) &&
                     sampleWithinWindow < static_cast<unsigned>(endSample)) {
                   //sum the energys of all TS
-                  alpaka::atomicAdd(acc, &shrMethod0EnergyAccum[lch], energym0_per_ts, alpaka::hierarchy::Threads{});
+                  aV2P::atomicAdd(acc, &shrMethod0EnergyAccum[lch], energym0_per_ts, aV2P::hierarchy::Threads{});
                   // pair TS and E for all TSs, find max pair according to E
                   // TODO: Non-deterministic behavior for TS with equal energy
                   atomicMaxPair(
@@ -615,7 +615,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
               }  //end sample loop
             }  // end channel loop
-            alpaka::syncBlockThreads(acc);
+            aV2P::syncBlockThreads(acc);
 
             // compute energy using shrMethod0EnergySamplePair
             for (auto channel : uniform_group_elements_y(acc, group, nchannels)) {
@@ -743,7 +743,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
             }  // loop for channels
 
             // make sure one iteration over the channel does not spill into the next
-            alpaka::syncBlockThreads(acc);
+            aV2P::syncBlockThreads(acc);
 
           }  // loop for channel groups
         }
@@ -751,7 +751,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       class Kernel_prep_pulseMatrices_sameNumberOfSamples {
       public:
-        ALPAKA_FN_ACC void operator()(Acc3D const& acc,
+        AV2P_FN_ACC void operator()(Acc3D const& acc,
                                       float* pulseMatrices,
                                       float* pulseMatricesM,
                                       float* pulseMatricesP,
@@ -771,9 +771,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                                       float const slopeTimeSlew,
                                       float const tmaxTimeSlew) const {
           //2nd index = pulse
-          auto const npulses(alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[1u]);
+          auto const npulses(aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[1u]);
           //3rd index = sample
-          auto const nsamples(alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[2u]);
+          auto const nsamples(aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[2u]);
 
           auto const nchannels = f01HEDigis.size() + f5HBDigis.size() + f3HBDigis.size();
           auto const nchannelsf015 = f01HEDigis.size() + f5HBDigis.size();
@@ -911,7 +911,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       };  // Kernel_prep_pulseMatrices_sameNumberOfSamples
 
       template <int NSAMPLES, int NPULSES>
-      ALPAKA_FN_ACC ALPAKA_FN_INLINE void update_covariance(
+      AV2P_FN_ACC AV2P_FN_INLINE void update_covariance(
           calo::multifit::ColumnVector<NPULSES> const& resultAmplitudesVector,
           calo::multifit::MapSymM<float, NSAMPLES>& covarianceMatrix,
           Eigen::Map<const calo::multifit::ColMajorMatrix<NSAMPLES, NPULSES>> const& pulseMatrix,
@@ -970,7 +970,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       template <int NSAMPLES, int NPULSES>
       class Kernel_minimize {
       public:
-        ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+        AV2P_FN_ACC void operator()(Acc1D const& acc,
                                       OProductType::View outputGPU,
                                       float const* amplitudes,
                                       float* pulseMatrices,
@@ -992,7 +992,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
           auto const nchannelsf015 = f01HEDigis.size() + f5HBDigis.size();
 
-          auto const threadsPerBlock(alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[0u]);
+          auto const threadsPerBlock(aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[0u]);
 
           //Loop over all groups of channels
           for (auto group : uniform_groups_x(acc, nchannels)) {
@@ -1006,7 +1006,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                 continue;
 
               // configure shared mem
-              float* shrmem = alpaka::getDynSharedMem<float>(acc);
+              float* shrmem = aV2P::getDynSharedMem<float>(acc);
               float* shrMatrixLFnnlsStorage = shrmem + calo::multifit::MapSymM<float, NPULSES>::total * lch;
               float* shrAtAStorage = shrmem + calo::multifit::MapSymM<float, NPULSES>::total * (lch + threadsPerBlock);
 
@@ -1319,7 +1319,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       auto electronicNoiseTerms = cms::alpakatools::make_device_buffer<float[]>(queue, totalChannels * windowSize);
       auto soiSamples = cms::alpakatools::make_device_buffer<int8_t[]>(queue, totalChannels * windowSize);
 
-      alpaka::exec<Acc2D>(queue,
+      aV2P::exec<Acc2D>(queue,
                           workDivPrep2D,
                           mahi::Kernel_prep1d_sameNumberOfSamples{},
                           outputGPU,
@@ -1359,7 +1359,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       auto pulseMatricesP = cms::alpakatools::make_device_buffer<float[]>(
           queue, totalChannels * windowSize * mahiPulseOffsets.metadata().size());
 
-      alpaka::exec<Acc3D>(queue,
+      aV2P::exec<Acc3D>(queue,
                           workDivPrep3D,
                           mahi::Kernel_prep_pulseMatrices_sameNumberOfSamples{},
                           pulseMatrices.data(),
@@ -1386,7 +1386,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       auto workDivPrep1D = cms::alpakatools::make_workdiv<Acc1D>(blocks_1d, threadsPerBlock);
 
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDivPrep1D,
                           mahi::Kernel_minimize<8, 8>{},
                           outputGPU,
@@ -1406,18 +1406,18 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     }
 
   }  // namespace hcal::reconstruction
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-namespace alpaka::trait {
-  using namespace ALPAKA_ACCELERATOR_NAMESPACE;
-  using namespace ALPAKA_ACCELERATOR_NAMESPACE::hcal::reconstruction::mahi;
+namespace aV2P::trait {
+  using namespace AV2P_ACCELERATOR_NAMESPACE;
+  using namespace AV2P_ACCELERATOR_NAMESPACE::hcal::reconstruction::mahi;
 
   //! The trait for getting the size of the block shared dynamic memory for Kernel_prep_1d_and_initialize.
   template <>
   struct BlockSharedMemDynSizeBytes<Kernel_prep1d_sameNumberOfSamples, Acc2D> {
     //! \return The size of the shared memory allocated for a block.
     template <typename TVec, typename... TArgs>
-    ALPAKA_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_prep1d_sameNumberOfSamples const&,
+    AV2P_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_prep1d_sameNumberOfSamples const&,
                                                                  TVec const& threadsPerBlock,
                                                                  TVec const& elemsPerThread,
                                                                  TArgs const&...) -> std::size_t {
@@ -1437,7 +1437,7 @@ namespace alpaka::trait {
   struct BlockSharedMemDynSizeBytes<Kernel_minimize<NSAMPLES, NPULSES>, Acc1D> {
     //! \return The size of the shared memory allocated for a block.
     template <typename TVec, typename... TArgs>
-    ALPAKA_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_minimize<NSAMPLES, NPULSES> const&,
+    AV2P_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_minimize<NSAMPLES, NPULSES> const&,
                                                                  TVec const& threadsPerBlock,
                                                                  TVec const& elemsPerThread,
                                                                  TArgs const&...) -> std::size_t {
@@ -1449,4 +1449,4 @@ namespace alpaka::trait {
     }
   };
 
-}  // namespace alpaka::trait
+}  // namespace aV2P::trait

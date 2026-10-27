@@ -6,7 +6,7 @@
 #include "CondFormats/HGCalObjects/interface/HGCalMappingParameterSoA.h"
 #include "CondFormats/HGCalObjects/interface/HGCalMappingParameterHost.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   namespace hgcal {
 
@@ -24,6 +24,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   }  // namespace hgcal
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // CondFormats_HGCalObjects_interface_alpaka_HGCalMappingParameterDevice_h

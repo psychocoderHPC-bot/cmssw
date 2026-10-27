@@ -1,4 +1,4 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
@@ -6,9 +6,9 @@
 #include "EnergyComputationKernels.h"
 
 //#define DEBUG
-//#define ECAL_RECO_ALPAKA_DEBUG
+//#define ECAL_RECO_AV2P_DEBUG
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::rechit {
 
   using namespace cms::alpakatools;
 
@@ -36,7 +36,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit {
     auto const blocks = cms::alpakatools::divide_up_by(nchannels, threads);
     auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(blocks, threads);
     if (!isPhase2) {
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv,
                           KernelCreateEcalRechit{},
                           ebUncalibRecHits->const_view(),
@@ -48,7 +48,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit {
                           eventTime,
                           configParams);
     } else {
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv,
                           KernelCreateEcalRechitPhase2{},
                           ebUncalibRecHits->const_view(),
@@ -60,4 +60,4 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit {
     }
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::rechit
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::rechit

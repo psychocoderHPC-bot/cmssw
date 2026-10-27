@@ -7,7 +7,7 @@
 #include <cstdio>
 #include <limits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/Math/interface/approx_atan2.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/VecArray.h"
@@ -19,7 +19,7 @@
 
 //#define GPU_DEBUG
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
+namespace AV2P_ACCELERATOR_NAMESPACE::caPixelDoublets {
 
   using HitToCell = caStructures::GenericContainer;
   using CellToTracks = caStructures::GenericContainer;
@@ -27,7 +27,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
   template <typename TrackerTraits>
   class CAFishbone {
   public:
-    ALPAKA_FN_ACC void operator()(Acc2D const& acc,
+    AV2P_FN_ACC void operator()(Acc2D const& acc,
                                   caStructures::HitsMultiView hh,
                                   ::reco::CALayersSoAConstView const& ll,
                                   CACell<TrackerTraits>* cells,
@@ -191,6 +191,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets {
     }
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::caPixelDoublets
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::caPixelDoublets
 
 #endif  // RecoTracker_PixelSeeding_plugins_alpaka_CAFishbone_h

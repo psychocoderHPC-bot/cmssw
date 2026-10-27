@@ -5,7 +5,7 @@
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-#if defined ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+#if defined AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
 
 // check that the portable device collection for the host device is the same as the portable host collection
 #define ASSERT_DEVICE_MATCHES_HOST_COLLECTION(DEVICE_COLLECTION, HOST_COLLECTION)       \
@@ -17,6 +17,6 @@
 // the portable device collections for the non-host devices do not require any checks
 #define ASSERT_DEVICE_MATCHES_HOST_COLLECTION(DEVICE_COLLECTION, HOST_COLLECTION)
 
-#endif  // ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+#endif  // AV2P_ACC_CPU_B_SEQ_T_SEQ_ENABLED
 
 #endif  // HeterogeneousCore_AlpakaInterface_interface_AssertDeviceMatchesHostCollection_h

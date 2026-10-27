@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 namespace cms::alpakatools {
 
@@ -11,11 +11,11 @@ namespace cms::alpakatools {
   public:
     using DoubleWord = uint64_t;
 
-    ALPAKA_FN_HOST_ACC constexpr AtomicPairCounter() : counter_{0} {}
-    ALPAKA_FN_HOST_ACC constexpr AtomicPairCounter(uint32_t first, uint32_t second) : counter_{pack(first, second)} {}
-    ALPAKA_FN_HOST_ACC constexpr AtomicPairCounter(DoubleWord values) : counter_{values} {}
+    AV2P_FN_HOST_ACC constexpr AtomicPairCounter() : counter_{0} {}
+    AV2P_FN_HOST_ACC constexpr AtomicPairCounter(uint32_t first, uint32_t second) : counter_{pack(first, second)} {}
+    AV2P_FN_HOST_ACC constexpr AtomicPairCounter(DoubleWord values) : counter_{values} {}
 
-    ALPAKA_FN_HOST_ACC constexpr AtomicPairCounter& operator=(DoubleWord values) {
+    AV2P_FN_HOST_ACC constexpr AtomicPairCounter& operator=(DoubleWord values) {
       counter_.as_doubleword = values;
       return *this;
     }
@@ -25,21 +25,21 @@ namespace cms::alpakatools {
       uint32_t second;  // in a "One to Many" association is the total number of associations
     };
 
-    ALPAKA_FN_HOST_ACC constexpr Counters get() const { return counter_.as_counters; }
+    AV2P_FN_HOST_ACC constexpr Counters get() const { return counter_.as_counters; }
 
     // atomically add as_counters, and return the previous value
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE constexpr Counters add(const TAcc& acc, Counters c) {
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE constexpr Counters add(const TAcc& acc, Counters c) {
       Packer value{pack(c.first, c.second)};
       Packer ret{0};
       ret.as_doubleword =
-          alpaka::atomicAdd(acc, &counter_.as_doubleword, value.as_doubleword, alpaka::hierarchy::Blocks{});
+          aV2P::atomicAdd(acc, &counter_.as_doubleword, value.as_doubleword, aV2P::hierarchy::Blocks{});
       return ret.as_counters;
     }
 
     // atomically increment first and add i to second, and return the previous value
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE Counters constexpr inc_add(const TAcc& acc, uint32_t i) {
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE Counters constexpr inc_add(const TAcc& acc, uint32_t i) {
       return add(acc, {1u, i});
     }
 

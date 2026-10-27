@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include <cstdlib>
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 #include "DataFormats/SoATemplate/interface/SoACommon.h"
 #include "DataFormats/SoATemplate/interface/SoALayout.h"
 #include "DataFormats/Portable/interface/PortableHostCollection.h"
@@ -29,7 +29,7 @@ static constexpr bool multiblock = true;
 static constexpr bool multiblock = false;
 #endif
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   class PrologueTest {
   public:
@@ -41,7 +41,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   void PrologueTest::apply(Queue &queue,
                            reco::PFMultiDepthClusteringEdgeVarsDeviceCollection &pfClusteringEdgeVars,
                            const reco::PFMultiDepthClusteringCCLabelsDeviceCollection &mdpfClusteringVars) const {
-    uint32_t items = std::is_same_v<Device, alpaka::DevCpu> ? 1 : (multiblock ? 64 : 160);
+    uint32_t items = std::is_same_v<Device, aV2P::DevCpu> ? 1 : (multiblock ? 64 : 160);
 
     auto n = static_cast<uint32_t>(mdpfClusteringVars->metadata().size());
     uint32_t groups = cms::alpakatools::divide_up_by(n, items);
@@ -59,39 +59,39 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
       devClusteringPrologueArgs.zeroInitialise(queue);
 
-      alpaka::exec<Acc1D>(
+      aV2P::exec<Acc1D>(
           queue, workDiv, ECLCCComputeExternNeighsKernel{}, devClusteringPrologueArgs.view(), mdpfClusteringVars.view());
 
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv,
                           ECLCCPrologueComputeOffsetsKernel{},
                           devClusteringPrologueArgs.view(),
                           mdpfClusteringVars.view());
 
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv,
                           ECLCCFinalizePrologueKernel{},
                           pfClusteringEdgeVars.view(),
                           devClusteringPrologueArgs.view(),
                           mdpfClusteringVars.view());
 
-      alpaka::exec<Acc1D>(queue,
+      aV2P::exec<Acc1D>(queue,
                           workDiv,
                           ECLCCLoadCrossBlockNeighKernel{},
                           pfClusteringEdgeVars.view(),
                           devClusteringPrologueArgs.view(),
                           mdpfClusteringVars.view());
     } else {
-      if constexpr (std::is_same_v<Device, alpaka::DevCpu>) {
-        alpaka::exec<Acc1D>(
+      if constexpr (std::is_same_v<Device, aV2P::DevCpu>) {
+        aV2P::exec<Acc1D>(
             queue, workDiv, ECLCCPrologueNaiveKernel{}, pfClusteringEdgeVars.view(), mdpfClusteringVars.view());
       } else {
-        alpaka::exec<Acc1D>(
+        aV2P::exec<Acc1D>(
             queue, workDiv, ECLCCPrologueKernel{}, pfClusteringEdgeVars.view(), mdpfClusteringVars.view());
       }
     }
 
-    alpaka::wait(queue);
+    aV2P::wait(queue);
   }
 
   void launch_prologue_test(Queue &queue,
@@ -106,20 +106,20 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     reco::PFMultiDepthClusteringCCLabelsDeviceCollection devClusteringCCLabels{queue, nClusters};
     reco::PFMultiDepthClusteringEdgeVarsDeviceCollection devClusteringEdgeVars{queue, 2 * nClusters};
 
-    alpaka::memcpy(queue, devClusteringCCLabels.buffer(), hostClusteringCCLabels.buffer());
+    aV2P::memcpy(queue, devClusteringCCLabels.buffer(), hostClusteringCCLabels.buffer());
 
     prologue_test.apply(queue, devClusteringEdgeVars, devClusteringCCLabels);
 
-    alpaka::wait(queue);
+    aV2P::wait(queue);
 
-    alpaka::memcpy(queue, hostClusteringEdgeVars.buffer(), devClusteringEdgeVars.buffer());
+    aV2P::memcpy(queue, hostClusteringEdgeVars.buffer(), devClusteringEdgeVars.buffer());
 
-    alpaka::wait(queue);
+    aV2P::wait(queue);
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 std::vector<std::vector<int>> buildAdj(const std::vector<int> &v) {
   const int n = (int)v.size();
@@ -235,7 +235,7 @@ int main() {
   // get the list of devices on the current platform
   auto const &devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }

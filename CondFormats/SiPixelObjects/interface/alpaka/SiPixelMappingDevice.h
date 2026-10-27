@@ -7,10 +7,10 @@
 #include "CondFormats/SiPixelObjects/interface/SiPixelMappingLayout.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using SiPixelMappingDevice = PortableCollection<SiPixelMappingSoA>;
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // DataFormats_SiPixelMappingSoA_alpaka_SiPixelClustersDevice_h

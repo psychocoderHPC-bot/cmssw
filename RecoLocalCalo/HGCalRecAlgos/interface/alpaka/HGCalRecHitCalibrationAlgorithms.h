@@ -2,7 +2,7 @@
 #define RecoLocalCalo_HGCalRecAlgos_interface_alpaka_HGCalRecHitCalibrationAlgorithms_h
 
 // Alpaka imports
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
 // HGCal digis data formats
@@ -19,7 +19,7 @@
 #include "CondFormats/HGCalObjects/interface/HGCalMappingParameterHost.h"
 #include "CondFormats/HGCalObjects/interface/alpaka/HGCalMappingParameterDevice.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace hgcaldigi;
   using namespace hgcalrechit;
@@ -54,6 +54,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     int n_threads_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif  // RecoLocalCalo_HGCalRecAlgos_interface_alpaka_HGCalRecHitCalibrationAlgorithms_h

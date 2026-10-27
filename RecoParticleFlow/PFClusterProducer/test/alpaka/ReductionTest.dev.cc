@@ -1,6 +1,6 @@
 #include <random>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/traits.h"
@@ -22,7 +22,7 @@
 
 using namespace reco;
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   using namespace cms::alpakatools;
   using namespace reco;
@@ -35,7 +35,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
   //  Define operation type:
   template <bool comp_min>
   struct CompFn {
-    ALPAKA_FN_ACC float operator()(float a, float b) const {
+    AV2P_FN_ACC float operator()(float a, float b) const {
       if constexpr (comp_min)
         return a < b ? a : b;
       else
@@ -45,11 +45,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
   class PFClusterTestKernel {
   public:
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC void operator()(TAcc const& acc, reco::PFClusterDeviceCollection::View in) const {
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC void operator()(TAcc const& acc, reco::PFClusterDeviceCollection::View in) const {
       const unsigned int nClusters = in.size();
 
-      const unsigned int w_extent = alpaka::warp::getSize(acc);
+      const unsigned int w_extent = aV2P::warp::getSize(acc);
 
       for (auto group : ::cms::alpakatools::uniform_groups(acc)) {  //loop over thread blocks
                                                                     // Only single block is active:
@@ -61,7 +61,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
                  acc, group, ::cms::alpakatools::round_up_by(nClusters, w_extent))) {
           if (idx.local == 0)
             printf("Entry kernel body...\n");
-          const unsigned int active_lanes_mask = alpaka::warp::ballot(acc, idx.global < boundary);
+          const unsigned int active_lanes_mask = aV2P::warp::ballot(acc, idx.global < boundary);
 
           if (idx.global >= boundary)
             continue;
@@ -139,9 +139,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(groups, items);
 
-    alpaka::exec<Acc1D>(queue, workDiv, PFClusterTestKernel{}, collection.view());
+    aV2P::exec<Acc1D>(queue, workDiv, PFClusterTestKernel{}, collection.view());
 
-    alpaka::wait(queue);
+    aV2P::wait(queue);
   }
 
   void launch_test(Queue& queue, const int collectionSize) {
@@ -180,27 +180,27 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
 
     reco::PFClusterDeviceCollection deviceProduct{queue, collectionSize};
 
-    alpaka::memcpy(queue, deviceProduct.buffer(), hostProduct.buffer());
+    aV2P::memcpy(queue, deviceProduct.buffer(), hostProduct.buffer());
 
     printf("Run kernel: \n");
     pfcluster_test_.runTest(queue, deviceProduct);
 
     printf("...done\n");
 
-    alpaka::wait(queue);
+    aV2P::wait(queue);
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 using namespace edm;
 using namespace std;
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
 int main() {
   // get the list of devices on the current platform
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    std::cerr << "No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    std::cerr << "No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
       "the test will be skipped.\n";
     exit(EXIT_FAILURE);
   }

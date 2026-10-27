@@ -3,11 +3,11 @@
 
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 namespace cms::alpakatools {
   template <typename T>
-  concept NonCPUQueue = alpaka::concepts::Queue<T> and not std::is_same_v<alpaka::Dev<T>, alpaka::DevCpu>;
+  concept NonCPUQueue = aV2P::concepts::Queue<T> and not std::is_same_v<aV2P::Dev<T>, aV2P::DevCpu>;
 }  // namespace cms::alpakatools
 
 #endif

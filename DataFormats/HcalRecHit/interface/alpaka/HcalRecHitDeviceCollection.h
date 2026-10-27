@@ -5,18 +5,18 @@
 #include "DataFormats/HcalRecHit/interface/HcalRecHitSoA.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
 
   namespace hcal {
 
     // make the names from the top-level hcal namespace visible for unqualified lookup
-    // inside the ALPAKA_ACCELERATOR_NAMESPACE::hcal namespace
+    // inside the AV2P_ACCELERATOR_NAMESPACE::hcal namespace
     using namespace ::hcal;
 
     // HcalRecHitSoA in device global memory
     using RecHitDeviceCollection = PortableCollection<HcalRecHitSoA>;
   }  // namespace hcal
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

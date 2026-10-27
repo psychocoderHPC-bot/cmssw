@@ -4,7 +4,7 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "FWCore/Utilities/interface/stringize.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/atomicIncSaturate.h"
@@ -13,24 +13,24 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 
 using namespace cms::alpakatools;
-using namespace ALPAKA_ACCELERATOR_NAMESPACE;
+using namespace AV2P_ACCELERATOR_NAMESPACE;
 
-static constexpr auto s_tag = "[" ALPAKA_TYPE_ALIAS_NAME(alpakaTestAtomicIncSaturate) "]";
+static constexpr auto s_tag = "[" AV2P_TYPE_ALIAS_NAME(alpakaTestAtomicIncSaturate) "]";
 
 // Each element increments the counter, and records which index it was given:
 //   - indices below the limit are counted in the histogram, and must be given out exactly once;
 //   - all other calls must return the limit itself, and are counted in the overflow counter.
 struct IncrementKernel {
   template <typename T>
-  ALPAKA_FN_ACC void operator()(
+  AV2P_FN_ACC void operator()(
       Acc1D const& acc, T* counter, T limit, uint32_t* histogram, uint32_t* overflow, uint32_t size) const {
     for ([[maybe_unused]] uint32_t i : uniform_elements(acc, size)) {
-      T index = atomicIncSaturate(acc, counter, limit, alpaka::hierarchy::Blocks{});
+      T index = atomicIncSaturate(acc, counter, limit, aV2P::hierarchy::Blocks{});
       if (index < limit) {
-        alpaka::atomicAdd(acc, &histogram[index], 1u, alpaka::hierarchy::Blocks{});
+        aV2P::atomicAdd(acc, &histogram[index], 1u, aV2P::hierarchy::Blocks{});
       } else {
-        ALPAKA_ASSERT_ACC(index == limit);
-        alpaka::atomicAdd(acc, overflow, 1u, alpaka::hierarchy::Blocks{});
+        AV2P_ASSERT_ACC(index == limit);
+        aV2P::atomicAdd(acc, overflow, 1u, aV2P::hierarchy::Blocks{});
       }
     }
   }
@@ -45,21 +45,21 @@ void testAtomicIncSaturate(Queue& queue, uint32_t size, T limit) {
   auto counter_d = make_device_buffer<T>(queue);
   auto overflow_d = make_device_buffer<uint32_t>(queue);
   auto histogram_d = make_device_buffer<uint32_t[]>(queue, bins);
-  alpaka::memset(queue, counter_d, 0x00);
-  alpaka::memset(queue, overflow_d, 0x00);
-  alpaka::memset(queue, histogram_d, 0x00);
+  aV2P::memset(queue, counter_d, 0x00);
+  aV2P::memset(queue, overflow_d, 0x00);
+  aV2P::memset(queue, histogram_d, 0x00);
 
   auto workdiv = make_workdiv<Acc1D>(divide_up_by(size, 256u), 256u);
-  alpaka::exec<Acc1D>(
+  aV2P::exec<Acc1D>(
       queue, workdiv, IncrementKernel{}, counter_d.data(), limit, histogram_d.data(), overflow_d.data(), size);
 
   auto counter_h = make_host_buffer<T>(queue);
   auto overflow_h = make_host_buffer<uint32_t>(queue);
   auto histogram_h = make_host_buffer<uint32_t[]>(queue, bins);
-  alpaka::memcpy(queue, counter_h, counter_d);
-  alpaka::memcpy(queue, overflow_h, overflow_d);
-  alpaka::memcpy(queue, histogram_h, histogram_d);
-  alpaka::wait(queue);
+  aV2P::memcpy(queue, counter_h, counter_d);
+  aV2P::memcpy(queue, overflow_h, overflow_d);
+  aV2P::memcpy(queue, histogram_h, histogram_d);
+  aV2P::wait(queue);
 
   // The counter saturates at the limit.
   REQUIRE(static_cast<uint32_t>(*counter_h) == expected);
@@ -71,16 +71,16 @@ void testAtomicIncSaturate(Queue& queue, uint32_t size, T limit) {
   }
 }
 
-TEST_CASE("Standard checks of " ALPAKA_TYPE_ALIAS_NAME(alpakaTestAtomicIncSaturate), s_tag) {
+TEST_CASE("Standard checks of " AV2P_TYPE_ALIAS_NAME(alpakaTestAtomicIncSaturate), s_tag) {
   auto const& devices = cms::alpakatools::devices<Platform>();
   if (devices.empty()) {
-    FAIL("No devices available for the " EDM_STRINGIZE(ALPAKA_ACCELERATOR_NAMESPACE) " backend, "
+    FAIL("No devices available for the " EDM_STRINGIZE(AV2P_ACCELERATOR_NAMESPACE) " backend, "
          "the test will be skipped.");
   }
 
   // run the test on each device
   for (auto const& device : devices) {
-    std::cout << "Test atomicIncSaturate on " << alpaka::getName(device) << '\n';
+    std::cout << "Test atomicIncSaturate on " << aV2P::getName(device) << '\n';
     Queue queue(device);
 
     SECTION("int32_t, saturating") { testAtomicIncSaturate<int32_t>(queue, 100000, 1000); }

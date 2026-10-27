@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
@@ -23,31 +23,31 @@ namespace cms::alpakatools {
   inline constexpr Idx idx_min(Idx const x, Idx const y) { return (y > x) ? x : y; }
 
   // Trait describing whether or not the accelerator expects the threads-per-block and elements-per-thread to be swapped
-  template <alpaka::concepts::Acc TAcc>
+  template <aV2P::concepts::Acc TAcc>
   struct requires_single_thread_per_block : public std::true_type {};
 
-#ifdef ALPAKA_ACC_GPU_CUDA_ENABLED
+#ifdef AV2P_ACC_GPU_CUDA_ENABLED
   template <typename TDim>
-  struct requires_single_thread_per_block<alpaka::AccGpuCudaRt<TDim, Idx>> : public std::false_type {};
-#endif  // ALPAKA_ACC_GPU_CUDA_ENABLED
+  struct requires_single_thread_per_block<aV2P::AccGpuCudaRt<TDim, Idx>> : public std::false_type {};
+#endif  // AV2P_ACC_GPU_CUDA_ENABLED
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef AV2P_ACC_GPU_HIP_ENABLED
   template <typename TDim>
-  struct requires_single_thread_per_block<alpaka::AccGpuHipRt<TDim, Idx>> : public std::false_type {};
-#endif  // ALPAKA_ACC_GPU_HIP_ENABLED
+  struct requires_single_thread_per_block<aV2P::AccGpuHipRt<TDim, Idx>> : public std::false_type {};
+#endif  // AV2P_ACC_GPU_HIP_ENABLED
 
-#ifdef ALPAKA_ACC_CPU_B_SEQ_T_THREADS_ENABLED
+#ifdef AV2P_ACC_CPU_B_SEQ_T_THREADS_ENABLED
   template <typename TDim>
-  struct requires_single_thread_per_block<alpaka::AccCpuThreads<TDim, Idx>> : public std::false_type {};
-#endif  // ALPAKA_ACC_CPU_B_SEQ_T_THREADS_ENABLED
+  struct requires_single_thread_per_block<aV2P::AccCpuThreads<TDim, Idx>> : public std::false_type {};
+#endif  // AV2P_ACC_CPU_B_SEQ_T_THREADS_ENABLED
 
   // Whether or not the accelerator expects the threads-per-block and elements-per-thread to be swapped
-  template <alpaka::concepts::Acc TAcc>
+  template <aV2P::concepts::Acc TAcc>
   inline constexpr bool requires_single_thread_per_block_v = requires_single_thread_per_block<TAcc>::value;
 
   // Create an accelerator-dependent work division for 1-dimensional kernels
-  template <alpaka::concepts::Acc TAcc>
-    requires(alpaka::Dim<TAcc>::value == 1)
+  template <aV2P::concepts::Acc TAcc>
+    requires(aV2P::Dim<TAcc>::value == 1)
   inline WorkDiv<Dim1D> make_workdiv(Idx blocks, Idx elements) {
     if constexpr (not requires_single_thread_per_block_v<TAcc>) {
       // On GPU backends, each thread is looking at a single element:
@@ -63,10 +63,10 @@ namespace cms::alpakatools {
   }
 
   // Create the accelerator-dependent workdiv for N-dimensional kernels
-  template <alpaka::concepts::Acc TAcc>
-  inline WorkDiv<alpaka::Dim<TAcc>> make_workdiv(const Vec<alpaka::Dim<TAcc>>& blocks,
-                                                 const Vec<alpaka::Dim<TAcc>>& elements) {
-    using Dim = alpaka::Dim<TAcc>;
+  template <aV2P::concepts::Acc TAcc>
+  inline WorkDiv<aV2P::Dim<TAcc>> make_workdiv(const Vec<aV2P::Dim<TAcc>>& blocks,
+                                                 const Vec<aV2P::Dim<TAcc>>& elements) {
+    using Dim = aV2P::Dim<TAcc>;
     if constexpr (not requires_single_thread_per_block_v<TAcc>) {
       // On GPU backends, each thread is looking at a single element:
       //   - the number of threads per block is "elements";
@@ -111,7 +111,7 @@ namespace cms::alpakatools {
    * `UniformElementsAlong<TAcc, N-1>(acc, ...)`, `<N-2>` and `<N-3>`.
    *
    * To cover the problem space, different threads may execute a different number of iterations. As a result, it is not
-   * safe to call `alpaka::syncBlockThreads()` and other block-level synchronisations within this loop.
+   * safe to call `aV2P::syncBlockThreads()` and other block-level synchronisations within this loop.
    * If a block synchronisation is needed, one should split the loop into an outer loop over the groups and an inner
    * loop over each group's elements, and synchronise only in the outer loop:
    *
@@ -122,14 +122,14 @@ namespace cms::alpakatools {
    *       ...
    *    }
    *    // wait for all threads to complete the first part
-   *    alpaka::syncBlockThreads();
+   *    aV2P::syncBlockThreads();
    *    for (auto element : uniform_group_elements_along<Dim>(acc, group, extent)) {
    *       // second part of the computation
    *       // no synchronisations here
    *       ...
    *    }
    *    // wait for all threads to complete the second part
-   *    alpaka::syncBlockThreads();
+   *    aV2P::syncBlockThreads();
    *    ...
    *  }
    *
@@ -138,14 +138,14 @@ namespace cms::alpakatools {
    * hang. To avoid this problem, round up `extent` to a multiple of the warp size, and check the element index
    * explicitly inside the loop:
    *
-   *  for (auto element : uniform_elements_along<N-1>(acc, round_up_by(extent, alpaka::warp::getSize(acc)))) {
+   *  for (auto element : uniform_elements_along<N-1>(acc, round_up_by(extent, aV2P::warp::getSize(acc)))) {
    *    bool flag = false;
    *    if (element < extent) {
    *      // do some work and compute a result flag only for the valid elements
    *      flag = do_some_work();
    *    }
    *    // check if any valid element had a positive result
-   *    if (alpaka::warp::any(acc, flag)) {
+   *    if (aV2P::warp::any(acc, flag)) {
    *      // ...
    *    }
    *  }
@@ -153,39 +153,39 @@ namespace cms::alpakatools {
    * Note that the use of warp-level primitives is usually suitable only for the fastest-looping dimension, `N-1`.
    */
 
-    template <alpaka::concepts::Acc TAcc, std::size_t Dim>
-      requires(alpaka::Dim<TAcc>::value >= Dim)
+    template <aV2P::concepts::Acc TAcc, std::size_t Dim>
+      requires(aV2P::Dim<TAcc>::value >= Dim)
     class UniformElementsAlong {
     public:
-      ALPAKA_FN_ACC inline UniformElementsAlong(TAcc const& acc)
-          : elements_{alpaka::getWorkDiv<alpaka::Thread, alpaka::Elems>(acc)[Dim]},
-            first_{alpaka::getIdx<alpaka::Grid, alpaka::Threads>(acc)[Dim] * elements_},
-            stride_{alpaka::getWorkDiv<alpaka::Grid, alpaka::Threads>(acc)[Dim] * elements_},
+      AV2P_FN_ACC inline UniformElementsAlong(TAcc const& acc)
+          : elements_{aV2P::getWorkDiv<aV2P::Thread, aV2P::Elems>(acc)[Dim]},
+            first_{aV2P::getIdx<aV2P::Grid, aV2P::Threads>(acc)[Dim] * elements_},
+            stride_{aV2P::getWorkDiv<aV2P::Grid, aV2P::Threads>(acc)[Dim] * elements_},
             extent_{stride_} {}
 
-      ALPAKA_FN_ACC inline UniformElementsAlong(TAcc const& acc, Idx extent)
-          : elements_{alpaka::getWorkDiv<alpaka::Thread, alpaka::Elems>(acc)[Dim]},
-            first_{alpaka::getIdx<alpaka::Grid, alpaka::Threads>(acc)[Dim] * elements_},
-            stride_{alpaka::getWorkDiv<alpaka::Grid, alpaka::Threads>(acc)[Dim] * elements_},
+      AV2P_FN_ACC inline UniformElementsAlong(TAcc const& acc, Idx extent)
+          : elements_{aV2P::getWorkDiv<aV2P::Thread, aV2P::Elems>(acc)[Dim]},
+            first_{aV2P::getIdx<aV2P::Grid, aV2P::Threads>(acc)[Dim] * elements_},
+            stride_{aV2P::getWorkDiv<aV2P::Grid, aV2P::Threads>(acc)[Dim] * elements_},
             extent_{extent} {}
 
-      ALPAKA_FN_ACC inline UniformElementsAlong(TAcc const& acc, Idx first, Idx extent)
-          : elements_{alpaka::getWorkDiv<alpaka::Thread, alpaka::Elems>(acc)[Dim]},
-            first_{alpaka::getIdx<alpaka::Grid, alpaka::Threads>(acc)[Dim] * elements_ + first},
-            stride_{alpaka::getWorkDiv<alpaka::Grid, alpaka::Threads>(acc)[Dim] * elements_},
+      AV2P_FN_ACC inline UniformElementsAlong(TAcc const& acc, Idx first, Idx extent)
+          : elements_{aV2P::getWorkDiv<aV2P::Thread, aV2P::Elems>(acc)[Dim]},
+            first_{aV2P::getIdx<aV2P::Grid, aV2P::Threads>(acc)[Dim] * elements_ + first},
+            stride_{aV2P::getWorkDiv<aV2P::Grid, aV2P::Threads>(acc)[Dim] * elements_},
             extent_{extent} {}
 
       class const_iterator;
       using iterator = const_iterator;
 
-      ALPAKA_FN_ACC inline const_iterator begin() const { return const_iterator(elements_, stride_, extent_, first_); }
+      AV2P_FN_ACC inline const_iterator begin() const { return const_iterator(elements_, stride_, extent_, first_); }
 
-      ALPAKA_FN_ACC inline const_iterator end() const { return const_iterator(elements_, stride_, extent_, extent_); }
+      AV2P_FN_ACC inline const_iterator end() const { return const_iterator(elements_, stride_, extent_, extent_); }
 
       class const_iterator {
         friend class UniformElementsAlong;
 
-        ALPAKA_FN_ACC inline const_iterator(Idx elements, Idx stride, Idx extent, Idx first)
+        AV2P_FN_ACC inline const_iterator(Idx elements, Idx stride, Idx extent, Idx first)
             : elements_{elements},
               stride_{stride},
               extent_{extent},
@@ -194,10 +194,10 @@ namespace cms::alpakatools {
               range_{idx_min(first + elements, extent)} {}
 
       public:
-        ALPAKA_FN_ACC inline Idx operator*() const { return index_; }
+        AV2P_FN_ACC inline Idx operator*() const { return index_; }
 
         // pre-increment the iterator
-        ALPAKA_FN_ACC inline const_iterator& operator++() {
+        AV2P_FN_ACC inline const_iterator& operator++() {
           if constexpr (requires_single_thread_per_block_v<TAcc>) {
             // increment the index along the elements processed by the current thread
             ++index_;
@@ -220,17 +220,17 @@ namespace cms::alpakatools {
         }
 
         // post-increment the iterator
-        ALPAKA_FN_ACC inline const_iterator operator++(int) {
+        AV2P_FN_ACC inline const_iterator operator++(int) {
           const_iterator old = *this;
           ++(*this);
           return old;
         }
 
-        ALPAKA_FN_ACC inline bool operator==(const_iterator const& other) const {
+        AV2P_FN_ACC inline bool operator==(const_iterator const& other) const {
           return (index_ == other.index_) and (first_ == other.first_);
         }
 
-        ALPAKA_FN_ACC inline bool operator!=(const_iterator const& other) const { return not(*this == other); }
+        AV2P_FN_ACC inline bool operator!=(const_iterator const& other) const { return not(*this == other); }
 
       private:
         // non-const to support iterator copy and assignment
@@ -262,7 +262,7 @@ namespace cms::alpakatools {
    * `uniform_elements(acc, ...)` is a shorthand for `detail::UniformElementsAlong<TAcc, 0>(acc, ...)`.
    *
    * To cover the problem space, different threads may execute a different number of iterations. As a result, it is not
-   * safe to call `alpaka::syncBlockThreads()` and other block-level synchronisations within this loop.
+   * safe to call `aV2P::syncBlockThreads()` and other block-level synchronisations within this loop.
    * If a block synchronisation is needed, one should split the loop into an outer loop over the groups and an inner
    * loop over each group's elements, and synchronise only in the outer loop:
    *
@@ -273,14 +273,14 @@ namespace cms::alpakatools {
    *       ...
    *    }
    *    // wait for all threads to complete the first part
-   *    alpaka::syncBlockThreads();
+   *    aV2P::syncBlockThreads();
    *    for (auto element : uniform_group_elements(acc, group, extent)) {
    *       // second part of the computation
    *       // no synchronisations here
    *       ...
    *    }
    *    // wait for all threads to complete the second part
-   *    alpaka::syncBlockThreads();
+   *    aV2P::syncBlockThreads();
    *    ...
    *  }
    *
@@ -289,14 +289,14 @@ namespace cms::alpakatools {
    * hang. To avoid this problem, round up `extent` to a multiple of the warp size, and check the element index
    * explicitly inside the loop:
    *
-   *  for (auto element : uniform_elements(acc, round_up_by(extent, alpaka::warp::getSize(acc)))) {
+   *  for (auto element : uniform_elements(acc, round_up_by(extent, aV2P::warp::getSize(acc)))) {
    *    bool flag = false;
    *    if (element < extent) {
    *      // do some work and compute a result flag only for elements up to extent
    *      flag = do_some_work();
    *    }
    *    // check if any valid element had a positive result
-   *    if (alpaka::warp::any(acc, flag)) {
+   *    if (aV2P::warp::any(acc, flag)) {
    *      // ...
    *    }
    *  }
@@ -308,9 +308,9 @@ namespace cms::alpakatools {
    *     along the fastest, second-fastest, or third-fastest dimension.
    */
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value == 1)
-  ALPAKA_FN_ACC inline auto uniform_elements(TAcc const& acc, TArgs... args) {
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value == 1)
+  AV2P_FN_ACC inline auto uniform_elements(TAcc const& acc, TArgs... args) {
     return detail::UniformElementsAlong<TAcc, 0>(acc, static_cast<Idx>(args)...);
   }
 
@@ -320,9 +320,9 @@ namespace cms::alpakatools {
    * infer the accelerator type from the argument.
    */
 
-  template <alpaka::concepts::Acc TAcc, std::size_t Dim, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value >= Dim)
-  ALPAKA_FN_ACC inline auto uniform_elements_along(TAcc const& acc, TArgs... args) {
+  template <aV2P::concepts::Acc TAcc, std::size_t Dim, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value >= Dim)
+  AV2P_FN_ACC inline auto uniform_elements_along(TAcc const& acc, TArgs... args) {
     return detail::UniformElementsAlong<TAcc, Dim>(acc, static_cast<Idx>(args)...);
   }
 
@@ -331,22 +331,22 @@ namespace cms::alpakatools {
    * Like `uniform_elements` for N-dimensional kernels, along the fastest, second-fastest, and third-fastest dimensions.
    */
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 0)
-  ALPAKA_FN_ACC inline auto uniform_elements_x(TAcc const& acc, TArgs... args) {
-    return detail::UniformElementsAlong<TAcc, alpaka::Dim<TAcc>::value - 1>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 0)
+  AV2P_FN_ACC inline auto uniform_elements_x(TAcc const& acc, TArgs... args) {
+    return detail::UniformElementsAlong<TAcc, aV2P::Dim<TAcc>::value - 1>(acc, static_cast<Idx>(args)...);
   }
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 1)
-  ALPAKA_FN_ACC inline auto uniform_elements_y(TAcc const& acc, TArgs... args) {
-    return detail::UniformElementsAlong<TAcc, alpaka::Dim<TAcc>::value - 2>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 1)
+  AV2P_FN_ACC inline auto uniform_elements_y(TAcc const& acc, TArgs... args) {
+    return detail::UniformElementsAlong<TAcc, aV2P::Dim<TAcc>::value - 2>(acc, static_cast<Idx>(args)...);
   }
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 2)
-  ALPAKA_FN_ACC inline auto uniform_elements_z(TAcc const& acc, TArgs... args) {
-    return detail::UniformElementsAlong<TAcc, alpaka::Dim<TAcc>::value - 3>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 2)
+  AV2P_FN_ACC inline auto uniform_elements_z(TAcc const& acc, TArgs... args) {
+    return detail::UniformElementsAlong<TAcc, aV2P::Dim<TAcc>::value - 3>(acc, static_cast<Idx>(args)...);
   }
 
   namespace detail {
@@ -359,7 +359,7 @@ namespace cms::alpakatools {
    * `uniform_elements_nd(acc, ...)` is an alias for `UniformElementsND<TAcc>(acc, ...)`.
    *
    * To cover the problem space, different threads may execute a different number of iterations. As a result, it is not
-   * safe to call `alpaka::syncBlockThreads()` and other block-level synchronisations within this loop.
+   * safe to call `aV2P::syncBlockThreads()` and other block-level synchronisations within this loop.
    * If a block synchronisation is needed, one should split the loop into an outer loop over the groups and an inner
    * loop over each group's elements, and synchronise only in the outer loop:
    *
@@ -373,7 +373,7 @@ namespace cms::alpakatools {
    *        }
    *      }
    *      // wait for all threads to complete the first part
-   *      alpaka::syncBlockThreads();
+   *      aV2P::syncBlockThreads();
    *      for (auto element0 : uniform_group_elements_along<0>(acc, group0, extent[0])) {
    *        for (auto element1 : uniform_group_elements_along<1>(acc, group1, extent[1])) {
    *           // second part of the computation
@@ -382,7 +382,7 @@ namespace cms::alpakatools {
    *        }
    *      }
    *      // wait for all threads to complete the second part
-   *      alpaka::syncBlockThreads();
+   *      aV2P::syncBlockThreads();
    *      ...
    *    }
    *  }
@@ -390,23 +390,23 @@ namespace cms::alpakatools {
    * For more details, see `UniformElementsAlong<TAcc, Dim>(acc, ...)`.
    */
 
-    template <alpaka::concepts::Acc TAcc>
-      requires(alpaka::Dim<TAcc>::value > 0)
+    template <aV2P::concepts::Acc TAcc>
+      requires(aV2P::Dim<TAcc>::value > 0)
     class UniformElementsND {
     public:
-      using Dim = alpaka::Dim<TAcc>;
-      using Vec = alpaka::Vec<Dim, Idx>;
+      using Dim = aV2P::Dim<TAcc>;
+      using Vec = aV2P::Vec<Dim, Idx>;
 
-      ALPAKA_FN_ACC inline UniformElementsND(TAcc const& acc)
-          : elements_{alpaka::getWorkDiv<alpaka::Thread, alpaka::Elems>(acc)},
-            thread_{alpaka::getIdx<alpaka::Grid, alpaka::Threads>(acc) * elements_},
-            stride_{alpaka::getWorkDiv<alpaka::Grid, alpaka::Threads>(acc) * elements_},
+      AV2P_FN_ACC inline UniformElementsND(TAcc const& acc)
+          : elements_{aV2P::getWorkDiv<aV2P::Thread, aV2P::Elems>(acc)},
+            thread_{aV2P::getIdx<aV2P::Grid, aV2P::Threads>(acc) * elements_},
+            stride_{aV2P::getWorkDiv<aV2P::Grid, aV2P::Threads>(acc) * elements_},
             extent_{stride_} {}
 
-      ALPAKA_FN_ACC inline UniformElementsND(TAcc const& acc, Vec extent)
-          : elements_{alpaka::getWorkDiv<alpaka::Thread, alpaka::Elems>(acc)},
-            thread_{alpaka::getIdx<alpaka::Grid, alpaka::Threads>(acc) * elements_},
-            stride_{alpaka::getWorkDiv<alpaka::Grid, alpaka::Threads>(acc) * elements_},
+      AV2P_FN_ACC inline UniformElementsND(TAcc const& acc, Vec extent)
+          : elements_{aV2P::getWorkDiv<aV2P::Thread, aV2P::Elems>(acc)},
+            thread_{aV2P::getIdx<aV2P::Grid, aV2P::Threads>(acc) * elements_},
+            stride_{aV2P::getWorkDiv<aV2P::Grid, aV2P::Threads>(acc) * elements_},
             extent_{extent} {}
 
       // tag used to construct an end iterator
@@ -415,7 +415,7 @@ namespace cms::alpakatools {
       class const_iterator;
       using iterator = const_iterator;
 
-      ALPAKA_FN_ACC inline const_iterator begin() const {
+      AV2P_FN_ACC inline const_iterator begin() const {
         // check that all dimensions of the current thread index are within the extent
         if ((thread_ < extent_).all()) {
           // construct an iterator pointing to the first element to be processed by the current thread
@@ -426,7 +426,7 @@ namespace cms::alpakatools {
         }
       }
 
-      ALPAKA_FN_ACC inline const_iterator end() const {
+      AV2P_FN_ACC inline const_iterator end() const {
         // construct an end iterator, pointing post the end of the extent
         return const_iterator{this, at_end_t{}};
       }
@@ -435,43 +435,43 @@ namespace cms::alpakatools {
         friend class UniformElementsND;
 
       public:
-        ALPAKA_FN_ACC inline Vec operator*() const { return index_; }
+        AV2P_FN_ACC inline Vec operator*() const { return index_; }
 
         // pre-increment the iterator
-        ALPAKA_FN_ACC constexpr inline const_iterator operator++() {
+        AV2P_FN_ACC constexpr inline const_iterator operator++() {
           increment();
           return *this;
         }
 
         // post-increment the iterator
-        ALPAKA_FN_ACC constexpr inline const_iterator operator++(int) {
+        AV2P_FN_ACC constexpr inline const_iterator operator++(int) {
           const_iterator old = *this;
           increment();
           return old;
         }
 
-        ALPAKA_FN_ACC constexpr inline bool operator==(const_iterator const& other) const {
+        AV2P_FN_ACC constexpr inline bool operator==(const_iterator const& other) const {
           return (index_ == other.index_);
         }
 
-        ALPAKA_FN_ACC constexpr inline bool operator!=(const_iterator const& other) const {
+        AV2P_FN_ACC constexpr inline bool operator!=(const_iterator const& other) const {
           return not(*this == other);
         }
 
       private:
         // construct an iterator pointing to the first element to be processed by the current thread
-        ALPAKA_FN_ACC inline const_iterator(UniformElementsND const* loop, Vec first)
+        AV2P_FN_ACC inline const_iterator(UniformElementsND const* loop, Vec first)
             : loop_{loop},
-              first_{alpaka::elementwise_min(first, loop->extent_)},
-              range_{alpaka::elementwise_min(first + loop->elements_, loop->extent_)},
+              first_{aV2P::elementwise_min(first, loop->extent_)},
+              range_{aV2P::elementwise_min(first + loop->elements_, loop->extent_)},
               index_{first_} {}
 
         // construct an end iterator, pointing post the end of the extent
-        ALPAKA_FN_ACC inline const_iterator(UniformElementsND const* loop, at_end_t const&)
+        AV2P_FN_ACC inline const_iterator(UniformElementsND const* loop, at_end_t const&)
             : loop_{loop}, first_{loop_->extent_}, range_{loop_->extent_}, index_{loop_->extent_} {}
 
         template <size_t I>
-        ALPAKA_FN_ACC inline constexpr bool nth_elements_loop() {
+        AV2P_FN_ACC inline constexpr bool nth_elements_loop() {
           bool overflow = false;
           ++index_[I];
           if (index_[I] >= range_[I]) {
@@ -482,7 +482,7 @@ namespace cms::alpakatools {
         }
 
         template <size_t N>
-        ALPAKA_FN_ACC inline constexpr bool do_elements_loops() {
+        AV2P_FN_ACC inline constexpr bool do_elements_loops() {
           if constexpr (N == 0) {
             // overflow
             return true;
@@ -496,7 +496,7 @@ namespace cms::alpakatools {
         }
 
         template <size_t I>
-        ALPAKA_FN_ACC inline constexpr bool nth_strided_loop() {
+        AV2P_FN_ACC inline constexpr bool nth_strided_loop() {
           bool overflow = false;
           first_[I] += loop_->stride_[I];
           if (first_[I] >= loop_->extent_[I]) {
@@ -509,7 +509,7 @@ namespace cms::alpakatools {
         }
 
         template <size_t N>
-        ALPAKA_FN_ACC inline constexpr bool do_strided_loops() {
+        AV2P_FN_ACC inline constexpr bool do_strided_loops() {
           if constexpr (N == 0) {
             // overflow
             return true;
@@ -523,7 +523,7 @@ namespace cms::alpakatools {
         }
 
         // increment the iterator
-        ALPAKA_FN_ACC inline constexpr void increment() {
+        AV2P_FN_ACC inline constexpr void increment() {
           if constexpr (requires_single_thread_per_block_v<TAcc>) {
             // linear N-dimensional loops over the elements associated to the thread;
             // do_elements_loops<>() returns true if any of those loops overflows
@@ -569,15 +569,15 @@ namespace cms::alpakatools {
    * `uniform_elements_nd(acc, ...)` is a shorthand for `detail::UniformElementsND<TAcc>(acc, ...)`.
    */
 
-  template <alpaka::concepts::Acc TAcc>
-    requires(alpaka::Dim<TAcc>::value > 0)
-  ALPAKA_FN_ACC inline auto uniform_elements_nd(TAcc const& acc) {
+  template <aV2P::concepts::Acc TAcc>
+    requires(aV2P::Dim<TAcc>::value > 0)
+  AV2P_FN_ACC inline auto uniform_elements_nd(TAcc const& acc) {
     return detail::UniformElementsND<TAcc>(acc);
   }
 
-  template <alpaka::concepts::Acc TAcc>
-    requires(alpaka::Dim<TAcc>::value > 0)
-  ALPAKA_FN_ACC inline auto uniform_elements_nd(TAcc const& acc, alpaka::Vec<alpaka::Dim<TAcc>, Idx> extent) {
+  template <aV2P::concepts::Acc TAcc>
+    requires(aV2P::Dim<TAcc>::value > 0)
+  AV2P_FN_ACC inline auto uniform_elements_nd(TAcc const& acc, aV2P::Vec<aV2P::Dim<TAcc>, Idx> extent) {
     return detail::UniformElementsND<TAcc>(acc, extent);
   }
 
@@ -635,39 +635,39 @@ namespace cms::alpakatools {
    * `uniform_group_elements_along<Dim>`.
    */
 
-    template <alpaka::concepts::Acc TAcc, std::size_t Dim>
-      requires(alpaka::Dim<TAcc>::value >= Dim)
+    template <aV2P::concepts::Acc TAcc, std::size_t Dim>
+      requires(aV2P::Dim<TAcc>::value >= Dim)
     class UniformGroupsAlong {
     public:
-      ALPAKA_FN_ACC inline UniformGroupsAlong(TAcc const& acc)
-          : first_{alpaka::getIdx<alpaka::Grid, alpaka::Blocks>(acc)[Dim]},
-            stride_{alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[Dim]},
+      AV2P_FN_ACC inline UniformGroupsAlong(TAcc const& acc)
+          : first_{aV2P::getIdx<aV2P::Grid, aV2P::Blocks>(acc)[Dim]},
+            stride_{aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[Dim]},
             extent_{stride_} {}
 
       // extent is the total number of elements (not blocks)
-      ALPAKA_FN_ACC inline UniformGroupsAlong(TAcc const& acc, Idx extent)
-          : first_{alpaka::getIdx<alpaka::Grid, alpaka::Blocks>(acc)[Dim]},
-            stride_{alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[Dim]},
-            extent_{divide_up_by(extent, alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[Dim])} {}
+      AV2P_FN_ACC inline UniformGroupsAlong(TAcc const& acc, Idx extent)
+          : first_{aV2P::getIdx<aV2P::Grid, aV2P::Blocks>(acc)[Dim]},
+            stride_{aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[Dim]},
+            extent_{divide_up_by(extent, aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[Dim])} {}
 
       class const_iterator;
       using iterator = const_iterator;
 
-      ALPAKA_FN_ACC inline const_iterator begin() const { return const_iterator(stride_, extent_, first_); }
+      AV2P_FN_ACC inline const_iterator begin() const { return const_iterator(stride_, extent_, first_); }
 
-      ALPAKA_FN_ACC inline const_iterator end() const { return const_iterator(stride_, extent_, extent_); }
+      AV2P_FN_ACC inline const_iterator end() const { return const_iterator(stride_, extent_, extent_); }
 
       class const_iterator {
         friend class UniformGroupsAlong;
 
-        ALPAKA_FN_ACC inline const_iterator(Idx stride, Idx extent, Idx first)
+        AV2P_FN_ACC inline const_iterator(Idx stride, Idx extent, Idx first)
             : stride_{stride}, extent_{extent}, first_{idx_min(first, extent)} {}
 
       public:
-        ALPAKA_FN_ACC inline Idx operator*() const { return first_; }
+        AV2P_FN_ACC inline Idx operator*() const { return first_; }
 
         // pre-increment the iterator
-        ALPAKA_FN_ACC inline const_iterator& operator++() {
+        AV2P_FN_ACC inline const_iterator& operator++() {
           // increment the first-element-in-block index by the grid stride
           first_ += stride_;
           if (first_ < extent_)
@@ -679,15 +679,15 @@ namespace cms::alpakatools {
         }
 
         // post-increment the iterator
-        ALPAKA_FN_ACC inline const_iterator operator++(int) {
+        AV2P_FN_ACC inline const_iterator operator++(int) {
           const_iterator old = *this;
           ++(*this);
           return old;
         }
 
-        ALPAKA_FN_ACC inline bool operator==(const_iterator const& other) const { return (first_ == other.first_); }
+        AV2P_FN_ACC inline bool operator==(const_iterator const& other) const { return (first_ == other.first_); }
 
-        ALPAKA_FN_ACC inline bool operator!=(const_iterator const& other) const { return not(*this == other); }
+        AV2P_FN_ACC inline bool operator!=(const_iterator const& other) const { return not(*this == other); }
 
       private:
         // non-const to support iterator copy and assignment
@@ -752,9 +752,9 @@ namespace cms::alpakatools {
    *     along the fastest, second-fastest, or third-fastest dimension.
    */
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value == 1)
-  ALPAKA_FN_ACC inline auto uniform_groups(TAcc const& acc, TArgs... args) {
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value == 1)
+  AV2P_FN_ACC inline auto uniform_groups(TAcc const& acc, TArgs... args) {
     return detail::UniformGroupsAlong<TAcc, 0>(acc, static_cast<Idx>(args)...);
   }
 
@@ -764,9 +764,9 @@ namespace cms::alpakatools {
    * the accelerator type from the argument.
    */
 
-  template <alpaka::concepts::Acc TAcc, std::size_t Dim, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value >= Dim)
-  ALPAKA_FN_ACC inline auto uniform_groups_along(TAcc const& acc, TArgs... args) {
+  template <aV2P::concepts::Acc TAcc, std::size_t Dim, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value >= Dim)
+  AV2P_FN_ACC inline auto uniform_groups_along(TAcc const& acc, TArgs... args) {
     return detail::UniformGroupsAlong<TAcc, Dim>(acc, static_cast<Idx>(args)...);
   }
 
@@ -775,22 +775,22 @@ namespace cms::alpakatools {
    * Like `uniform_groups` for N-dimensional kernels, along the fastest, second-fastest, and third-fastest dimensions.
    */
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 0)
-  ALPAKA_FN_ACC inline auto uniform_groups_x(TAcc const& acc, TArgs... args) {
-    return detail::UniformGroupsAlong<TAcc, alpaka::Dim<TAcc>::value - 1>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 0)
+  AV2P_FN_ACC inline auto uniform_groups_x(TAcc const& acc, TArgs... args) {
+    return detail::UniformGroupsAlong<TAcc, aV2P::Dim<TAcc>::value - 1>(acc, static_cast<Idx>(args)...);
   }
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 1)
-  ALPAKA_FN_ACC inline auto uniform_groups_y(TAcc const& acc, TArgs... args) {
-    return detail::UniformGroupsAlong<TAcc, alpaka::Dim<TAcc>::value - 2>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 1)
+  AV2P_FN_ACC inline auto uniform_groups_y(TAcc const& acc, TArgs... args) {
+    return detail::UniformGroupsAlong<TAcc, aV2P::Dim<TAcc>::value - 2>(acc, static_cast<Idx>(args)...);
   }
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 2)
-  ALPAKA_FN_ACC inline auto uniform_groups_z(TAcc const& acc, TArgs... args) {
-    return detail::UniformGroupsAlong<TAcc, alpaka::Dim<TAcc>::value - 3>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 2)
+  AV2P_FN_ACC inline auto uniform_groups_z(TAcc const& acc, TArgs... args) {
+    return detail::UniformGroupsAlong<TAcc, aV2P::Dim<TAcc>::value - 3>(acc, static_cast<Idx>(args)...);
   }
 
   namespace detail {
@@ -821,7 +821,7 @@ namespace cms::alpakatools {
    * global element index reaches `elements`.
    *
    * If the problem size is not a multiple of the block size, different threads may execute a different number of
-   * iterations. As a result, it is not safe to call `alpaka::syncBlockThreads()` within this loop. If a block
+   * iterations. As a result, it is not safe to call `aV2P::syncBlockThreads()` within this loop. If a block
    * synchronisation is needed, one should split the loop, and synchronise the threads between the loops.
    * See `UniformElementsAlong<Dim>(acc, ...)` for a concrete example using `uniform_groups_along<Dim>` and
    * `uniform_group_elements_along<Dim>`.
@@ -831,14 +831,14 @@ namespace cms::alpakatools {
    * kernel may hang. To avoid this problem, round up `elements` to a multiple of the warp size, and check the element
    * index explicitly inside the loop:
    *
-   *  for (auto element : uniform_group_elements_along<N-1>(acc, group, round_up_by(elements, alpaka::warp::getSize(acc)))) {
+   *  for (auto element : uniform_group_elements_along<N-1>(acc, group, round_up_by(elements, aV2P::warp::getSize(acc)))) {
    *    bool flag = false;
    *    if (element < elements) {
    *      // do some work and compute a result flag only for the valid elements
    *      flag = do_some_work();
    *    }
    *    // check if any valid element had a positive result
-   *    if (alpaka::warp::any(acc, flag)) {
+   *    if (aV2P::warp::any(acc, flag)) {
    *      // ...
    *    }
    *  }
@@ -846,41 +846,41 @@ namespace cms::alpakatools {
    * Note that the use of warp-level primitives is usually suitable only for the fastest-looping dimension, `N-1`.
    */
 
-    template <alpaka::concepts::Acc TAcc, std::size_t Dim>
-      requires(alpaka::Dim<TAcc>::value >= Dim)
+    template <aV2P::concepts::Acc TAcc, std::size_t Dim>
+      requires(aV2P::Dim<TAcc>::value >= Dim)
     class UniformGroupElementsAlong {
     public:
-      ALPAKA_FN_ACC inline UniformGroupElementsAlong(TAcc const& acc, Idx block)
-          : first_{block * alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[Dim]},
-            local_{alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[Dim] *
-                   alpaka::getWorkDiv<alpaka::Thread, alpaka::Elems>(acc)[Dim]},
-            range_{local_ + alpaka::getWorkDiv<alpaka::Thread, alpaka::Elems>(acc)[Dim]} {}
+      AV2P_FN_ACC inline UniformGroupElementsAlong(TAcc const& acc, Idx block)
+          : first_{block * aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[Dim]},
+            local_{aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc)[Dim] *
+                   aV2P::getWorkDiv<aV2P::Thread, aV2P::Elems>(acc)[Dim]},
+            range_{local_ + aV2P::getWorkDiv<aV2P::Thread, aV2P::Elems>(acc)[Dim]} {}
 
-      ALPAKA_FN_ACC inline UniformGroupElementsAlong(TAcc const& acc, Idx block, Idx extent)
-          : first_{block * alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[Dim]},
+      AV2P_FN_ACC inline UniformGroupElementsAlong(TAcc const& acc, Idx block, Idx extent)
+          : first_{block * aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[Dim]},
             local_{idx_min(extent - first_,
-                           alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[Dim] *
-                               alpaka::getWorkDiv<alpaka::Thread, alpaka::Elems>(acc)[Dim])},
-            range_{idx_min(extent - first_, local_ + alpaka::getWorkDiv<alpaka::Thread, alpaka::Elems>(acc)[Dim])} {}
+                           aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc)[Dim] *
+                               aV2P::getWorkDiv<aV2P::Thread, aV2P::Elems>(acc)[Dim])},
+            range_{idx_min(extent - first_, local_ + aV2P::getWorkDiv<aV2P::Thread, aV2P::Elems>(acc)[Dim])} {}
 
       class const_iterator;
       using iterator = const_iterator;
 
-      ALPAKA_FN_ACC inline const_iterator begin() const { return const_iterator(local_, first_, range_); }
+      AV2P_FN_ACC inline const_iterator begin() const { return const_iterator(local_, first_, range_); }
 
-      ALPAKA_FN_ACC inline const_iterator end() const { return const_iterator(range_, first_, range_); }
+      AV2P_FN_ACC inline const_iterator end() const { return const_iterator(range_, first_, range_); }
 
       class const_iterator {
         friend class UniformGroupElementsAlong;
 
-        ALPAKA_FN_ACC inline const_iterator(Idx local, Idx first, Idx range)
+        AV2P_FN_ACC inline const_iterator(Idx local, Idx first, Idx range)
             : index_{local}, first_{first}, range_{range} {}
 
       public:
-        ALPAKA_FN_ACC inline ElementIndex operator*() const { return ElementIndex{index_ + first_, index_}; }
+        AV2P_FN_ACC inline ElementIndex operator*() const { return ElementIndex{index_ + first_, index_}; }
 
         // pre-increment the iterator
-        ALPAKA_FN_ACC inline const_iterator& operator++() {
+        AV2P_FN_ACC inline const_iterator& operator++() {
           if constexpr (requires_single_thread_per_block_v<TAcc>) {
             // increment the index along the elements processed by the current thread
             ++index_;
@@ -894,15 +894,15 @@ namespace cms::alpakatools {
         }
 
         // post-increment the iterator
-        ALPAKA_FN_ACC inline const_iterator operator++(int) {
+        AV2P_FN_ACC inline const_iterator operator++(int) {
           const_iterator old = *this;
           ++(*this);
           return old;
         }
 
-        ALPAKA_FN_ACC inline bool operator==(const_iterator const& other) const { return (index_ == other.index_); }
+        AV2P_FN_ACC inline bool operator==(const_iterator const& other) const { return (index_ == other.index_); }
 
-        ALPAKA_FN_ACC inline bool operator!=(const_iterator const& other) const { return not(*this == other); }
+        AV2P_FN_ACC inline bool operator!=(const_iterator const& other) const { return not(*this == other); }
 
       private:
         // modified by the pre/post-increment operator
@@ -936,7 +936,7 @@ namespace cms::alpakatools {
    * global element index reaches `elements`.
    *
    * If the problem size is not a multiple of the block size, different threads may execute a different number of
-   * iterations. As a result, it is not safe to call `alpaka::syncBlockThreads()` within this loop. If a block
+   * iterations. As a result, it is not safe to call `aV2P::syncBlockThreads()` within this loop. If a block
    * synchronisation is needed, one should split the loop, and synchronise the threads between the loops.
    * See `uniform_elements(acc, ...)` for a concrete example using `uniform_groups` and `uniform_group_elements`.
    *
@@ -945,14 +945,14 @@ namespace cms::alpakatools {
    * kernel may hang. To avoid this problem, round up `elements` to a multiple of the warp size, and check the element
    * index explicitly inside the loop:
    *
-   *  for (auto element : uniform_group_elements(acc, group, round_up_by(elements, alpaka::warp::getSize(acc)))) {
+   *  for (auto element : uniform_group_elements(acc, group, round_up_by(elements, aV2P::warp::getSize(acc)))) {
    *    bool flag = false;
    *    if (element < elements) {
    *      // do some work and compute a result flag only for the valid elements
    *      flag = do_some_work();
    *    }
    *    // check if any valid element had a positive result
-   *    if (alpaka::warp::any(acc, flag)) {
+   *    if (aV2P::warp::any(acc, flag)) {
    *      // ...
    *    }
    *  }
@@ -964,9 +964,9 @@ namespace cms::alpakatools {
    *     `uniform_group_elements_z(acc, ...)` to loop along the fastest, second-fastest, or third-fastest dimension.
    */
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value == 1)
-  ALPAKA_FN_ACC inline auto uniform_group_elements(TAcc const& acc, TArgs... args) {
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value == 1)
+  AV2P_FN_ACC inline auto uniform_group_elements(TAcc const& acc, TArgs... args) {
     return detail::UniformGroupElementsAlong<TAcc, 0>(acc, static_cast<Idx>(args)...);
   }
 
@@ -976,9 +976,9 @@ namespace cms::alpakatools {
    * that can infer the accelerator type from the argument.
    */
 
-  template <alpaka::concepts::Acc TAcc, std::size_t Dim, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value >= Dim)
-  ALPAKA_FN_ACC inline auto uniform_group_elements_along(TAcc const& acc, TArgs... args) {
+  template <aV2P::concepts::Acc TAcc, std::size_t Dim, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value >= Dim)
+  AV2P_FN_ACC inline auto uniform_group_elements_along(TAcc const& acc, TArgs... args) {
     return detail::UniformGroupElementsAlong<TAcc, Dim>(acc, static_cast<Idx>(args)...);
   }
 
@@ -988,22 +988,22 @@ namespace cms::alpakatools {
    * dimensions.
    */
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 0)
-  ALPAKA_FN_ACC inline auto uniform_group_elements_x(TAcc const& acc, TArgs... args) {
-    return detail::UniformGroupElementsAlong<TAcc, alpaka::Dim<TAcc>::value - 1>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 0)
+  AV2P_FN_ACC inline auto uniform_group_elements_x(TAcc const& acc, TArgs... args) {
+    return detail::UniformGroupElementsAlong<TAcc, aV2P::Dim<TAcc>::value - 1>(acc, static_cast<Idx>(args)...);
   }
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 1)
-  ALPAKA_FN_ACC inline auto uniform_group_elements_y(TAcc const& acc, TArgs... args) {
-    return detail::UniformGroupElementsAlong<TAcc, alpaka::Dim<TAcc>::value - 2>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 1)
+  AV2P_FN_ACC inline auto uniform_group_elements_y(TAcc const& acc, TArgs... args) {
+    return detail::UniformGroupElementsAlong<TAcc, aV2P::Dim<TAcc>::value - 2>(acc, static_cast<Idx>(args)...);
   }
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 2)
-  ALPAKA_FN_ACC inline auto uniform_group_elements_z(TAcc const& acc, TArgs... args) {
-    return detail::UniformGroupElementsAlong<TAcc, alpaka::Dim<TAcc>::value - 3>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 2)
+  AV2P_FN_ACC inline auto uniform_group_elements_z(TAcc const& acc, TArgs... args) {
+    return detail::UniformGroupElementsAlong<TAcc, aV2P::Dim<TAcc>::value - 3>(acc, static_cast<Idx>(args)...);
   }
 
   namespace detail {
@@ -1046,38 +1046,38 @@ namespace cms::alpakatools {
    * group 3.
    */
 
-    template <alpaka::concepts::Acc TAcc, std::size_t Dim>
-      requires(alpaka::Dim<TAcc>::value >= Dim)
+    template <aV2P::concepts::Acc TAcc, std::size_t Dim>
+      requires(aV2P::Dim<TAcc>::value >= Dim)
     class IndependentGroupsAlong {
     public:
-      ALPAKA_FN_ACC inline IndependentGroupsAlong(TAcc const& acc)
-          : first_{alpaka::getIdx<alpaka::Grid, alpaka::Blocks>(acc)[Dim]},
-            stride_{alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[Dim]},
+      AV2P_FN_ACC inline IndependentGroupsAlong(TAcc const& acc)
+          : first_{aV2P::getIdx<aV2P::Grid, aV2P::Blocks>(acc)[Dim]},
+            stride_{aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[Dim]},
             extent_{stride_} {}
 
-      ALPAKA_FN_ACC inline IndependentGroupsAlong(TAcc const& acc, Idx groups)
-          : first_{alpaka::getIdx<alpaka::Grid, alpaka::Blocks>(acc)[Dim]},
-            stride_{alpaka::getWorkDiv<alpaka::Grid, alpaka::Blocks>(acc)[Dim]},
+      AV2P_FN_ACC inline IndependentGroupsAlong(TAcc const& acc, Idx groups)
+          : first_{aV2P::getIdx<aV2P::Grid, aV2P::Blocks>(acc)[Dim]},
+            stride_{aV2P::getWorkDiv<aV2P::Grid, aV2P::Blocks>(acc)[Dim]},
             extent_{groups} {}
 
       class const_iterator;
       using iterator = const_iterator;
 
-      ALPAKA_FN_ACC inline const_iterator begin() const { return const_iterator(stride_, extent_, first_); }
+      AV2P_FN_ACC inline const_iterator begin() const { return const_iterator(stride_, extent_, first_); }
 
-      ALPAKA_FN_ACC inline const_iterator end() const { return const_iterator(stride_, extent_, extent_); }
+      AV2P_FN_ACC inline const_iterator end() const { return const_iterator(stride_, extent_, extent_); }
 
       class const_iterator {
         friend class IndependentGroupsAlong;
 
-        ALPAKA_FN_ACC inline const_iterator(Idx stride, Idx extent, Idx first)
+        AV2P_FN_ACC inline const_iterator(Idx stride, Idx extent, Idx first)
             : stride_{stride}, extent_{extent}, first_{idx_min(first, extent)} {}
 
       public:
-        ALPAKA_FN_ACC inline Idx operator*() const { return first_; }
+        AV2P_FN_ACC inline Idx operator*() const { return first_; }
 
         // pre-increment the iterator
-        ALPAKA_FN_ACC inline const_iterator& operator++() {
+        AV2P_FN_ACC inline const_iterator& operator++() {
           // increment the first-element-in-block index by the grid stride
           first_ += stride_;
           if (first_ < extent_)
@@ -1089,15 +1089,15 @@ namespace cms::alpakatools {
         }
 
         // post-increment the iterator
-        ALPAKA_FN_ACC inline const_iterator operator++(int) {
+        AV2P_FN_ACC inline const_iterator operator++(int) {
           const_iterator old = *this;
           ++(*this);
           return old;
         }
 
-        ALPAKA_FN_ACC inline bool operator==(const_iterator const& other) const { return (first_ == other.first_); }
+        AV2P_FN_ACC inline bool operator==(const_iterator const& other) const { return (first_ == other.first_); }
 
-        ALPAKA_FN_ACC inline bool operator!=(const_iterator const& other) const { return not(*this == other); }
+        AV2P_FN_ACC inline bool operator!=(const_iterator const& other) const { return not(*this == other); }
 
       private:
         // non-const to support iterator copy and assignment
@@ -1149,9 +1149,9 @@ namespace cms::alpakatools {
    *     along the fastest, second-fastest, or third-fastest dimension.
    */
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value == 1)
-  ALPAKA_FN_ACC inline auto independent_groups(TAcc const& acc, TArgs... args) {
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value == 1)
+  AV2P_FN_ACC inline auto independent_groups(TAcc const& acc, TArgs... args) {
     return detail::IndependentGroupsAlong<TAcc, 0>(acc, static_cast<Idx>(args)...);
   }
 
@@ -1161,9 +1161,9 @@ namespace cms::alpakatools {
    * infer the accelerator type from the argument.
    */
 
-  template <alpaka::concepts::Acc TAcc, std::size_t Dim, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value >= Dim)
-  ALPAKA_FN_ACC inline auto independent_groups_along(TAcc const& acc, TArgs... args) {
+  template <aV2P::concepts::Acc TAcc, std::size_t Dim, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value >= Dim)
+  AV2P_FN_ACC inline auto independent_groups_along(TAcc const& acc, TArgs... args) {
     return detail::IndependentGroupsAlong<TAcc, Dim>(acc, static_cast<Idx>(args)...);
   }
 
@@ -1173,22 +1173,22 @@ namespace cms::alpakatools {
    * dimensions.
    */
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 0)
-  ALPAKA_FN_ACC inline auto independent_groups_x(TAcc const& acc, TArgs... args) {
-    return detail::IndependentGroupsAlong<TAcc, alpaka::Dim<TAcc>::value - 1>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 0)
+  AV2P_FN_ACC inline auto independent_groups_x(TAcc const& acc, TArgs... args) {
+    return detail::IndependentGroupsAlong<TAcc, aV2P::Dim<TAcc>::value - 1>(acc, static_cast<Idx>(args)...);
   }
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 1)
-  ALPAKA_FN_ACC inline auto independent_groups_y(TAcc const& acc, TArgs... args) {
-    return detail::IndependentGroupsAlong<TAcc, alpaka::Dim<TAcc>::value - 2>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 1)
+  AV2P_FN_ACC inline auto independent_groups_y(TAcc const& acc, TArgs... args) {
+    return detail::IndependentGroupsAlong<TAcc, aV2P::Dim<TAcc>::value - 2>(acc, static_cast<Idx>(args)...);
   }
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 2)
-  ALPAKA_FN_ACC inline auto independent_groups_z(TAcc const& acc, TArgs... args) {
-    return detail::IndependentGroupsAlong<TAcc, alpaka::Dim<TAcc>::value - 3>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 2)
+  AV2P_FN_ACC inline auto independent_groups_z(TAcc const& acc, TArgs... args) {
+    return detail::IndependentGroupsAlong<TAcc, aV2P::Dim<TAcc>::value - 3>(acc, static_cast<Idx>(args)...);
   }
 
   namespace detail {
@@ -1199,39 +1199,39 @@ namespace cms::alpakatools {
    * `IndependentGroupElementsAlong<TAcc, Dim>(acc, ...)` that can infer the accelerator type from the argument.
    */
 
-    template <alpaka::concepts::Acc TAcc, std::size_t Dim>
-      requires(alpaka::Dim<TAcc>::value >= Dim)
+    template <aV2P::concepts::Acc TAcc, std::size_t Dim>
+      requires(aV2P::Dim<TAcc>::value >= Dim)
     class IndependentGroupElementsAlong {
     public:
-      ALPAKA_FN_ACC inline IndependentGroupElementsAlong(TAcc const& acc)
-          : elements_{alpaka::getWorkDiv<alpaka::Thread, alpaka::Elems>(acc)[Dim]},
-            thread_{alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[Dim] * elements_},
-            stride_{alpaka::getWorkDiv<alpaka::Block, alpaka::Threads>(acc)[Dim] * elements_},
+      AV2P_FN_ACC inline IndependentGroupElementsAlong(TAcc const& acc)
+          : elements_{aV2P::getWorkDiv<aV2P::Thread, aV2P::Elems>(acc)[Dim]},
+            thread_{aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc)[Dim] * elements_},
+            stride_{aV2P::getWorkDiv<aV2P::Block, aV2P::Threads>(acc)[Dim] * elements_},
             extent_{stride_} {}
 
-      ALPAKA_FN_ACC inline IndependentGroupElementsAlong(TAcc const& acc, Idx extent)
-          : elements_{alpaka::getWorkDiv<alpaka::Thread, alpaka::Elems>(acc)[Dim]},
-            thread_{alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[Dim] * elements_},
-            stride_{alpaka::getWorkDiv<alpaka::Block, alpaka::Threads>(acc)[Dim] * elements_},
+      AV2P_FN_ACC inline IndependentGroupElementsAlong(TAcc const& acc, Idx extent)
+          : elements_{aV2P::getWorkDiv<aV2P::Thread, aV2P::Elems>(acc)[Dim]},
+            thread_{aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc)[Dim] * elements_},
+            stride_{aV2P::getWorkDiv<aV2P::Block, aV2P::Threads>(acc)[Dim] * elements_},
             extent_{extent} {}
 
-      ALPAKA_FN_ACC inline IndependentGroupElementsAlong(TAcc const& acc, Idx first, Idx extent)
-          : elements_{alpaka::getWorkDiv<alpaka::Thread, alpaka::Elems>(acc)[Dim]},
-            thread_{alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[Dim] * elements_ + first},
-            stride_{alpaka::getWorkDiv<alpaka::Block, alpaka::Threads>(acc)[Dim] * elements_},
+      AV2P_FN_ACC inline IndependentGroupElementsAlong(TAcc const& acc, Idx first, Idx extent)
+          : elements_{aV2P::getWorkDiv<aV2P::Thread, aV2P::Elems>(acc)[Dim]},
+            thread_{aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc)[Dim] * elements_ + first},
+            stride_{aV2P::getWorkDiv<aV2P::Block, aV2P::Threads>(acc)[Dim] * elements_},
             extent_{extent} {}
 
       class const_iterator;
       using iterator = const_iterator;
 
-      ALPAKA_FN_ACC inline const_iterator begin() const { return const_iterator(elements_, stride_, extent_, thread_); }
+      AV2P_FN_ACC inline const_iterator begin() const { return const_iterator(elements_, stride_, extent_, thread_); }
 
-      ALPAKA_FN_ACC inline const_iterator end() const { return const_iterator(elements_, stride_, extent_, extent_); }
+      AV2P_FN_ACC inline const_iterator end() const { return const_iterator(elements_, stride_, extent_, extent_); }
 
       class const_iterator {
         friend class IndependentGroupElementsAlong;
 
-        ALPAKA_FN_ACC inline const_iterator(Idx elements, Idx stride, Idx extent, Idx first)
+        AV2P_FN_ACC inline const_iterator(Idx elements, Idx stride, Idx extent, Idx first)
             : elements_{elements},
               stride_{stride},
               extent_{extent},
@@ -1240,10 +1240,10 @@ namespace cms::alpakatools {
               range_{idx_min(first + elements, extent)} {}
 
       public:
-        ALPAKA_FN_ACC inline Idx operator*() const { return index_; }
+        AV2P_FN_ACC inline Idx operator*() const { return index_; }
 
         // pre-increment the iterator
-        ALPAKA_FN_ACC inline const_iterator& operator++() {
+        AV2P_FN_ACC inline const_iterator& operator++() {
           if constexpr (requires_single_thread_per_block_v<TAcc>) {
             // increment the index along the elements processed by the current thread
             ++index_;
@@ -1266,17 +1266,17 @@ namespace cms::alpakatools {
         }
 
         // post-increment the iterator
-        ALPAKA_FN_ACC inline const_iterator operator++(int) {
+        AV2P_FN_ACC inline const_iterator operator++(int) {
           const_iterator old = *this;
           ++(*this);
           return old;
         }
 
-        ALPAKA_FN_ACC inline bool operator==(const_iterator const& other) const {
+        AV2P_FN_ACC inline bool operator==(const_iterator const& other) const {
           return (index_ == other.index_) and (first_ == other.first_);
         }
 
-        ALPAKA_FN_ACC inline bool operator!=(const_iterator const& other) const { return not(*this == other); }
+        AV2P_FN_ACC inline bool operator!=(const_iterator const& other) const { return not(*this == other); }
 
       private:
         // non-const to support iterator copy and assignment
@@ -1301,9 +1301,9 @@ namespace cms::alpakatools {
   /* independent_group_elements
    */
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value == 1)
-  ALPAKA_FN_ACC inline auto independent_group_elements(TAcc const& acc, TArgs... args) {
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value == 1)
+  AV2P_FN_ACC inline auto independent_group_elements(TAcc const& acc, TArgs... args) {
     return detail::IndependentGroupElementsAlong<TAcc, 0>(acc, static_cast<Idx>(args)...);
   }
 
@@ -1313,9 +1313,9 @@ namespace cms::alpakatools {
    * `detail::IndependentGroupElementsAlong<TAcc, Dim>(acc, ...)` that can infer the accelerator type from the argument.
    */
 
-  template <alpaka::concepts::Acc TAcc, std::size_t Dim, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value >= Dim)
-  ALPAKA_FN_ACC inline auto independent_group_elements_along(TAcc const& acc, TArgs... args) {
+  template <aV2P::concepts::Acc TAcc, std::size_t Dim, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value >= Dim)
+  AV2P_FN_ACC inline auto independent_group_elements_along(TAcc const& acc, TArgs... args) {
     return detail::IndependentGroupElementsAlong<TAcc, Dim>(acc, static_cast<Idx>(args)...);
   }
 
@@ -1325,22 +1325,22 @@ namespace cms::alpakatools {
    * dimensions.
    */
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 0)
-  ALPAKA_FN_ACC inline auto independent_group_elements_x(TAcc const& acc, TArgs... args) {
-    return detail::IndependentGroupElementsAlong<TAcc, alpaka::Dim<TAcc>::value - 1>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 0)
+  AV2P_FN_ACC inline auto independent_group_elements_x(TAcc const& acc, TArgs... args) {
+    return detail::IndependentGroupElementsAlong<TAcc, aV2P::Dim<TAcc>::value - 1>(acc, static_cast<Idx>(args)...);
   }
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 1)
-  ALPAKA_FN_ACC inline auto independent_group_elements_y(TAcc const& acc, TArgs... args) {
-    return detail::IndependentGroupElementsAlong<TAcc, alpaka::Dim<TAcc>::value - 2>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 1)
+  AV2P_FN_ACC inline auto independent_group_elements_y(TAcc const& acc, TArgs... args) {
+    return detail::IndependentGroupElementsAlong<TAcc, aV2P::Dim<TAcc>::value - 2>(acc, static_cast<Idx>(args)...);
   }
 
-  template <alpaka::concepts::Acc TAcc, typename... TArgs>
-    requires(alpaka::Dim<TAcc>::value > 2)
-  ALPAKA_FN_ACC inline auto independent_group_elements_z(TAcc const& acc, TArgs... args) {
-    return detail::IndependentGroupElementsAlong<TAcc, alpaka::Dim<TAcc>::value - 3>(acc, static_cast<Idx>(args)...);
+  template <aV2P::concepts::Acc TAcc, typename... TArgs>
+    requires(aV2P::Dim<TAcc>::value > 2)
+  AV2P_FN_ACC inline auto independent_group_elements_z(TAcc const& acc, TArgs... args) {
+    return detail::IndependentGroupElementsAlong<TAcc, aV2P::Dim<TAcc>::value - 3>(acc, static_cast<Idx>(args)...);
   }
 
   /* once_per_grid
@@ -1350,9 +1350,9 @@ namespace cms::alpakatools {
    * Usually the condition is true for block 0 and thread 0, but these indices should not be relied upon.
    */
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC inline constexpr bool once_per_grid(TAcc const& acc) {
-    return alpaka::getIdx<alpaka::Grid, alpaka::Threads>(acc) == Vec<alpaka::Dim<TAcc>>::zeros();
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC inline constexpr bool once_per_grid(TAcc const& acc) {
+    return aV2P::getIdx<aV2P::Grid, aV2P::Threads>(acc) == Vec<aV2P::Dim<TAcc>>::zeros();
   }
 
   /* once_per_block
@@ -1362,9 +1362,9 @@ namespace cms::alpakatools {
    * Usually the condition is true for thread 0, but this index should not be relied upon.
    */
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC inline constexpr bool once_per_block(TAcc const& acc) {
-    return alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc) == Vec<alpaka::Dim<TAcc>>::zeros();
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC inline constexpr bool once_per_block(TAcc const& acc) {
+    return aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc) == Vec<aV2P::Dim<TAcc>>::zeros();
   }
 
 }  // namespace cms::alpakatools

@@ -9,7 +9,7 @@
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/ESGetToken.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/QueueCache.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   class ESProducer;
 
   namespace device {
@@ -17,7 +17,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
    * The device::Record class template mimics the EventSetup Record
    * classes, and provides access to ESProducts in the host memory
    * space, and in the device memory space defined by the backend
-   * (i.e. ALPAKA_ACCELERATOR_NAMESPACE), that exist in the TRecord
+   * (i.e. AV2P_ACCELERATOR_NAMESPACE), that exist in the TRecord
    * Record. The device::Record also gives access to the Queue object
    * the ESProducer should use to queue all the device operations.
    *
@@ -53,7 +53,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           if (not handle) {
             return edm::ESHandle<TProduct>(handle.whyFailedFactory());
           }
-          return edm::ESHandle<TProduct>(&handle->get(alpaka::getDev(*queue_)), handle.description());
+          return edm::ESHandle<TProduct>(&handle->get(aV2P::getDev(*queue_)), handle.description());
         }
       }
 
@@ -76,7 +76,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
           if (handle.failedToGet()) {
             return edm::ESTransientHandle<TProduct>(handle.whyFailedFactory());
           }
-          return edm::ESTransientHandle<TProduct>(&handle->get(alpaka::getDev(*queue_)), handle.description());
+          return edm::ESTransientHandle<TProduct>(&handle->get(aV2P::getDev(*queue_)), handle.description());
         }
       }
 
@@ -93,7 +93,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
         if constexpr (detail::useESProductDirectly) {
           return product;
         } else {
-          return product.get(alpaka::getDev(*queue_));
+          return product.get(aV2P::getDev(*queue_));
         }
       }
 
@@ -102,6 +102,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
       std::shared_ptr<Queue> queue_;
     };
   }  // namespace device
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #endif

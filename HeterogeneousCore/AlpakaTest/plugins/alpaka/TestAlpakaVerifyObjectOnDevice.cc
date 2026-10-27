@@ -13,7 +13,7 @@
 
 #include "verifyDeviceObjectAsync.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE {
+namespace AV2P_ACCELERATOR_NAMESPACE {
   class TestAlpakaVerifyObjectOnDevice : public stream::SynchronizingEDProducer<> {
   public:
     TestAlpakaVerifyObjectOnDevice(edm::ParameterSet const& config)
@@ -45,7 +45,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE {
     std::optional<cms::alpakatools::host_buffer<bool>> succeeded_;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE
+}  // namespace AV2P_ACCELERATOR_NAMESPACE
 
 #include "HeterogeneousCore/AlpakaCore/interface/alpaka/MakerMacros.h"
-DEFINE_FWK_ALPAKA_MODULE(TestAlpakaVerifyObjectOnDevice);
+DEFINE_FWK_AV2P_MODULE(TestAlpakaVerifyObjectOnDevice);

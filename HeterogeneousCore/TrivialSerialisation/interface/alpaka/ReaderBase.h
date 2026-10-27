@@ -8,7 +8,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousCore/TrivialSerialisation/interface/AnyBuffer.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
+namespace AV2P_ACCELERATOR_NAMESPACE::ngt {
 
   // Base class for reading the memory regions and properties of a serialised device product.
   class ReaderBase {
@@ -21,6 +21,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt {
     virtual ~ReaderBase() = default;
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ngt
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ngt
 
 #endif  // HeterogeneousCore_TrivialSerialisation_interface_alpaka_ReaderBase_h

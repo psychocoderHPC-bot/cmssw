@@ -7,7 +7,7 @@
 #include "HeterogeneousCore/AlpakaInterface/interface/CopyToHost.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/CopyToDevice.h"
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 /**
  * This data product is part of a test for CopyToHost::postCopy()
@@ -23,7 +23,7 @@ namespace portabletest {
   template <typename TDev>
   using TestProductWithPtr = PortableCollection<TDev, TestSoAWithPtr>;
 
-  ALPAKA_FN_HOST_ACC ALPAKA_FN_INLINE void setPtrInTestProductWithPtr(TestSoAWithPtr::View view) {
+  AV2P_FN_HOST_ACC AV2P_FN_INLINE void setPtrInTestProductWithPtr(TestSoAWithPtr::View view) {
     view.ptr() = &view.buffer(0);
   }
 }  // namespace portabletest
@@ -34,7 +34,7 @@ namespace cms::alpakatools {
     template <typename TQueue>
     static auto copyAsync(TQueue& queue, PortableDeviceCollection<TDev, portabletest::TestSoAWithPtr> const& src) {
       PortableHostCollection<portabletest::TestSoAWithPtr> dst(queue, src->metadata().size());
-      alpaka::memcpy(queue, dst.buffer(), src.buffer());
+      aV2P::memcpy(queue, dst.buffer(), src.buffer());
       return dst;
     }
 

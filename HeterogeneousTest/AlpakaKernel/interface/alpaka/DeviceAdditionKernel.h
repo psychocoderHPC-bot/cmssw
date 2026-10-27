@@ -3,15 +3,15 @@
 
 #include <cstdint>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 #include "HeterogeneousTest/AlpakaDevice/interface/alpaka/DeviceAddition.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::test {
+namespace AV2P_ACCELERATOR_NAMESPACE::test {
 
   struct KernelAddVectorsF {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   const float* __restrict__ in1,
                                   const float* __restrict__ in2,
                                   float* __restrict__ out,
@@ -21,7 +21,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::test {
   };
 
   struct KernelAddVectorsD {
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   const double* __restrict__ in1,
                                   const double* __restrict__ in2,
                                   double* __restrict__ out,
@@ -30,6 +30,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::test {
     }
   };
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::test
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::test
 
 #endif  // HeterogeneousTest_AlpakaKernel_interface_alpaka_DeviceAdditionKernel_h

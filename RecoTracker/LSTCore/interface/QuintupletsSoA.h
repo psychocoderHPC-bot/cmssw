@@ -1,7 +1,7 @@
 #ifndef RecoTracker_LSTCore_interface_QuintupletsSoA_h
 #define RecoTracker_LSTCore_interface_QuintupletsSoA_h
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 #include "DataFormats/Common/interface/StdArray.h"
 #include "DataFormats/SoATemplate/interface/SoALayout.h"
 #include "DataFormats/SoATemplate/interface/SoABlocks.h"

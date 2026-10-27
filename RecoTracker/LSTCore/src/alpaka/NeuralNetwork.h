@@ -14,15 +14,15 @@
 #include "pLSEmbedNetworkWeights.h"
 #include "T4NeuralNetworkWeights.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
+namespace AV2P_ACCELERATOR_NAMESPACE::lst {
 
-  template <int FEATURES, alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void softmax_activation(TAcc const& acc, float (&input)[FEATURES]) {
+  template <int FEATURES, aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE void softmax_activation(TAcc const& acc, float (&input)[FEATURES]) {
     float sum = 0.f;
     // Compute exp and sum
     CMS_UNROLL_LOOP
     for (unsigned int i = 0; i < FEATURES; ++i) {
-      input[i] = alpaka::math::exp(acc, input[i]);
+      input[i] = aV2P::math::exp(acc, input[i]);
       sum += input[i];
     }
 
@@ -34,21 +34,21 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   }
 
   template <int FEATURES>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void relu_activation(float (&input)[FEATURES]) {
+  AV2P_FN_ACC AV2P_FN_INLINE void relu_activation(float (&input)[FEATURES]) {
     CMS_UNROLL_LOOP
     for (unsigned int col = 0; col < FEATURES; ++col) {
       input[col] = (input[col] > 0.f) ? input[col] : 0.f;
     }
   }
 
-  template <alpaka::concepts::Acc TAcc>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE float sigmoid_activation(TAcc const& acc, const float x) {
-    const float e = alpaka::math::exp(acc, x);
+  template <aV2P::concepts::Acc TAcc>
+  AV2P_FN_ACC AV2P_FN_INLINE float sigmoid_activation(TAcc const& acc, const float x) {
+    const float e = aV2P::math::exp(acc, x);
     return e / (e + 1.f);
   }
 
   template <int IN_FEATURES, int OUT_FEATURES>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void linear_layer(const float (&input)[IN_FEATURES],
+  AV2P_FN_ACC AV2P_FN_INLINE void linear_layer(const float (&input)[IN_FEATURES],
                                                    float (&output)[OUT_FEATURES],
                                                    const float (&weights)[IN_FEATURES][OUT_FEATURES],
                                                    const float (&biases)[OUT_FEATURES]) {
@@ -63,8 +63,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   }
 
   namespace t3dnn {
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool runInference(TAcc const& acc,
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE bool runInference(TAcc const& acc,
                                                      MiniDoubletsConst mds,
                                                      const unsigned int mdIndex1,
                                                      const unsigned int mdIndex2,
@@ -77,17 +77,17 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       constexpr unsigned int kHiddenFeatures = 32;
 
       // Extract hit information
-      float eta1 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex1]);  // inner T3 anchor hit 1 eta
-      float eta2 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex2]);  // inner T3 anchor hit 2 eta
-      float eta3 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex3]);  // inner T3 anchor hit 3 eta
+      float eta1 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex1]);  // inner T3 anchor hit 1 eta
+      float eta2 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex2]);  // inner T3 anchor hit 2 eta
+      float eta3 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex3]);  // inner T3 anchor hit 3 eta
 
       float phi1 = mds.anchorPhi()[mdIndex1];  // inner T3 anchor hit 1 phi
       float phi2 = mds.anchorPhi()[mdIndex2];  // inner T3 anchor hit 2 phi
       float phi3 = mds.anchorPhi()[mdIndex3];  // inner T3 anchor hit 3 phi
 
-      float z1 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex1]);  // inner T3 anchor hit 1 z
-      float z2 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex2]);  // inner T3 anchor hit 2 z
-      float z3 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex3]);  // inner T3 anchor hit 3 z
+      float z1 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex1]);  // inner T3 anchor hit 1 z
+      float z2 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex2]);  // inner T3 anchor hit 2 z
+      float z3 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex3]);  // inner T3 anchor hit 3 z
 
       float r1 = mds.anchorRt()[mdIndex1];  // inner T3 anchor hit 1 r
       float r2 = mds.anchorRt()[mdIndex2];  // inner T3 anchor hit 2 r
@@ -96,7 +96,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       // Build input feature vector matching training order
       float x[kInputFeatures] = {
           eta1 / dnn::t3dnn::kEta_norm,                   // First hit eta normalized
-          alpaka::math::abs(acc, phi1) / dnn::kPhi_norm,  // First hit phi normalized
+          aV2P::math::abs(acc, phi1) / dnn::kPhi_norm,  // First hit phi normalized
           z1 / dnn::t3dnn::kZ_max,                        // First hit z normalized
           r1 / dnn::t3dnn::kR_max,                        // First hit r normalized
 
@@ -110,7 +110,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
           (z3 - z2) / dnn::t3dnn::kZ_max,  // Difference in z between hit 3 and 2 normalized
           (r3 - r2) / dnn::t3dnn::kR_max,  // Difference in r between hit 3 and 2 normalized
 
-          alpaka::math::log10(acc, radius),  // T3's circle radius
+          aV2P::math::log10(acc, radius),  // T3's circle radius
           betaIn                             // Beta angle of inner segment
       };
 
@@ -142,8 +142,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
   namespace pt3dnn {
 
-    template <typename WP, alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool runInference(TAcc const& acc,
+    template <typename WP, aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE bool runInference(TAcc const& acc,
                                                      const float rPhiChiSquared,
                                                      const float tripletRadius,
                                                      const float pixelRadius,
@@ -156,12 +156,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       constexpr unsigned int kHiddenFeatures = 32;
       constexpr unsigned int kOutputFeatures = 1;
       float x[kInputFeatures] = {
-          alpaka::math::log10(acc, rPhiChiSquared),
-          alpaka::math::log10(acc, tripletRadius),
-          alpaka::math::log10(acc, pixelRadius),
-          alpaka::math::log10(acc, pixRadiusError),
-          alpaka::math::log10(acc, rzChiSquared),
-          alpaka::math::abs(acc, pixelEta) / dnn::pt3dnn::kEta_norm,
+          aV2P::math::log10(acc, rPhiChiSquared),
+          aV2P::math::log10(acc, tripletRadius),
+          aV2P::math::log10(acc, pixelRadius),
+          aV2P::math::log10(acc, pixRadiusError),
+          aV2P::math::log10(acc, rzChiSquared),
+          aV2P::math::abs(acc, pixelEta) / dnn::pt3dnn::kEta_norm,
           static_cast<float>(moduleType3),
       };
 
@@ -179,9 +179,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
           x2, x3, dnn::pt3dnn::wgtT_output_layer, dnn::pt3dnn::bias_output_layer);
       float output = sigmoid_activation(acc, x3[0]);
 
-      uint8_t bin_index = (alpaka::math::abs(acc, pixelEta) > 2.5f)
+      uint8_t bin_index = (aV2P::math::abs(acc, pixelEta) > 2.5f)
                               ? (dnn::kEtaBins - 1)
-                              : static_cast<unsigned int>(alpaka::math::abs(acc, pixelEta) / dnn::kEtaSize);
+                              : static_cast<unsigned int>(aV2P::math::abs(acc, pixelEta) / dnn::kEtaSize);
 
       if (pixelPt > 5.0f)
         return output > WP::wpHigh();
@@ -193,8 +193,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
   namespace t5dnn {
     // Fills the softmax outputs (fake, prompt, displaced); returns the creation decision.
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool runInference(TAcc const& acc,
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE bool runInference(TAcc const& acc,
                                                      MiniDoubletsConst mds,
                                                      const unsigned int mdIndex1,
                                                      const unsigned int mdIndex2,
@@ -215,11 +215,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       constexpr unsigned int kInputFeatures = 35;
       constexpr unsigned int kHiddenFeatures = 32;
 
-      float eta1 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex1]);  // inner T3 anchor hit 1 eta
-      float eta2 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex2]);  // inner T3 anchor hit 2 eta
-      float eta3 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex3]);  // inner T3 anchor hit 3 eta
-      float eta4 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex4]);  // outer T3 anchor hit 4 eta
-      float eta5 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex5]);  // outer T3 anchor hit 5 eta
+      float eta1 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex1]);  // inner T3 anchor hit 1 eta
+      float eta2 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex2]);  // inner T3 anchor hit 2 eta
+      float eta3 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex3]);  // inner T3 anchor hit 3 eta
+      float eta4 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex4]);  // outer T3 anchor hit 4 eta
+      float eta5 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex5]);  // outer T3 anchor hit 5 eta
 
       float phi1 = mds.anchorPhi()[mdIndex1];  // inner T3 anchor hit 1 phi
       float phi2 = mds.anchorPhi()[mdIndex2];  // inner T3 anchor hit 2 phi
@@ -227,11 +227,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       float phi4 = mds.anchorPhi()[mdIndex4];  // outer T3 anchor hit 4 phi
       float phi5 = mds.anchorPhi()[mdIndex5];  // outer T3 anchor hit 5 phi
 
-      float z1 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex1]);  // inner T3 anchor hit 1 z
-      float z2 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex2]);  // inner T3 anchor hit 2 z
-      float z3 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex3]);  // inner T3 anchor hit 3 z
-      float z4 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex4]);  // outer T3 anchor hit 4 z
-      float z5 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex5]);  // outer T3 anchor hit 5 z
+      float z1 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex1]);  // inner T3 anchor hit 1 z
+      float z2 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex2]);  // inner T3 anchor hit 2 z
+      float z3 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex3]);  // inner T3 anchor hit 3 z
+      float z4 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex4]);  // outer T3 anchor hit 4 z
+      float z5 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex5]);  // outer T3 anchor hit 5 z
 
       float r1 = mds.anchorRt()[mdIndex1];  // inner T3 anchor hit 1 r
       float r2 = mds.anchorRt()[mdIndex2];  // inner T3 anchor hit 2 r
@@ -242,7 +242,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       // Build the input feature vector using pairwise differences after the first hit
       float x[kInputFeatures] = {
           eta1 / dnn::t5dnn::kEta_norm,                   // inner T3: First hit eta normalized
-          alpaka::math::abs(acc, phi1) / dnn::kPhi_norm,  // inner T3: First hit phi normalized
+          aV2P::math::abs(acc, phi1) / dnn::kPhi_norm,  // inner T3: First hit phi normalized
           z1 / dnn::t5dnn::kZ_max,                        // inner T3: First hit z normalized
           r1 / dnn::t5dnn::kR_max,                        // inner T3: First hit r normalized
 
@@ -270,9 +270,9 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
           (z5 - z4) / dnn::t5dnn::kZ_max,  // outer T3: Difference in z between hit 5 and 4 normalized
           (r5 - r4) / dnn::t5dnn::kR_max,  // outer T3: Difference in r between hit 5 and 4 normalized
 
-          alpaka::math::log10(acc, innerRadius),   // T5 inner radius
-          alpaka::math::log10(acc, bridgeRadius),  // T5 bridge radius
-          alpaka::math::log10(acc, outerRadius),   // T5 outer radius
+          aV2P::math::log10(acc, innerRadius),   // T5 inner radius
+          aV2P::math::log10(acc, bridgeRadius),  // T5 bridge radius
+          aV2P::math::log10(acc, outerRadius),   // T5 outer radius
 
           fakeScore1,    // inner T3 fake score
           promptScore1,  // inner T3 prompt score
@@ -282,10 +282,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
           dispScore2,    // outer T3 displaced score
           extra.mdDirMeanW,
           extra.mdDirMaxW,
-          alpaka::math::log10(acc, 1.f + extra.nT3OutMid),
-          alpaka::math::log10(acc, 1.f + extra.nT3OutFirst),
-          alpaka::math::log10(acc, 1.f + extra.nMDFirstMod),
-          alpaka::math::min(acc, alpaka::math::log10(acc, 1.f + extra.dcaXY), dnn::t5dnn::kLogDcaMax)};
+          aV2P::math::log10(acc, 1.f + extra.nT3OutMid),
+          aV2P::math::log10(acc, 1.f + extra.nT3OutFirst),
+          aV2P::math::log10(acc, 1.f + extra.nMDFirstMod),
+          aV2P::math::min(acc, aV2P::math::log10(acc, 1.f + extra.dcaXY), dnn::t5dnn::kLogDcaMax)};
 
       float x_1[kHiddenFeatures];
       float x_2[kHiddenFeatures];
@@ -305,8 +305,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   }  // namespace t5dnn
 
   namespace t5embdnn {
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void runEmbed(TAcc const& acc,
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE void runEmbed(TAcc const& acc,
                                                  MiniDoubletsConst mds,
                                                  unsigned int mdIndex1,
                                                  unsigned int mdIndex2,
@@ -327,10 +327,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       constexpr unsigned int kHiddenFeatures = 32;
 
       float eta1 = mds.anchorEta()[mdIndex1];
-      float eta2 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex2]);
-      float eta3 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex3]);
-      float eta4 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex4]);
-      float eta5 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex5]);
+      float eta2 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex2]);
+      float eta3 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex3]);
+      float eta4 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex4]);
+      float eta5 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex5]);
 
       float phi1 = mds.anchorPhi()[mdIndex1];
       float phi2 = mds.anchorPhi()[mdIndex2];
@@ -338,11 +338,11 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       float phi4 = mds.anchorPhi()[mdIndex4];
       float phi5 = mds.anchorPhi()[mdIndex5];
 
-      float z1 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex1]);
-      float z2 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex2]);
-      float z3 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex3]);
-      float z4 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex4]);
-      float z5 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex5]);
+      float z1 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex1]);
+      float z2 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex2]);
+      float z3 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex3]);
+      float z4 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex4]);
+      float z5 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex5]);
 
       float r1 = mds.anchorRt()[mdIndex1];
       float r2 = mds.anchorRt()[mdIndex2];
@@ -351,12 +351,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       float r5 = mds.anchorRt()[mdIndex5];
 
       float x[kInputFeatures] = {eta1 / dnn::t5dnn::kEta_norm,
-                                 alpaka::math::cos(acc, phi1),
-                                 alpaka::math::sin(acc, phi1),
+                                 aV2P::math::cos(acc, phi1),
+                                 aV2P::math::sin(acc, phi1),
                                  z1 / dnn::t5dnn::kZ_max,
                                  r1 / dnn::t5dnn::kR_max,
 
-                                 eta2 - alpaka::math::abs(acc, eta1),
+                                 eta2 - aV2P::math::abs(acc, eta1),
                                  cms::alpakatools::deltaPhi(acc, phi2, phi1),
                                  (z2 - z1) / dnn::t5dnn::kZ_max,
                                  (r2 - r1) / dnn::t5dnn::kR_max,
@@ -402,8 +402,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   }  // namespace t5embdnn
 
   namespace plsembdnn {
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE void runEmbed(TAcc const& acc,
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE void runEmbed(TAcc const& acc,
                                                  const float eta,
                                                  const float etaErr,
                                                  const float phi,
@@ -419,14 +419,14 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
       float x[kInputFeatures] = {eta / dnn::plsembdnn::kEta_norm,
                                  etaErr / dnn::plsembdnn::kEtaErr_norm,
-                                 alpaka::math::cos(acc, phi),
-                                 alpaka::math::sin(acc, phi),
+                                 aV2P::math::cos(acc, phi),
+                                 aV2P::math::sin(acc, phi),
                                  1.0f / ptIn,
-                                 alpaka::math::log10(acc, ptErr),
+                                 aV2P::math::log10(acc, ptErr),
                                  isQuad ? 1.0f : 0.0f,
-                                 alpaka::math::log10(acc, alpaka::math::abs(acc, circleCenterX)),
-                                 alpaka::math::log10(acc, alpaka::math::abs(acc, circleCenterY)),
-                                 alpaka::math::log10(acc, circleRadius)};
+                                 aV2P::math::log10(acc, aV2P::math::abs(acc, circleCenterX)),
+                                 aV2P::math::log10(acc, aV2P::math::abs(acc, circleCenterY)),
+                                 aV2P::math::log10(acc, circleRadius)};
 
       float h1[kHiddenFeatures];
       float h2[kHiddenFeatures];
@@ -444,8 +444,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
   }  // namespace plsembdnn
 
   namespace t4dnn {
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC ALPAKA_FN_INLINE bool runInference(TAcc const& acc,
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC AV2P_FN_INLINE bool runInference(TAcc const& acc,
                                                      MiniDoubletsConst mds,
                                                      ModulesConst modules,
                                                      const unsigned int mdIndex1,
@@ -475,20 +475,20 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       constexpr unsigned int khiddenFeatures = 32;
       constexpr unsigned int koutputFeatures = 3;
 
-      float eta1 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex1]);  // inner T3 anchor hit 1 eta (t3_0_eta)
-      float eta2 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex2]);  // inner T3 anchor hit 2 eta (t3_2_eta)
-      float eta3 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex3]);  // inner T3 anchor hit 3 eta (t3_4_eta)
-      float eta4 = alpaka::math::abs(acc, mds.anchorEta()[mdIndex4]);  // outer T3 anchor hit 4 eta (t3_2_eta)
+      float eta1 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex1]);  // inner T3 anchor hit 1 eta (t3_0_eta)
+      float eta2 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex2]);  // inner T3 anchor hit 2 eta (t3_2_eta)
+      float eta3 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex3]);  // inner T3 anchor hit 3 eta (t3_4_eta)
+      float eta4 = aV2P::math::abs(acc, mds.anchorEta()[mdIndex4]);  // outer T3 anchor hit 4 eta (t3_2_eta)
 
       float phi1 = mds.anchorPhi()[mdIndex1];  // inner T3 anchor hit 1 phi
       float phi2 = mds.anchorPhi()[mdIndex2];  // inner T3 anchor hit 2 phi
       float phi3 = mds.anchorPhi()[mdIndex3];  // inner T3 anchor hit 3 phi
       float phi4 = mds.anchorPhi()[mdIndex4];  // outer T3 anchor hit 4 phi
 
-      float z1 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex1]);  // inner T3 anchor hit 1 z (t3_0_z)
-      float z2 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex2]);  // inner T3 anchor hit 2 z (t3_2_z)
-      float z3 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex3]);  // inner T3 anchor hit 3 z (t3_4_z)
-      float z4 = alpaka::math::abs(acc, mds.anchorZ()[mdIndex4]);  // outer T3 anchor hit 4 z (t3_2_z)
+      float z1 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex1]);  // inner T3 anchor hit 1 z (t3_0_z)
+      float z2 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex2]);  // inner T3 anchor hit 2 z (t3_2_z)
+      float z3 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex3]);  // inner T3 anchor hit 3 z (t3_4_z)
+      float z4 = aV2P::math::abs(acc, mds.anchorZ()[mdIndex4]);  // outer T3 anchor hit 4 z (t3_2_z)
 
       float r1 = mds.anchorRt()[mdIndex1];  // inner T3 anchor hit 1 r (t3_0_r)
       float r2 = mds.anchorRt()[mdIndex2];  // inner T3 anchor hit 2 r (t3_2_r)
@@ -498,7 +498,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
       // Build the input feature vector using pairwise differences after the first hit
       float x[kinputFeatures] = {
           eta1 / dnn::t4dnn::kEta_norm,                   // inner T3: First hit eta normalized
-          alpaka::math::abs(acc, phi1) / dnn::kPhi_norm,  // inner T3: First hit phi normalized
+          aV2P::math::abs(acc, phi1) / dnn::kPhi_norm,  // inner T3: First hit phi normalized
           z1 / dnn::t4dnn::kZ_max,                        // inner T3: First hit z normalized
           r1 / dnn::t4dnn::kR_max,                        // inner T3: First hit r normalized
 
@@ -533,10 +533,10 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
           displacedScore2,
           extra.mdDirMeanW,
           extra.mdDirMaxW,
-          alpaka::math::log10(acc, 1.f + extra.nT3OutMid),
-          alpaka::math::log10(acc, 1.f + extra.nT3OutFirst),
-          alpaka::math::log10(acc, 1.f + extra.nMDFirstMod),
-          alpaka::math::min(acc, alpaka::math::log10(acc, 1.f + extra.dcaXY), dnn::t5dnn::kLogDcaMax)};
+          aV2P::math::log10(acc, 1.f + extra.nT3OutMid),
+          aV2P::math::log10(acc, 1.f + extra.nT3OutFirst),
+          aV2P::math::log10(acc, 1.f + extra.nMDFirstMod),
+          aV2P::math::min(acc, aV2P::math::log10(acc, 1.f + extra.dcaXY), dnn::t5dnn::kLogDcaMax)};
 
       float x_1[khiddenFeatures];  // Layer 1 output
       float x_2[khiddenFeatures];  // Layer 2 output
@@ -570,6 +570,6 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::lst {
 
   }  //namespace t4dnn
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::lst
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::lst
 
 #endif

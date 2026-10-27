@@ -1,4 +1,4 @@
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "DataFormats/SiPixelClusterSoA/interface/SiPixelClustersDevice.h"
 #include "DataFormats/SiPixelClusterSoA/interface/SiPixelClustersHost.h"
@@ -8,13 +8,13 @@
 
 #include "Clusters_test.h"
 
-using namespace alpaka;
+using namespace aV2P;
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::testClusterSoA {
+namespace AV2P_ACCELERATOR_NAMESPACE::testClusterSoA {
 
   class TestFillKernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, SiPixelClustersSoAView clust_view) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, SiPixelClustersSoAView clust_view) const {
       for (int32_t j : cms::alpakatools::uniform_elements(acc, clust_view.metadata().size())) {
         clust_view[j].moduleStart() = j;
         clust_view[j].clusInModule() = j * 2;
@@ -26,12 +26,12 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::testClusterSoA {
 
   class TestVerifyKernel {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc, SiPixelClustersSoAConstView clust_view) const {
+    AV2P_FN_ACC void operator()(Acc1D const& acc, SiPixelClustersSoAConstView clust_view) const {
       for (uint32_t j : cms::alpakatools::uniform_elements(acc, clust_view.metadata().size())) {
-        ALPAKA_ASSERT_ACC(clust_view[j].moduleStart() == j);
-        ALPAKA_ASSERT_ACC(clust_view[j].clusInModule() == j * 2);
-        ALPAKA_ASSERT_ACC(clust_view[j].moduleId() == j * 3);
-        ALPAKA_ASSERT_ACC(clust_view[j].clusModuleStart() == j * 4);
+        AV2P_ASSERT_ACC(clust_view[j].moduleStart() == j);
+        AV2P_ASSERT_ACC(clust_view[j].clusInModule() == j * 2);
+        AV2P_ASSERT_ACC(clust_view[j].moduleId() == j * 3);
+        AV2P_ASSERT_ACC(clust_view[j].clusModuleStart() == j * 4);
       }
     }
   };
@@ -40,8 +40,8 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::testClusterSoA {
     uint32_t items = 64;
     uint32_t groups = cms::alpakatools::divide_up_by(clust_view.metadata().size(), items);
     auto workDiv = cms::alpakatools::make_workdiv<Acc1D>(groups, items);
-    alpaka::exec<Acc1D>(queue, workDiv, TestFillKernel{}, clust_view);
-    alpaka::exec<Acc1D>(queue, workDiv, TestVerifyKernel{}, clust_view);
+    aV2P::exec<Acc1D>(queue, workDiv, TestFillKernel{}, clust_view);
+    aV2P::exec<Acc1D>(queue, workDiv, TestVerifyKernel{}, clust_view);
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::testClusterSoA
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::testClusterSoA

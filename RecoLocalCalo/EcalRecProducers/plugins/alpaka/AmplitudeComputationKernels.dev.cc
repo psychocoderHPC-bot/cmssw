@@ -1,6 +1,6 @@
 #include <cmath>
 #include <limits>
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "CondFormats/EcalObjects/interface/EcalPulseCovariances.h"
 #include "DataFormats/CaloRecHit/interface/MultifitComputations.h"
@@ -11,12 +11,12 @@
 #include "KernelHelpers.h"
 #include "EcalUncalibRecHitMultiFitAlgoPortable.h"
 
-namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
+namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit {
 
   using namespace ::ecal::multifit;
 
   template <typename MatrixType>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void update_covariance(EcalPulseCovariance const& pulse_covariance,
+  AV2P_FN_ACC AV2P_FN_INLINE void update_covariance(EcalPulseCovariance const& pulse_covariance,
                                                         MatrixType& inverse_cov,
                                                         SampleVector const& amplitudes) {
     constexpr auto nsamples = SampleVector::RowsAtCompileTime;
@@ -55,7 +55,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
   ///
   class Kernel_minimize {
   public:
-    ALPAKA_FN_ACC void operator()(Acc1D const& acc,
+    AV2P_FN_ACC void operator()(Acc1D const& acc,
                                   InputProduct::ConstView const& digisDevEB,
                                   InputProduct::ConstView const& digisDevEE,
                                   OutputProduct::View uncalibRecHitsEB,
@@ -78,7 +78,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
 
       using DataType = SampleVector::Scalar;
 
-      auto const elemsPerBlock(alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[0u]);
+      auto const elemsPerBlock(aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[0u]);
 
       auto const nchannelsEB = digisDevEB.size();
       auto const nchannels = nchannelsEB + digisDevEE.size();
@@ -88,7 +88,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
           reinterpret_cast<const EcalPulseCovariance*>(conditionsDev.pulseCovariance().data());
 
       // shared memory
-      DataType* shrmem = alpaka::getDynSharedMem<DataType>(acc);
+      DataType* shrmem = aV2P::getDynSharedMem<DataType>(acc);
 
       // channel
       for (auto idx : cms::alpakatools::uniform_elements(acc, nchannels)) {
@@ -274,7 +274,7 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
     auto blocks_min = cms::alpakatools::divide_up_by(totalChannels, threads_min);
 
     auto workDivMinimize = cms::alpakatools::make_workdiv<Acc1D>(blocks_min, threads_min);
-    alpaka::exec<Acc1D>(queue,
+    aV2P::exec<Acc1D>(queue,
                         workDivMinimize,
                         Kernel_minimize{},
                         digisDevEB.const_view(),
@@ -293,18 +293,18 @@ namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit {
                         50);  // maximum number of fit iterations
   }
 
-}  // namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit
+}  // namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit
 
-namespace alpaka::trait {
-  using namespace ALPAKA_ACCELERATOR_NAMESPACE;
-  using namespace ALPAKA_ACCELERATOR_NAMESPACE::ecal::multifit;
+namespace aV2P::trait {
+  using namespace AV2P_ACCELERATOR_NAMESPACE;
+  using namespace AV2P_ACCELERATOR_NAMESPACE::ecal::multifit;
 
   //! The trait for getting the size of the block shared dynamic memory for Kernel_minimize.
   template <>
   struct BlockSharedMemDynSizeBytes<Kernel_minimize, Acc1D> {
     //! \return The size of the shared memory allocated for a block.
     template <typename TVec, typename... TArgs>
-    ALPAKA_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_minimize const&,
+    AV2P_FN_HOST_ACC static auto getBlockSharedMemDynSizeBytes(Kernel_minimize const&,
                                                                  TVec const& threadsPerBlock,
                                                                  TVec const& elemsPerThread,
                                                                  TArgs const&...) -> std::size_t {
@@ -318,4 +318,4 @@ namespace alpaka::trait {
       return bytes;
     }
   };
-}  // namespace alpaka::trait
+}  // namespace aV2P::trait

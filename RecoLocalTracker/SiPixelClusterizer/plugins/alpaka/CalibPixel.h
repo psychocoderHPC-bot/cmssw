@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <limits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "CondFormats/SiPixelObjects/interface/SiPixelGainCalibrationForHLTLayout.h"
 #include "CondFormats/SiPixelObjects/interface/alpaka/SiPixelGainCalibrationForHLTUtilities.h"
@@ -24,8 +24,8 @@ namespace calibPixel {
 
   template <bool debug = false>
   struct CalibDigis {
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC void operator()(const TAcc& acc,
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC void operator()(const TAcc& acc,
                                   SiPixelClusterThresholds clusterThresholds,
                                   SiPixelDigisSoAView view,
                                   SiPixelClustersSoAView clus_view,
@@ -90,8 +90,8 @@ namespace calibPixel {
   };
 
   struct CalibDigisPhase2 {
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC void operator()(const TAcc& acc,
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC void operator()(const TAcc& acc,
                                   SiPixelClusterThresholds clusterThresholds,
                                   SiPixelDigisSoAView view,
                                   SiPixelClustersSoAView clus_view,

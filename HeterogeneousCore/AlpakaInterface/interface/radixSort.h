@@ -6,25 +6,25 @@
 #include <numeric>
 #include <type_traits>
 
-#include <alpaka/alpaka.hpp>
+#include <aV2P/alpaka.hpp>
 
 #include "HeterogeneousCore/AlpakaInterface/interface/workdivision.h"
 #include "HeterogeneousCore/AlpakaInterface/interface/config.h"
 
 namespace cms::alpakatools {
 
-  template <alpaka::concepts::Acc TAcc, typename T>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void dummyReorder(
+  template <aV2P::concepts::Acc TAcc, typename T>
+  AV2P_FN_ACC AV2P_FN_INLINE void dummyReorder(
       const TAcc& acc, T const* a, uint16_t* ind, uint16_t* ind2, uint32_t size) {}
 
-  template <alpaka::concepts::Acc TAcc, typename T>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void reorderSigned(
+  template <aV2P::concepts::Acc TAcc, typename T>
+  AV2P_FN_ACC AV2P_FN_INLINE void reorderSigned(
       const TAcc& acc, T const* a, uint16_t* ind, uint16_t* ind2, uint32_t size) {
     //move negative first...
 
-    auto& firstNeg = alpaka::declareSharedVar<uint32_t, __COUNTER__>(acc);
+    auto& firstNeg = aV2P::declareSharedVar<uint32_t, __COUNTER__>(acc);
     firstNeg = a[ind[0]] < 0 ? 0 : size;
-    alpaka::syncBlockThreads(acc);
+    aV2P::syncBlockThreads(acc);
 
     // find first negative
     for (auto idx : independent_group_elements(acc, size - 1)) {
@@ -33,48 +33,48 @@ namespace cms::alpakatools {
       }
     }
 
-    alpaka::syncBlockThreads(acc);
+    aV2P::syncBlockThreads(acc);
 
     for (auto idx : independent_group_elements(acc, firstNeg, size)) {
       ind2[idx - firstNeg] = ind[idx];
     }
-    alpaka::syncBlockThreads(acc);
+    aV2P::syncBlockThreads(acc);
 
     for (auto idx : independent_group_elements(acc, firstNeg)) {
       ind2[idx + size - firstNeg] = ind[idx];
     }
-    alpaka::syncBlockThreads(acc);
+    aV2P::syncBlockThreads(acc);
 
     for (auto idx : independent_group_elements(acc, size)) {
       ind[idx] = ind2[idx];
     }
   }
 
-  template <alpaka::concepts::Acc TAcc, typename T>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void reorderFloat(
+  template <aV2P::concepts::Acc TAcc, typename T>
+  AV2P_FN_ACC AV2P_FN_INLINE void reorderFloat(
       const TAcc& acc, T const* a, uint16_t* ind, uint16_t* ind2, uint32_t size) {
     //move negative first...
 
-    auto& firstNeg = alpaka::declareSharedVar<uint32_t, __COUNTER__>(acc);
+    auto& firstNeg = aV2P::declareSharedVar<uint32_t, __COUNTER__>(acc);
     firstNeg = a[ind[0]] < 0 ? 0 : size;
-    alpaka::syncBlockThreads(acc);
+    aV2P::syncBlockThreads(acc);
 
     // find first negative
     for (auto idx : independent_group_elements(acc, size - 1)) {
       if ((a[ind[idx]] ^ a[ind[idx + 1]]) < 0)
         firstNeg = idx + 1;
     }
-    alpaka::syncBlockThreads(acc);
+    aV2P::syncBlockThreads(acc);
 
     for (auto idx : independent_group_elements(acc, firstNeg, size)) {
       ind2[size - idx - 1] = ind[idx];
     }
-    alpaka::syncBlockThreads(acc);
+    aV2P::syncBlockThreads(acc);
 
     for (auto idx : independent_group_elements(acc, firstNeg)) {
       ind2[idx + size - firstNeg] = ind[idx];
     }
-    alpaka::syncBlockThreads(acc);
+    aV2P::syncBlockThreads(acc);
 
     for (auto idx : independent_group_elements(acc, size)) {
       ind[idx] = ind2[idx];
@@ -90,16 +90,16 @@ namespace cms::alpakatools {
   // most significant bit for signed types, integer or floating point).
   // The floating point numbers are reinterpret_cast into integers in the calling wrapper
   // This algorithm requires to run in a single block
-  template <alpaka::concepts::Acc TAcc,
+  template <aV2P::concepts::Acc TAcc,
             typename T,   // shall be integer, signed or not does not matter here
             int NS,       // number of significant bytes to use in sorting.
             typename RF>  // The post processing reorder function.
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void radixSortImpl(
+  AV2P_FN_ACC AV2P_FN_INLINE void radixSortImpl(
       const TAcc& acc, T const* __restrict__ a, uint16_t* ind, uint16_t* ind2, uint32_t size, RF reorder) {
     if constexpr (!requires_single_thread_per_block_v<TAcc>) {
-      const auto warpSize = alpaka::warp::getSize(acc);
-      const uint32_t threadIdxLocal(alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[0u]);
-      [[maybe_unused]] const uint32_t blockDimension(alpaka::getWorkDiv<alpaka::Block, alpaka::Elems>(acc)[0u]);
+      const auto warpSize = aV2P::warp::getSize(acc);
+      const uint32_t threadIdxLocal(aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc)[0u]);
+      [[maybe_unused]] const uint32_t blockDimension(aV2P::getWorkDiv<aV2P::Block, aV2P::Elems>(acc)[0u]);
       // we expect a power of 2 here
       assert(warpSize && (0 == (warpSize & (warpSize - 1))));
       const std::size_t warpMask = warpSize - 1;
@@ -117,24 +117,24 @@ namespace cms::alpakatools {
 
       // Count/index for the prefix scan
       // TODO: rename
-      auto& c = alpaka::declareSharedVar<int32_t[binsNumber], __COUNTER__>(acc);
+      auto& c = aV2P::declareSharedVar<int32_t[binsNumber], __COUNTER__>(acc);
       // Temporary storage for prefix scan. Only really needed for first-of-warp keeping
       // Then used for thread to bin mapping TODO: change type to byte and remap to
-      auto& ct = alpaka::declareSharedVar<int32_t[binsNumber], __COUNTER__>(acc);
+      auto& ct = aV2P::declareSharedVar<int32_t[binsNumber], __COUNTER__>(acc);
       // Bin to thread index mapping (used to store the highest thread index within a bin number
       // batch of threads.
       // TODO: currently initialized to an invalid value, but could also be initialized to the
       // lowest possible value (change to bytes?)
-      auto& cu = alpaka::declareSharedVar<int32_t[binsNumber], __COUNTER__>(acc);
+      auto& cu = aV2P::declareSharedVar<int32_t[binsNumber], __COUNTER__>(acc);
       // TODO we could also have an explicit caching of the current index for each thread.
 
       // TODO: do those have to be shared?
-      auto& ibs = alpaka::declareSharedVar<int, __COUNTER__>(acc);
-      auto& currentSortingPass = alpaka::declareSharedVar<int, __COUNTER__>(acc);
+      auto& ibs = aV2P::declareSharedVar<int, __COUNTER__>(acc);
+      auto& currentSortingPass = aV2P::declareSharedVar<int, __COUNTER__>(acc);
 
-      ALPAKA_ASSERT_ACC(size > 0);
+      AV2P_ASSERT_ACC(size > 0);
       // TODO: is this a hard requirement?
-      ALPAKA_ASSERT_ACC(blockDimension >= binsNumber);
+      AV2P_ASSERT_ACC(blockDimension >= binsNumber);
 
       currentSortingPass = initialSortingPass;
 
@@ -145,25 +145,25 @@ namespace cms::alpakatools {
       for (auto idx : independent_group_elements(acc, size)) {
         j[idx] = idx;
       }
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
 
       // Iterate on the slices of the data.
-      while (alpaka::syncBlockThreadsPredicate<alpaka::BlockAnd>(acc, (currentSortingPass < totalSortingPassses))) {
+      while (aV2P::syncBlockThreadsPredicate<aV2P::BlockAnd>(acc, (currentSortingPass < totalSortingPassses))) {
         for (auto idx : independent_group_elements(acc, binsNumber)) {
           c[idx] = 0;
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
         const auto sortingPassShift = binBits * currentSortingPass;
 
         // fill bins (count elements in each bin)
         for (auto idx : independent_group_elements(acc, size)) {
           auto bin = (a[j[idx]] >> sortingPassShift) & binsMask;
-          alpaka::atomicAdd(acc, &c[bin], 1, alpaka::hierarchy::Threads{});
+          aV2P::atomicAdd(acc, &c[bin], 1, aV2P::hierarchy::Threads{});
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
-        if (!threadIdxLocal && 1 == alpaka::getIdx<alpaka::Grid, alpaka::Blocks>(acc)[0]) {
-          //          printf("Pass=%d, Block=%d, ", currentSortingPass - 1, alpaka::getIdx<alpaka::Grid, alpaka::Blocks>(acc)[0]);
+        if (!threadIdxLocal && 1 == aV2P::getIdx<aV2P::Grid, aV2P::Blocks>(acc)[0]) {
+          //          printf("Pass=%d, Block=%d, ", currentSortingPass - 1, aV2P::getIdx<aV2P::Grid, aV2P::Blocks>(acc)[0]);
           size_t total = 0;
           for (int i = 0; i < (int)binsNumber; i++) {
             //            printf("count[%d]=%d ", i, c[i] );
@@ -180,13 +180,13 @@ namespace cms::alpakatools {
           auto laneId = idx & warpMask;
 
           for (int offset = 1; offset < warpSize; offset <<= 1) {
-            auto y = alpaka::warp::shfl(acc, x, laneId - offset);
+            auto y = aV2P::warp::shfl(acc, x, laneId - offset);
             if (laneId >= (uint32_t)offset)
               x += y;
           }
           ct[idx] = x;
         }
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // Block level completion of prefix scan (add last sum of each preceding warp)
         for (auto idx : independent_group_elements(acc, binsNumber)) {
@@ -207,16 +207,16 @@ namespace cms::alpakatools {
         // bin, working on one set of bin size elements at a time.
         // This will reorder the indices by the currently considered slice, otherwise preserving the previous order.
         ibs = size - 1;
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
 
         // Iterate on bin-sized slices to (size - 1) / binSize + 1 iterations
-        while (alpaka::syncBlockThreadsPredicate<alpaka::BlockAnd>(acc, ibs >= 0)) {
+        while (aV2P::syncBlockThreadsPredicate<aV2P::BlockAnd>(acc, ibs >= 0)) {
           // Init
           for (auto idx : independent_group_elements(acc, binsNumber)) {
             cu[idx] = -1;
             ct[idx] = -1;
           }
-          alpaka::syncBlockThreads(acc);
+          aV2P::syncBlockThreads(acc);
 
           // Find the highest index for all the threads dealing with a given bin (in cu[])
           // Also record the bin for each thread (in ct[])
@@ -226,10 +226,10 @@ namespace cms::alpakatools {
             if (i >= 0) {
               bin = (a[j[i]] >> sortingPassShift) & binsMask;
               ct[idx] = bin;
-              alpaka::atomicMax(acc, &cu[bin], int(i), alpaka::hierarchy::Threads{});
+              aV2P::atomicMax(acc, &cu[bin], int(i), aV2P::hierarchy::Threads{});
             }
           }
-          alpaka::syncBlockThreads(acc);
+          aV2P::syncBlockThreads(acc);
 
           // FIXME: we can slash a memory access.
           for (auto idx : independent_group_elements(acc, binsNumber)) {
@@ -261,15 +261,15 @@ namespace cms::alpakatools {
                 }
             */
           }
-          alpaka::syncBlockThreads(acc);
+          aV2P::syncBlockThreads(acc);
 
           if (threadIdxLocal == 0) {
             ibs -= binsNumber;
             // https://github.com/cms-patatrack/pixeltrack-standalone/pull/210
             // TODO: is this really needed?
-            alpaka::mem_fence(acc, alpaka::memory_scope::Grid{});
+            aV2P::mem_fence(acc, aV2P::memory_scope::Grid{});
           }
-          alpaka::syncBlockThreads(acc);
+          aV2P::syncBlockThreads(acc);
         }
 
         /*
@@ -282,22 +282,22 @@ namespace cms::alpakatools {
         }
         */
 
-        alpaka::syncBlockThreads(acc);
-        ALPAKA_ASSERT_ACC(c[0] == 0);
+        aV2P::syncBlockThreads(acc);
+        AV2P_ASSERT_ACC(c[0] == 0);
 
         // swap (local, ok)
         auto t = j;
         j = k;
         k = t;
 
-        const uint32_t threadIdxLocal(alpaka::getIdx<alpaka::Block, alpaka::Threads>(acc)[0u]);
+        const uint32_t threadIdxLocal(aV2P::getIdx<aV2P::Block, aV2P::Threads>(acc)[0u]);
         if (threadIdxLocal == 0)
           ++currentSortingPass;
-        alpaka::syncBlockThreads(acc);
+        aV2P::syncBlockThreads(acc);
       }
 
       if ((dataBits != 8) && (0 == (NS & 1)))
-        ALPAKA_ASSERT_ACC(j ==
+        AV2P_ASSERT_ACC(j ==
                           ind);  // dataBits/binBits is even so ind is correct (the result is in the right location)
 
       // TODO this copy is (doubly?) redundant with the reorder
@@ -306,7 +306,7 @@ namespace cms::alpakatools {
           ind[idx] = ind2[idx];
         };
 
-      alpaka::syncBlockThreads(acc);
+      aV2P::syncBlockThreads(acc);
 
       // now move negative first... (if signed)
       // TODO: the ind2 => ind copy should have beed deferred. We should pass (j != ind) as an extra parameter
@@ -316,45 +316,45 @@ namespace cms::alpakatools {
     }
   }
 
-  template <alpaka::concepts::Acc TAcc,
+  template <aV2P::concepts::Acc TAcc,
             typename T,
             int NS = sizeof(T),  // number of significant bytes to use in sorting
             typename std::enable_if<std::is_unsigned<T>::value && !requires_single_thread_per_block_v<TAcc>, T>::type* =
                 nullptr>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void radixSort(
+  AV2P_FN_ACC AV2P_FN_INLINE void radixSort(
       const TAcc& acc, T const* a, uint16_t* ind, uint16_t* ind2, uint32_t size) {
     radixSortImpl<TAcc, T, NS>(acc, a, ind, ind2, size, dummyReorder<TAcc, T>);
   }
 
-  template <alpaka::concepts::Acc TAcc,
+  template <aV2P::concepts::Acc TAcc,
             typename T,
             int NS = sizeof(T),  // number of significant bytes to use in sorting
             typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value &&
                                         !requires_single_thread_per_block_v<TAcc>,
                                     T>::type* = nullptr>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void radixSort(
+  AV2P_FN_ACC AV2P_FN_INLINE void radixSort(
       const TAcc& acc, T const* a, uint16_t* ind, uint16_t* ind2, uint32_t size) {
     radixSortImpl<TAcc, T, NS>(acc, a, ind, ind2, size, reorderSigned<TAcc, T>);
   }
 
-  template <alpaka::concepts::Acc TAcc,
+  template <aV2P::concepts::Acc TAcc,
             typename T,
             int NS = sizeof(T),  // number of significant bytes to use in sorting
             typename std::enable_if<std::is_floating_point<T>::value && !requires_single_thread_per_block_v<TAcc>,
                                     T>::type* = nullptr>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void radixSort(
+  AV2P_FN_ACC AV2P_FN_INLINE void radixSort(
       const TAcc& acc, T const* a, uint16_t* ind, uint16_t* ind2, uint32_t size) {
     static_assert(sizeof(T) == sizeof(int), "radixSort with the wrong type size");
     using I = int;
     radixSortImpl<TAcc, I, NS>(acc, (I const*)(a), ind, ind2, size, reorderFloat<TAcc, I>);
   }
 
-  template <alpaka::concepts::Acc TAcc,
+  template <aV2P::concepts::Acc TAcc,
             typename T,
             int NS = sizeof(T),  // number of significant bytes to use in sorting
             typename std::enable_if<requires_single_thread_per_block_v<TAcc>, T>::type* = nullptr>
-  /* not ALPAKA_FN_ACC to avoid trying to compile it for the CUDA or ROCm back-ends */
-  ALPAKA_FN_INLINE void radixSort(const TAcc& acc, T const* a, uint16_t* ind, uint16_t* ind2, uint32_t size) {
+  /* not AV2P_FN_ACC to avoid trying to compile it for the CUDA or ROCm back-ends */
+  AV2P_FN_INLINE void radixSort(const TAcc& acc, T const* a, uint16_t* ind, uint16_t* ind2, uint32_t size) {
     static_assert(requires_single_thread_per_block_v<TAcc>, "CPU sort (not a radixSort) called wtth wrong accelerator");
     // Initialize the index array
     std::iota(ind, ind + size, 0);
@@ -378,15 +378,15 @@ namespace cms::alpakatools {
     */
   }
 
-  template <alpaka::concepts::Acc TAcc, typename T, int NS = sizeof(T)>
-  ALPAKA_FN_ACC ALPAKA_FN_INLINE void radixSortMulti(
+  template <aV2P::concepts::Acc TAcc, typename T, int NS = sizeof(T)>
+  AV2P_FN_ACC AV2P_FN_INLINE void radixSortMulti(
       const TAcc& acc, T const* v, uint16_t* index, uint32_t const* offsets, uint16_t* workspace) {
     // TODO: check
     // Sort multiple blocks of data in v[] separated by in chunks located at offsets[]
     // extern __shared__ uint16_t ws[];
-    uint16_t* ws = alpaka::getDynSharedMem<uint16_t>(acc);
+    uint16_t* ws = aV2P::getDynSharedMem<uint16_t>(acc);
 
-    const uint32_t blockIdx(alpaka::getIdx<alpaka::Grid, alpaka::Blocks>(acc)[0u]);
+    const uint32_t blockIdx(aV2P::getIdx<aV2P::Grid, aV2P::Blocks>(acc)[0u]);
     auto a = v + offsets[blockIdx];
     auto ind = index + offsets[blockIdx];
     auto ind2 = nullptr == workspace ? ws : workspace + offsets[blockIdx];
@@ -403,8 +403,8 @@ namespace cms::alpakatools {
     //__global__ void __launch_bounds__(256, 4)
 #endif
 */
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC void operator()(const TAcc& acc,
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC void operator()(const TAcc& acc,
                                   T const* v,
                                   uint16_t* index,
                                   uint32_t const* offsets,
@@ -416,8 +416,8 @@ namespace cms::alpakatools {
 
   template <typename T, int NS = sizeof(T)>
   struct radixSortMultiWrapper2 {
-    template <alpaka::concepts::Acc TAcc>
-    ALPAKA_FN_ACC void operator()(const TAcc& acc,
+    template <aV2P::concepts::Acc TAcc>
+    AV2P_FN_ACC void operator()(const TAcc& acc,
                                   T const* v,
                                   uint16_t* index,
                                   uint32_t const* offsets,
@@ -428,13 +428,13 @@ namespace cms::alpakatools {
   };
 }  // namespace cms::alpakatools
 
-namespace alpaka::trait {
+namespace aV2P::trait {
   // specialize the BlockSharedMemDynSizeBytes trait to specify the amount of
   // block shared dynamic memory for the radixSortMultiWrapper kernel
-  template <alpaka::concepts::Acc TAcc, typename T, int NS>
+  template <aV2P::concepts::Acc TAcc, typename T, int NS>
   struct BlockSharedMemDynSizeBytes<cms::alpakatools::radixSortMultiWrapper<T, NS>, TAcc> {
     // the size in bytes of the shared memory allocated for a block
-    ALPAKA_FN_HOST_ACC static std::size_t getBlockSharedMemDynSizeBytes(
+    AV2P_FN_HOST_ACC static std::size_t getBlockSharedMemDynSizeBytes(
         cms::alpakatools::radixSortMultiWrapper<T, NS> const& /* kernel */,
         alpaka_common::Vec1D /* threads */,
         alpaka_common::Vec1D /* elements */,
@@ -450,6 +450,6 @@ namespace alpaka::trait {
       return sharedMemBytes;
     }
   };
-}  // namespace alpaka::trait
+}  // namespace aV2P::trait
 
 #endif  // HeterogeneousCore_AlpakaInterface_interface_radixSort_h
