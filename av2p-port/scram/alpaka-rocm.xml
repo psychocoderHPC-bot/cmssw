@@ -1,7 +1,12 @@
 <tool revision="1">
   <use name="alpaka"/>
   <use name="rocm"/>
-  <flags CXXFLAGS="-DAV2P_ACC_GPU_HIP_ENABLED -DAV2P_ACC_GPU_HIP_ONLY_MODE -DAV2P_HOST_ONLY"/>
-  <flags GENREFLEX_CPPFLAGS="-DAV2P_ACC_GPU_HIP_ENABLED -DAV2P_ACC_GPU_HIP_ONLY_MODE -DAV2P_HOST_ONLY"/>
-  <flags ROCM_FLAGS="-DAV2P_ACC_GPU_HIP_ENABLED -DAV2P_ACC_GPU_HIP_ONLY_MODE -UAV2P_HOST_ONLY --expt-relaxed-constexpr"/>
+  <!-- HIP/ROCm on ROCm 7.2.0 (AMD clang 22, gfx1100):
+       - AV2P_ACC_GPU_HIP_ONLY_MODE makes aV2P define AV2P_FN_ACC as __device__ only; alpaka 3's
+         KernelBundle invocability check then rejects the kernel functor in the host pass. The device
+         pass keeps the default __device__ __host__ attribute instead.
+       - the expt-relaxed-constexpr option is nvcc-only; AMD clang rejects it as an unknown argument. -->
+  <flags CXXFLAGS="-DAV2P_ACC_GPU_HIP_ENABLED -DAV2P_HOST_ONLY"/>
+  <flags GENREFLEX_CPPFLAGS="-DAV2P_ACC_GPU_HIP_ENABLED -DAV2P_HOST_ONLY"/>
+  <flags ROCM_FLAGS="-DAV2P_ACC_GPU_HIP_ENABLED -UAV2P_HOST_ONLY"/>
 </tool>
