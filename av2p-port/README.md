@@ -78,14 +78,51 @@ strip `AV2P_HOST_ONLY`. Rules for an operator:
 
 1. This external is the only provider of the backend gate macros. Do not
    install a second external that injects `-DALPAKA_ACC_*`.
-2. `$TOOL_BASE/include` must come first on the include path so that
-   `<aV2P/alpaka.hpp>` resolves to aV2P.
+2. `$TOOL_BASE/include` must contain both `aV2P/` and native `alpaka/`, and
+   must come first on the include path so that `<aV2P/alpaka.hpp>` resolves to
+   aV2P.
 3. `ALPAKA_BACKENDS` stays. It is a SCRAM/CMake build flag, not a C++ macro.
+
+## Build layer: include roots, link flags and gates
+
+The validated install is one include root. `$TOOL_BASE/include` must contain
+both `aV2P/` and native `alpaka/`; the validated install ships alpaka 3.0.0 at
+`eb677e8d`. A prefix with only `aV2P/` has no native alpaka, and a prefix with
+only `alpaka/` has no adapter. Check a prefix with:
+
+```
+av2p-port/check-tool-prefix.sh "$AV2P_PREFIX" cuda   # or: hip
+```
+
+The script checks both include roots and both headers, then preprocesses a tiny
+translation unit with `-DAV2P_ACC_GPU_<BACKEND>_ENABLED -I$AV2P_PREFIX/include`.
+It uses `nvcc` for `cuda` and `hipcc` for `hip` by default; override the
+compiler with `CXX`.
+
+`-lhwloc` is required by the validated install because its vendored alpaka 3
+was built with hwloc. If a package's external builds alpaka with hwloc off,
+that package must drop `-lhwloc`. This follows the alpaka build of each
+package, so decide it from that external's alpaka configuration instead of
+copying the command below.
+
+`AV2P_ACC_*_ONLY_MODE` must stay off. With `AV2P_ACC_GPU_HIP_ONLY_MODE`
+defined, aV2P sets `AV2P_FN_ACC` to `__device__` only; alpaka 3's
+`KernelBundle::operator()` guards the launch on `std::is_invocable_v` in the
+HIP host pass, so the kernel launch fails to compile. This is an
+aV2P/alpaka 3 incompatibility, reproduced on gfx1100. The SCRAM tool files in
+`scram/` therefore do not pass `AV2P_ACC_*_ONLY_MODE`.
+
+`aV2PConfig.cmake` does not export `alpaka_DIR`. A CMake consumer that calls
+`find_package(aV2P CONFIG)` must also provide the native alpaka prefix, for
+example on `CMAKE_PREFIX_PATH` or through `alpaka_DIR`. SCRAM consumers use the
+tool file and are not affected.
 
 ## Build and run
 
 The validation below used CUDA 12.6.85, g++ 13.3.0, a Tesla V100-SXM2-32GB
-(`sm_70`) and an aV2P install prefix at `$AV2P_PREFIX`.
+(`sm_70`) and an aV2P install prefix at `$AV2P_PREFIX`. The commands assume the
+two include roots and the per-package `-lhwloc` decision from the previous
+section.
 
 Real device test with the default caching allocator:
 
